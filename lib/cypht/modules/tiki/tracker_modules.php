@@ -544,4 +544,284 @@ class Hm_Handler_tiki_message_content extends Hm_Handler_Module
 
         tiki_flag_message($email['fileId'], 'add', 'seen');
 
-        $message = $
+        $message = $email['message_raw'];
+
+        $msg_headers = [];
+        foreach ($message->getAllHeaders() as $header) {
+            if (function_exists('mb_decode_mimeheader')) {
+                $msg_headers[$header->getName()] = mb_decode_mimeheader($header->getRawValue());
+            } else {
+                $msg_headers[$header->getName()] = $header->getRawValue();
+            }
+        }
+        $msg_struct = tiki_mime_part_to_bodystructure($message);
+        $msg_struct_current = [];
+
+        if ($part_num !== false) {
+            $part = tiki_get_mime_part($message, $part_num);
+        } else {
+            if (! $this->user_config->get('text_only_setting', false)) {
+                $part = $message->getHtmlPart();
+                if (! $part) {
+                    $part = $message->getTextPart();
+                }
+            } else {
+                $part = $message->getTextPart();
+            }
+        }
+        if ($part_num !== false && $part_num == 0) {
+            $file = Tiki\FileGallery\File::id($email['fileId']);
+            $msg_text = $file->getContents();
+        } else {
+            $msg_text = $part->getContent();
+        }
+        $list = explode('/', $part->getContentType());
+        $msg_struct_current = [
+            'type' => $list[0],
+            'subtype' => $list[1],
+        ];
+        if ($msg_struct_current['subtype'] == 'html') {
+            $msg_text = tiki_add_attached_images($message, $msg_text);
+        }
+
+        $this->out('msg_struct', $msg_struct);
+        $this->out('list_headers', get_list_headers($msg_headers));
+        $this->out('msg_headers', $msg_headers);
+        $this->out('imap_msg_part', "$part_num");
+        $this->out('use_message_part_icons', $this->user_config->get('msg_part_icons_setting', false));
+        $this->out('simple_msg_part_view', $this->user_config->get('simple_msg_parts_setting', false));
+        if ($msg_struct_current) {
+            $this->out('msg_struct_current', $msg_struct_current);
+        }
+        $this->out('msg_text', $msg_text);
+        $this->out('msg_download_args', sprintf("page=message&amp;uid=%s&amp;list_path=%s&amp;tiki_download_message=1", $form['imap_msg_uid'], $this->request->post['list_path']));
+        $this->out('msg_show_args', sprintf("page=message&amp;uid=%s&amp;list_path=%s&amp;tiki_show_message=1", $form['imap_msg_uid'], $this->request->post['list_path']));
+        if ($email['prev']) {
+            $this->out('msg_prev_link', sprintf("?page=message&amp;uid=%s&amp;list_path=tracker_folder_%s_%s&list_parent=tracker_%s", $email['prev']['fileId'], $email['prev']['itemId'], $email['prev']['fieldId'], $email['prev']['trackerId']));
+            $this->out('msg_prev_subject', $email['prev']['subject']);
+        }
+        if ($email['next']) {
+            $this->out('msg_next_link', sprintf("?page=message&amp;uid=%s&amp;list_path=tracker_folder_%s_%s&list_parent=tracker_%s", $email['next']['fileId'], $email['next']['itemId'], $email['next']['fieldId'], $email['next']['trackerId']));
+            $this->out('msg_next_subject', $email['next']['subject']);
+        }
+        $this->out('show_archive', $email['show_archive']);
+
+        clear_existing_reply_details($this->session);
+        if ($part == 0) {
+            $msg_struct_current['type'] = 'text';
+            $msg_struct_current['subtype'] = 'plain';
+        }
+        $this->session->set(
+            sprintf('reply_details_%s_%s', $this->request->post['list_path'], $form['imap_msg_uid']),
+            ['ts' => time(), 'msg_struct' => $msg_struct_current, 'msg_text' => $msg_text, 'msg_headers' => $msg_headers]
+        );
+    }
+}
+
+/**
+ * Retrieve a message part and show in the browser (mainly images)
+ * @subpackage tiki/handler
+ */
+class Hm_Handler_tiki_download_message extends Hm_Handler_Module
+{
+    public function process()
+    {
+        $show = $download = false;
+        if (array_key_exists('tiki_show_message', $this->request->get) && $this->request->get['tiki_show_message']) {
+            $show = true;
+        }
+        if (array_key_exists('tiki_download_message', $this->request->get) && $this->request->get['tiki_download_message']) {
+            $download = true;
+        }
+        if ($show || $download) {
+            $uid = null;
+            $list_path = null;
+            $msg_id = null;
+            if (array_key_exists('uid', $this->request->get) && $this->request->get['uid']) {
+                $uid = $this->request->get['uid'];
+            }
+            if (array_key_exists('list_path', $this->request->get) && $this->request->get['list_path']) {
+                $list_path = $this->request->get['list_path'];
+            }
+            if (array_key_exists('imap_msg_part', $this->request->get) && preg_match("/^[0-9\.]+$/", $this->request->get['imap_msg_part'])) {
+                $msg_id = $this->request->get['imap_msg_part'];
+            }
+            if ($list_path !== null && $uid !== null && $msg_id !== null) {
+                $email = tiki_parse_message($list_path, $uid);
+                if (! $email) {
+                    return;
+                }
+
+                $message = $email['message_raw'];
+                $part = tiki_get_mime_part($message, $msg_id);
+
+                if ($download) {
+                    $struct = tiki_mime_part_to_bodystructure($part, "0");
+                    $name = get_imap_part_name($struct[0], $uid, preg_replace("/^0\./", "", $msg_id));
+                    header('Content-Disposition: attachment; filename="' . $name . '"');
+                }
+
+                header('Content-Type: ' . $part->getContentType());
+                header('Content-Transfer-Encoding: binary');
+                ob_end_clean();
+                echo $part->getContent();
+                Hm_Functions::cease();
+            }
+            Hm_Msgs::add('ERRAn Error occurred trying to download the message');
+        }
+    }
+}
+
+/**
+ * Process a move/copy action
+ * @subpackage tiki/handler
+ */
+class Hm_Handler_tiki_process_move extends Hm_Handler_Module
+{
+    public function process()
+    {
+        list($success, $form) = $this->process_form(['imap_move_to', 'imap_move_action', 'imap_move_ids']);
+        if ($success) {
+            $moved = 0;
+            $dest_path = explode('_', $form['imap_move_to']);
+            $msg_ids = explode(',', $form['imap_move_ids']);
+            foreach ($msg_ids as $msg_id) {
+                list($list_path, $uid) = explode('#', $msg_id);
+                $email = tiki_parse_message($list_path, $uid);
+                if (! $email) {
+                    continue;
+                }
+                $result = tiki_move_to_imap_server($email, $form['imap_move_action'], $dest_path, $this->cache);
+                if ($result) {
+                    $moved++;
+                }
+            }
+            if ($moved == 0) {
+                Hm_Msgs::add('ERRUnable to move/copy selected messages');
+            } elseif ($form['imap_move_action'] == 'move') {
+                Hm_Msgs::add($moved == 1 ? 'Message moved' : $moved . ' messages moved');
+            } else {
+                Hm_Msgs::add($moved == 1 ? 'Message copied' : $moved . ' messages copied');
+            }
+            $this->out('move_count', $moved);
+        }
+    }
+}
+
+/**
+ * Add Move to trackers button
+ * @subpackage tiki/output
+ */
+class Hm_Output_add_move_to_trackers extends Hm_Output_Module
+{
+    protected function output()
+    {
+        $res = '| ' . tiki_move_to_tracker_dropdown($this);
+        $headers = $this->get('msg_headers');
+        $headers = preg_replace("#<a class=\"archive_link[^>]*>.*?</a>#", "\\0 " . $res, $headers);
+        $this->out('msg_headers', $headers, false);
+    }
+}
+
+/**
+ * Add move/copy dialog to the message list controls
+ * @subpackage imap/output
+ */
+class Hm_Output_add_multiple_move_to_trackers extends Hm_Output_Module
+{
+    protected function output()
+    {
+        $res = tiki_move_to_tracker_dropdown($this);
+        $this->concat('msg_controls_extra', $res);
+    }
+}
+
+/**
+ * @subpackage tiki/handler
+ */
+class Hm_Handler_tiki_get_trackers extends Hm_Handler_Module
+{
+    public function process()
+    {
+    }
+}
+
+
+class Hm_Output_tiki_get_trackers_output extends Hm_Output_Module
+{
+    public function output()
+    {
+        $trackers = '<div id="trackers_dropdown">' . tiki_move_to_tracker_dropdown($this) . '</div>';
+        $this->out('trackers', $trackers);
+    }
+}
+
+/**
+ * @subpackage tiki/handler
+ */
+class Hm_Handler_tiki_tracker_info extends Hm_Handler_Module
+{
+    public function process()
+    {
+        list($success, $form) = $this->process_form(['tracker_field_id', 'tracker_item_id', 'folder']);
+        if (! $success) {
+            return;
+        }
+        $folder_name = 'Inbox';
+        $trklib = TikiLib::lib('trk');
+        $objectlib = TikiLib::lib('object');
+        $field_data = $trklib->get_field_info($form['tracker_field_id']);
+
+        $item = $objectlib->get_title('trackeritem', $form['tracker_item_id']);
+        $tracker = $objectlib->get_title('tracker', $field_data['trackerId']);
+        $field = $objectlib->get_title('trackerfield', $form['tracker_field_id']);
+
+        $handler = $trklib->get_field_handler($field_data);
+        if ($handler->getOption('useFolders')) {
+            $folder_name = $handler->getFolders()[$form['folder']];
+        }
+
+        $out = $tracker . ' - ' . $field . ' - ' . $item . ' (' . $folder_name . ')';
+
+        $this->out('tracker_data', $out);
+    }
+}
+
+
+class Hm_Output_tiki_tracker_info_output extends Hm_Output_Module
+{
+    public function output()
+    {
+        $this->out('tracker_data', $this->get('tracker_data'));
+    }
+}
+
+/**
+ * Forward handler vars to the frontend
+ * @subpackage tiki/output
+ */
+class Hm_Output_forward_variables extends Hm_Output_Module
+{
+    protected function output()
+    {
+        $this->out('msg_prev_link', $this->get('msg_prev_link'));
+        $this->out('msg_prev_subject', $this->get('msg_prev_subject'));
+        $this->out('msg_next_link', $this->get('msg_next_link'));
+        $this->out('msg_next_subject', $this->get('msg_next_subject'));
+        $this->out('show_archive', $this->get('show_archive'));
+        $this->out('flag_state', $this->get('flag_state'));
+    }
+}
+
+/**
+ * Pass redirect_url param to the output
+ * @subpackage tiki/output
+ */
+class Hm_Output_pass_redirect_url extends Hm_Output_Module
+{
+    protected function output()
+    {
+        $url = $this->get('tiki_redirect_url');
+        $this->out('tiki_redirect_url', $url);
+    }
+}
