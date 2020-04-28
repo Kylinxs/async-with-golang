@@ -37,4 +37,110 @@
             <div class="faqquestion">
                 {if $prefs.faq_prefix neq 'none'}
                     <span class="faq_question_prefix">
-                        {if 
+                        {if $prefs.faq_prefix eq 'QA'}
+                            {tr}Question:{/tr}
+                        {elseif $prefs.faq_prefix eq 'question_id'}
+                            {$smarty.section.ix.index_next}.&nbsp;
+                        {/if}
+                    </span>
+                {/if}
+                {$channels[ix].question|escape}
+            </div>
+            <div class="faqanswer">
+                {if $prefs.faq_prefix eq 'QA'}
+                    <span class="faq_answer_prefix">{tr}Answer:{/tr}&nbsp;</span>
+                {/if}
+                {$channels[ix].parsed}
+            </div>
+        </div>
+    {/section}
+{/if}
+
+<div class="navbar">
+    {if $faq_info.canSuggest eq 'y' and $tiki_p_suggest_faq eq 'y'}
+        {button href="javascript:flip('faqsugg');" _flip_id="faqsugg" _text="{tr}Add Suggestion{/tr}"}
+    {/if}
+
+    {if $prefs.feature_faq_comments == 'y'
+        && (($tiki_p_read_comments == 'y'
+        && $comments_cant != 0)
+        || $tiki_p_post_comments == 'y'
+        || $tiki_p_edit_comments == 'y')
+    }
+        {include file='comments_button.tpl'}
+    {/if}
+</div>
+
+{if $faq_info.canSuggest eq 'y' and $tiki_p_suggest_faq eq 'y'}
+    <div class="faq_suggestions" id="faqsugg" style="display:{if !empty($error)}block{else}none{/if};">
+        <br>
+        <form action="tiki-view_faq.php" method="post">
+            {ticket}
+            <input type="hidden" name="faqId" value="{$faqId|escape}">
+            <table class="formcolor">
+                <tr>
+                    <td>{tr}Question:{/tr}</td>
+                    <td>
+                        <textarea rows="2" cols="80" name="suggested_question" style="width:95%;">{if $pendingquestion}{$pendingquestion}{/if}</textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {tr}Answer:{/tr}
+                    </td>
+                    <td>
+                        <textarea rows="2" cols="80" name="suggested_answer" style="width:95%;">{if $pendinganswer}{$pendinganswer}{/if}</textarea>
+                    </td>
+                </tr>
+                {if $prefs.feature_antibot eq 'y' && $user eq ''}
+                    {include file='antibot.tpl'}
+                {/if}
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>
+                        <input type="submit" class="btn btn-primary btn-sm" name="sugg" value="{tr}Add{/tr}">
+                    </td>
+                </tr>
+            </table>
+        </form>
+        {if count($suggested) != 0}
+            <br>
+            <div class="table-responsive">
+                <table class="table">
+                    <tr>
+                        <th>{tr}Suggested questions{/tr}</th>
+                    </tr>
+
+                    {section name=ix loop=$suggested}
+                        <tr>
+                            <td class="text">{$suggested[ix].question}</td>
+                        </tr>
+                    {/section}
+                </table>
+            </div>
+        {/if}
+    </div>
+{/if}
+
+{capture name='copyright_section'}
+    {include file='show_copyright.tpl' copyright_context="faq"}
+{/capture}
+
+{* When copyright section is not empty show it *}
+{if $smarty.capture.copyright_section neq ''}
+    <footer class="form-text editdate">
+        {$smarty.capture.copyright_section}
+    </footer>
+{/if}
+
+{if $prefs.feature_faq_comments == 'y'
+&& ($tiki_p_read_comments == 'y'
+|| $tiki_p_post_comments == 'y'
+|| $tiki_p_edit_comments == 'y')}
+    <div id="comment-container" data-bs-target="{service controller=comment action=list type=faq objectId=$faqId}"></div>
+    {jq}
+        var id = '#comment-container';
+        $(id).comment_load($(id).data('bs-target'));
+        $(document).ajaxComplete(function(){$(id).tiki_popover();});
+    {/jq}
+{/if}
