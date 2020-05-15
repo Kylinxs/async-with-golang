@@ -12249,4 +12249,127 @@ div.ts-wrapperdiv div.ts-pager .right-margin {
 .mobile.tiki-cypht .nux_dev_news table td:last-child, .mobile.tiki-webmail .nux_dev_news table td:last-child {
   border-bottom: 1px solid #4c4c4c;
 }
-.tiki .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear, .tiki .select2-container--bootstrap-5 .select2
+.tiki .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear, .tiki .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__clear {
+  position: absolute;
+  top: 50%;
+  right: 3em;
+}
+.tiki .toastui-editor-contents {
+  font-family: "Trebuchet MS", "Bitstream Vera Sans", sans-serif;
+  font-size: 1rem;
+  background: #474747;
+  color: #d8d8d8;
+  text-shadow: none;
+}
+.tiki .toastui-editor-contents a, .tiki .toastui-editor-contents a:visited {
+  color: #ababab;
+  text-decoration: none;
+}
+.tiki .toastui-editor-contents a:hover, .tiki .toastui-editor-contents a:visited:hover {
+  color: #858585;
+  text-decoration: none;
+}
+.tiki .toastui-editor-contents p {
+  color: #d8d8d8;
+}
+.tiki .toastui-editor-contents h1, .tiki .toastui-editor-contents .h1 {
+  color: red;
+}
+.tiki .toastui-editor-contents h1, .tiki .toastui-editor-contents .h1, .tiki .toastui-editor-contents h2, .tiki .toastui-editor-contents .h2, .tiki .toastui-editor-contents h3, .tiki .toastui-editor-contents .h3, .tiki .toastui-editor-contents h4, .tiki .toastui-editor-contents .h4, .tiki .toastui-editor-contents h5, .tiki .toastui-editor-contents .h5, .tiki .toastui-editor-contents h6, .tiki .toastui-editor-contents .h6 {
+  font-family: "Trebuchet MS", "Bitstream Vera Sans", sans-serif;
+  /* should be $headings-font-family */
+  font-weight: 400;
+  /* $headings-font-weight */
+  color: #d8d8d8;
+  /* $headings-color */
+  text-decoration: none;
+  line-height: 1.5;
+  /* $headings-line-height */
+  /* no variable? */
+  border-bottom: none;
+}
+.tiki .toastui-editor-contents h1, .tiki .toastui-editor-contents .h1 {
+  font-size: 2.5rem;
+}
+.tiki .toastui-editor-contents h2, .tiki .toastui-editor-contents .h2 {
+  font-size: 2rem;
+}
+.tiki .toastui-editor-contents h3, .tiki .toastui-editor-contents .h3 {
+  font-size: 1.75rem;
+}
+.tiki .toastui-editor-contents h4, .tiki .toastui-editor-contents .h4 {
+  font-size: 1.5rem;
+}
+.tiki .toastui-editor-contents h5, .tiki .toastui-editor-contents .h5 {
+  font-size: 1.25rem;
+}
+.tiki .toastui-editor-contents h6, .tiki .toastui-editor-contents .h6 {
+  font-size: 1rem;
+}
+.tiki .toastui-editor-contents code {
+  font-size: 0.875em;
+  color: #f8f9fa;
+  background-color: #212529;
+}
+.tiki .toastui-editor-contents pre {
+  color: #e9ecef;
+}
+.tiki .toastui-editor-contents table {
+  background-color: #4e4e4e;
+}
+.tiki .toastui-editor-contents table th {
+  background-color: #4e4e4e;
+  color: var(--bs-body-color);
+  /* should be a var */
+  font-weight: bold;
+}
+.tiki .toastui-editor-contents table th p {
+  background-color: #4e4e4e;
+  color: var(--bs-body-color);
+}
+.tiki .toastui-editor-contents table .odd {
+  background: transparent;
+}
+.tiki .select2-container--bootstrap-5 .select2-selection {
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #cfcfcf;
+  background-color: #242424;
+  border: 1px solid #4c4c4c;
+  border-radius: 0.375rem;
+}
+.tiki .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered, .tiki .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option {
+  font-weight: 400;
+  line-height: 1.5;
+  color: #cfcfcf;
+}
+.tiki .select2-container--bootstrap-5 .select2-dropdown {
+  background-color: #242424;
+  border: 1px solid #4c4c4c;
+  border-radius: 0.375rem;
+}
+.tiki .select2-results__options .select2-results__option {
+  color: #cfcfcf;
+  background: #242424;
+}
+.tiki .select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #cfcfcf;
+  background-color: #242424;
+  border: 1px solid #4c4c4c;
+  border-radius: 0.25rem;
+  transition: #4c4c4c 0.15s ease-in-out, inset 0 1px 2px rgba(0, 0, 0, 0.075) 0.15s ease-in-out;
+}
+.tiki .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--selected, .tiki .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option[aria-selected="true"] {
+  color: #ffffff;
+  background-color: #030511;
+}
+
