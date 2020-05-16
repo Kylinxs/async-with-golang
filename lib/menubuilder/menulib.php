@@ -580,4 +580,228 @@ class MenuLib extends TikiLib
         }
         fclose($fhandle);
         foreach ($options as $option) {
-            if 
+            if ($option['remove'] == 'y') {
+                $this->remove_menu_option($option['optionId']);
+            } else {
+                $this->replace_menu_option($menuId, $option['optionId'], $option['name'], $option['url'], $option['type'], $option['position'], $option['section'], $option['perm'], $option['groupname'], $option['userlevel'], $option['icon'], $option['class']);
+            }
+        }
+    }
+
+    public function export_menu_options($menuId, $encoding)
+    {
+        $data = '"optionId","type","name","url","position","section","perm","groupname","userlevel","class","icon","remove"' . "\r\n";
+        $options = $this->list_menu_options($menuId, 0, -1, 'position_asc', '', true, 0, true);
+        foreach ($options['data'] as $option) {
+            $data .= $option['optionId']
+                            . ',"' . $option['type']
+                            . '","' . str_replace('"', '""', $option['name'])
+                            . '","' . str_replace('"', '""', $option['canonic'])
+                            . '",' . $option['position']
+                            . ',"' . $option['section']
+                            . '","' . $option['perm']
+                            . '","' . $option['groupname']
+                            . '",' . $option['userlevel']
+                            . ',' . $option['class']
+                            . ',' . $option['icon']
+                            . ',"n"' . "\r\n"
+                            ;
+        }
+        if (empty($encoding)) {
+            $encoding = 'UTF-8';
+        } elseif ($encoding == 'ISO-8859-1') {
+            $data = utf8_decode($data);
+        }
+        header("Content-type: text/comma-separated-values; charset:" . $encoding);
+        header("Content-Disposition: attachment; filename=" . tra('menu') . "_" . $menuId . ".csv");
+        header("Expires: 0");
+        header("Cache-Control: must-revalidate, post-check=0,pre-check=0");
+        header("Pragma: public");
+        echo $data;
+        die;
+    }
+    public function get_option($menuId, $url)
+    {
+        $query = 'select `optionId` from `tiki_menu_options` where `menuId`=? and `url`=?';
+        return $this->getOne($query, [$menuId, $url]);
+    }
+
+    public function get_menu($menuId)
+    {
+        $res = $this->table('tiki_menus')->fetchFullRow(['menuId' => (int) $menuId]);
+
+        if (empty($res['icon'])) {
+            $res['oicon'] = null;
+        } else {
+            $res['oicon'] = dirname($res['icon']) . '/o' . basename($res['icon']);
+        }
+        return $res;
+    }
+
+    public function list_menu_options($menuId, $offset = 0, $maxRecords = -1, $sort_mode = 'position_asc', $find = '', $full = false, $level = 0, $do_not_parse = false)
+    {
+        global $user, $tiki_p_admin, $prefs;
+        $wikilib = TikiLib::lib('wiki');
+        include_once('tiki-sefurl.php');
+
+        $options = $this->table('tiki_menu_options');
+        $conditions = [
+                'menuId' => $menuId,
+                ];
+        if ($find) {
+            $conditions['search'] = $options->expr('(`name` like ? or `url` like ?)', ["%$find%", "%$find%"]);
+        }
+
+        if ($level && $prefs['feature_userlevels'] == 'y') {
+            $conditions['userlevel'] = $options->lesserThan($level + 1);
+        }
+
+        $menu = $this->get_menu($menuId);
+
+        $sort = $options->expr($this->convertSortMode($sort_mode));
+        $result = $options->fetchAll($options->all(), $conditions, $maxRecords, $offset, $sort);
+        $cant = $options->fetchCount($conditions);
+
+        // ensure page-specific permissions are not affecting menu building
+        $globalperms = Perms::get();
+
+        $ret = [];
+        foreach ($result as $res) {
+            $res['canonic'] = $res['url'];
+            $resourceGroups = array_filter(explode(',', $res['groupname'] ?: ''));
+            if (! $do_not_parse) {
+                if (isset($menu['parse']) && $menu['parse'] === 'y') {
+                    $res['name'] = TikiLib::lib('parser')->parse_data($res['name'], ['suppress_icons' => true]);
+                } else {
+                    $res['name'] = htmlspecialchars($res['name']);
+                }
+            }
+            if (preg_match('|^\(\((.+?)\)\)$|', $res['url'], $matches)) {
+                $res['url'] = 'tiki-index.php?page=' . rawurlencode($matches[1]);
+                $res['sefurl'] = $wikilib->sefurl($matches[1]);
+                $perms = Perms::get(['type' => 'wiki page', 'object' => $matches[1]]);
+                if (! $perms->view && ! $perms->wiki_view_ref) {
+                    continue;
+                }
+            } else {
+                $res['sefurl'] = filter_out_sefurl($res['url']);
+            }
+            if (! $full) {
+                $display = true;
+                if (isset($res['section']) and $res['section']) {
+                    if (strstr($res['section'], '|')) {
+                        $display = false;
+                        $sections = preg_split('/\s*\|\s*/', $res['section']);
+                        foreach ($sections as $sec) {
+                            if (! isset($prefs[$sec]) or $prefs[$sec] != 'y') {
+                                $display = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        $display = true;
+                        $sections = preg_split('/\s*,\s*/', $res['section']);
+                        foreach ($sections as $sec) {
+                            if (! isset($prefs[$sec]) or $prefs[$sec] != 'y') {
+                                $display = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if ($display && $tiki_p_admin != 'y') {
+                    if (isset($res['perm']) and $res['perm']) {
+                        if (strstr($res['perm'], '|')) {
+                            $display = false;
+                            $sections = preg_split('/\s*\|\s*/', $res['perm']);
+                            foreach ($sections as $sec) {
+                                $sec = str_replace('tiki_p_', '', $sec);
+                                if ($globalperms->$sec) {
+                                    $display = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            $sections = preg_split('/\s*,\s*/', $res['perm']);
+                            $display = true;
+                            foreach ($sections as $sec) {
+                                $sec = str_replace('tiki_p_', '', $sec);
+                                if (! $globalperms->$sec) {
+                                    $display = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    $userGroups = $this->get_user_groups($user);
+                    if (count($resourceGroups) > 0) {
+                        $intersect = array_intersect($resourceGroups, $userGroups);
+                        if (count($intersect) < 1) {
+                            $display = false;
+                        }
+                    }
+                }
+                if ($display) {
+                    $pos = $res['position'];
+                    if (empty($ret[$pos]) || empty($ret[$pos]['url'])) {
+                        $ret[$pos] = $res;
+                    }
+                }
+            } else {
+                $ret[] = $res;
+            }
+        }
+
+        return [
+                'data' => array_values($ret),
+                'cant' => $cant,
+                ];
+    }
+    /*
+     *gets result from list_menu_options and sorts "sorted section" sections.
+     */
+    public function sort_menu_options($channels)
+    {
+
+        $sorted_channels = [];
+
+        if (! isset($channels['data']) || $channels['cant'] == 0) {
+            return $channels;
+        }
+        $cant = $channels['cant'];
+        $channels = $channels['data'];
+
+        $temp_max = count($channels);
+        for ($i = 0; $i < $temp_max; $i++) {
+            $sorted_channels[$i] = $channels[$i];
+            if ($sorted_channels[$i]['type'] == 'r') {
+                // sorted section
+                $sorted_channels[$i]['type'] = 's'; // common section, let's make it transparent
+                $i++;
+                $section = [];
+                while ($i < count($channels) && $channels[$i]['type'] == 'o') {
+                    $section[] = $channels[$i];
+                    $i++;
+                }
+                $i--;
+                //include_once('lib/smarty_tiki/function.menu.php');
+                usort($section, "compare_menu_options");
+                $sorted_channels = array_merge($sorted_channels, $section);
+            }
+        }
+
+        if (isset($cant)) {
+            $sorted_channels = ['data' => $sorted_channels,
+                    'cant' => $cant];
+        }
+
+        return $sorted_channels;
+    }
+
+    public static function clean_menu_html($data)
+    {
+        $data = preg_replace('/<ul>\s*<\/ul>/', '', $data);
+        $data = preg_replace('/<ol>\s*<\/ol>/', '', $data);
+        return '<nav class="role_navigation">' . $data . '</nav>';
+    }
+}
