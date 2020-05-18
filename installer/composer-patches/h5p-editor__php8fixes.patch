@@ -1,0 +1,25 @@
+From 2edfd9b9e72d20e3b61f17a6836da21edb370624 Mon Sep 17 00:00:00 2001
+From: Sara Arjona <sara@moodle.com>
+Date: Wed, 17 Mar 2021 16:11:45 +0100
+Subject: [PATCH] Fix PHP8.0 warning
+
+Credits goes to Marina Glancy.
+---
+ h5peditor.class.php | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/h5peditor.class.php b/h5peditor.class.php
+index 4dda11c..c356367 100644
+--- a/h5peditor.class.php
++++ b/h5peditor.class.php
+@@ -373,7 +373,7 @@ class H5peditor {
+    *
+    * @return array Libraries that was requested
+    */
+-  public function getLibraryData($machineName, $majorVersion, $minorVersion, $languageCode, $prefix = '', $fileDir = '', $defaultLanguage) {
++  public function getLibraryData($machineName, $majorVersion, $minorVersion, $languageCode, $prefix = '', $fileDir = '', $defaultLanguage = '') {
+     $libraryData = new stdClass();
+
+     $library = $this->h5p->loadLibrary($machineName, $majorVersion, $minorVersion);
+--
+2.32.1 (Apple Git-133)

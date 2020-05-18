@@ -49,4 +49,24 @@ for ($i = 0; $i < $temp_max; $i++) {
             $channels["data"][$i]["individual_tiki_p_view_quiz_stats"] = 'n';
         }
         if ($userlib->object_has_permission($user, $channels["data"][$i]["quizId"], 'quiz', 'tiki_p_view_user_stats')) {
-            $channels["data"][$i]["individual_tiki_p_view
+            $channels["data"][$i]["individual_tiki_p_view_user_stats"] = 'y';
+        } else {
+            $channels["data"][$i]["individual_tiki_p_view_user_stats"] = 'n';
+        }
+        if ($tiki_p_admin == 'y' || $userlib->object_has_permission($user, $channels["data"][$i]["quizId"], 'quiz', 'tiki_p_admin_quizzes')) {
+            $channels["data"][$i]["individual_tiki_p_take_quiz"] = 'y';
+            $channels["data"][$i]["individual_tiki_p_view_quiz_stats"] = 'y';
+            $channels["data"][$i]["individual_tiki_p_admin_quizzes"] = 'y';
+            $channels["data"][$i]["individual_tiki_p_view_user_stats"] = 'y';
+        }
+    } else {
+        $channels["data"][$i]["individual"] = 'n';
+    }
+}
+$smarty->assign_by_ref('cant_pages', $channels["cant"]);
+$smarty->assign_by_ref('channels', $channels["data"]);
+include_once('tiki-section_options.php');
+ask_ticket('quiz-stats');
+
+$smarty->assign('mid', 'tiki-quiz_stats.tpl');
+$smarty->display("tiki.tpl");
