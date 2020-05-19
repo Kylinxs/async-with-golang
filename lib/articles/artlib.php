@@ -788,4 +788,533 @@ class ArtLib extends TikiLib
             [
                 $use_ratings,
                 $show_pre_publ,
-        
+                $show_post_expire,
+                $heading_only,
+                $allow_comments,
+                $comment_can_rate_article,
+                $show_image,
+                $show_avatar,
+                $show_author,
+                $show_pubdate,
+                $show_expdate,
+                $show_reads,
+                $show_size,
+                $show_topline,
+                $show_subtitle,
+                $show_linkto,
+                $show_image_caption,
+                $creator_edit,
+                $type
+            ]
+        );
+    }
+
+    public function remove_type($type)
+    {
+        $query = 'delete from `tiki_article_types` where `type`=?';
+        $result = $this->query($query, [$type]);
+        // remove attributes set for this type too
+        $query = "delete from `tiki_object_relations` where `source_type` = 'articletype' and `source_itemId`=?";
+        $result = $this->query($query, [$type]);
+    }
+
+    public function get_type($type)
+    {
+        $query = 'select * from `tiki_article_types` where `type`=?';
+
+        $result = $this->query($query, [$type]);
+
+        $res = $result->fetchRow();
+        return $res;
+    }
+
+    public function list_types()
+    {
+        $query = 'select * from `tiki_article_types`';
+        $result = $this->query($query, []);
+        $ret = [];
+
+        while ($res = $result->fetchRow()) {
+            $res['article_cnt'] = $this->getOne('select count(*) from `tiki_articles` where `type` = ?', [$res['type']]);
+            $ret[] = $res;
+        }
+
+        return $ret;
+    }
+
+    public function list_types_byname()
+    {
+        $query = "select * from `tiki_article_types` order by `type` asc";
+        $result = $this->query($query, []);
+        $ret = [];
+
+        while ($res = $result->fetchRow()) {
+            $ret[$res['type']] = $res;
+        }
+
+        return $ret;
+    }
+
+    public function get_user_articles($user, $max)
+    {
+        $query = 'select `articleId` ,`title` from `tiki_articles` where `author`=? order by `publishDate` desc';
+
+        $articles = $this->fetchAll($query, [$user], $max);
+
+        return Perms::filter(['type' => 'article'], 'object', $articles, ['object' => 'articleId'], 'read_article');
+    }
+
+    public function import_csv($fileName, &$msgs, $csvDelimiter = ',')
+    {
+        global $user, $prefs, $tikilib;
+        $fhandle = fopen($fileName, 'r');
+        if (($fds = fgetcsv($fhandle, 4096, $csvDelimiter)) === false || empty($fds[0])) {
+            $msgs[] = tra('The file has incorrect syntax or is not a CSV file');
+            return false;
+        }
+        for ($i = 0, $icount_fds = count($fds); $i < $icount_fds; $i++) {
+            $fields[trim($fds[$i])] = $i;
+        }
+        if (! isset($fields['title'])) {
+            $fields['title']                = $i++;
+        }
+        if (! isset($fields['authorName'])) {
+            $fields['authorName']       = $i++;
+        }
+        if (! isset($fields['topicId'])) {
+            $fields['topicId']          = $i++;
+        }
+        if (! isset($fields['useImage'])) {
+            $fields['useImage']         = $i++;
+        }
+        if (! isset($fields['imgname'])) {
+            $fields['imgname']          = $i++;
+        }
+        if (! isset($fields['imgsize'])) {
+            $fields['imgsize']          = $i++;
+        }
+        if (! isset($fields['imgtype'])) {
+            $fields['imgtype']          = $i++;
+        }
+        if (! isset($fields['imgdata'])) {
+            $fields['imgdata']          = $i++;
+        }
+        if (! isset($fields['heading'])) {
+            $fields['heading']          = $i++;
+        }
+        if (! isset($fields['body'])) {
+            $fields['body']                 = $i++;
+        }
+        if (! isset($fields['publishDate'])) {
+            $fields['publishDate']  = $i++;
+        }
+        if (! isset($fields['expireDate'])) {
+            $fields['expireDate']       = $i++;
+        }
+        if (! isset($fields['user'])) {
+            $fields['user']                 = $i++;
+        }
+        if (! isset($fields['image_x'])) {
+            $fields['image_x']          = $i++;
+        }
+        if (! isset($fields['image_y'])) {
+            $fields['image_y']          = $i++;
+        }
+        if (! isset($fields['type'])) {
+            $fields['type']                 = $i++;
+        }
+        if (! isset($fields['topline'])) {
+            $fields['topline']          = $i++;
+        }
+        if (! isset($fields['subtitle'])) {
+            $fields['subtitle']         = $i++;
+        }
+        if (! isset($fields['linkto'])) {
+            $fields['linkto']               = $i++;
+        }
+        if (! isset($fields['image_caption'])) {
+            $fields['image_caption'] = $i++;
+        }
+        if (! isset($fields['lang'])) {
+            $fields['lang']                 = $i++;
+        }
+        if (! isset($fields['rating'])) {
+            $fields['rating']               = $i++;
+        }
+        if (! isset($fields['isfloat'])) {
+            $fields['isfloat']          = $i++;
+        }
+        if (! isset($fields['emails'])) {
+            $fields['emails']               = $i++;
+        }
+        $line = 1;
+        while (($data = fgetcsv($fhandle, 4096, $csvDelimiter)) !== false) {
+            ++$line;
+            if (! isset($data[$fields['title']])) {
+                $data[$fields['title']]                 = '';
+            }
+            if (! isset($data[$fields['authorName']])) {
+                $data[$fields['authorName']]        = '';
+            }
+            if (! isset($data[$fields['topicId']])) {
+                $data[$fields['topicId']]               = 0;
+            }
+            if (! isset($data[$fields['useImage']])) {
+                $data[$fields['useImage']]          = 'n';
+            }
+            if (! isset($data[$fields['imgname']])) {
+                $data[$fields['imgname']]               = '';
+            }
+            if (! isset($data[$fields['imgsize']])) {
+                $data[$fields['imgsize']]               = '';
+            }
+            if (! isset($data[$fields['imgtype']])) {
+                $data[$fields['imgtype']]               = '';
+            }
+            if (! isset($data[$fields['imgdata']])) {
+                $data[$fields['imgdata']]               = '';
+            }
+            if (! isset($data[$fields['heading']])) {
+                $data[$fields['heading']]               = '';
+            }
+            if (! isset($data[$fields['body']])) {
+                $data[$fields['body']]                  = '';
+            }
+            if (! isset($data[$fields['publishDate']])) {
+                $data[$fields['publishDate']]       = $tikilib->now;
+            }
+            if (! isset($data[$fields['expireDate']])) {
+                $data[$fields['expireDate']]        = $tikilib->now + 365 * 24 * 60 * 60;
+            }
+            if (! isset($data[$fields['user']])) {
+                $data[$fields['user']]                  = $user;
+            }
+            if (! isset($data[$fields['image_x']])) {
+                $data[$fields['image_x']]               = 0;
+            }
+            if (! isset($data[$fields['image_y']])) {
+                $data[$fields['image_y']]               = 0;
+            }
+            if (! isset($data[$fields['type']])) {
+                $data[$fields['type']]                  = 'Article';
+            }
+            if (! isset($data[$fields['topline']])) {
+                $data[$fields['topline']]               = '';
+            }
+            if (! isset($data[$fields['subtitle']])) {
+                $data[$fields['subtitle']]          = '';
+            }
+            if (! isset($data[$fields['linkto']])) {
+                $data[$fields['linkto']]                = '';
+            }
+            if (! isset($data[$fields['image_caption']])) {
+                $data[$fields['image_caption']] = '';
+            }
+            if (! isset($data[$fields['lang']])) {
+                $data[$fields['lang']]                  = $prefs['language'];
+            }
+            if (! isset($data[$fields['rating']])) {
+                $data[$fields['rating']]                = 7;
+            }
+            if (! isset($data[$fields['isfloat']])) {
+                $data[$fields['isfloat']]               = 'n';
+            }
+            if (! isset($data[$fields['emails']])) {
+                $data[$fields['emails']]                = '';
+            }
+
+            $articleId = $this->replace_article(
+                $data[$fields['title']],
+                $data[$fields['authorName']],
+                $data[$fields['topicId']],
+                $data[$fields['useImage']],
+                $data[$fields['imgname']],
+                $data[$fields['imgsize']],
+                $data[$fields['imgtype']],
+                $data[$fields['imgdata']],
+                $data[$fields['heading']],
+                $data[$fields['body']],
+                $data[$fields['publishDate']],
+                $data[$fields['expireDate']],
+                $data[$fields['user']],
+                0,
+                $data[$fields['image_x']],
+                $data[$fields['image_y']],
+                $data[$fields['type']],
+                $data[$fields['topline']],
+                $data[$fields['subtitle']],
+                $data[$fields['linkto']],
+                $data[$fields['image_caption']],
+                $data[$fields['lang']],
+                $data[$fields['rating']],
+                $data[$fields['isfloat']],
+                $data[$fields['emails']]
+            );
+            if (empty($articleId)) {
+                $msgs[] = sprintf(tr('Error line: %d'), $line);
+                return false;
+            }
+        }
+        if (isset($articleId) && $articleId) {
+            return true;
+        } else {
+            $msgs[] = tr('Import failed due to data format. Make sure the file has Unix-style line breaks.');
+            return false;
+        }
+    }
+
+    public function delete_image_cache($image_type, $imageId)
+    {
+        global $prefs, $tikidomain;
+        // Input validation: imageId must be a number, and not 0
+        if (! ctype_digit("$imageId") || ! ($imageId > 0)) {
+            return false;
+        }
+        switch ($image_type) {
+            case 'article':
+                $image_cache_prefix = 'article';
+                break;
+            case 'submission':
+                $image_cache_prefix = 'article_submission';
+                break;
+            case 'preview':
+                $image_cache_prefix = 'article_preview';
+                break;
+            default:
+                return false;
+        }
+        $article_image_cache = $prefs['tmpDir'];
+        if ($tikidomain) {
+            $article_image_cache .= "/$tikidomain";
+        }
+        $article_image_cache .= "/$image_cache_prefix." . $imageId;
+        if (@unlink($article_image_cache)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function get_title($articleId)
+    {
+        $query = 'select `title` from `tiki_articles` where `articleId`=?';
+        return $this->getOne($query, [(int)$articleId]);
+    }
+
+    public function fetchtopicId($topic)
+    {
+        $topicId = '';
+        $query = 'select `topicId` from `tiki_topics` where `name` = ?';
+        $topicId = $this->getOne($query, [$topic]);
+        return $topicId;
+    }
+
+    public function get_most_recent_article_id()
+    {
+        $maxRecords = 1;
+        $sort_mode = 'publishDate_desc';
+        $date_min = 0;
+        $date_max = $this->now;
+        $query = 'SELECT `tiki_articles`.`articleId` FROM `tiki_articles` INNER JOIN `tiki_article_types` on `tiki_articles`.`type` = `tiki_article_types`.`type` ' .
+                 'WHERE `tiki_articles`.`publishDate`>=\'0\' AND (`tiki_articles`.`publishDate`<=? OR `tiki_article_types`.`show_pre_publ`=\'y\') AND ' .
+                 '(`tiki_articles`.`expireDate`>? OR `tiki_article_types`.`show_post_expire`=\'y\') AND `tiki_articles`.`ispublished`=\'y\' ' .
+                 'ORDER BY `publishDate` DESC';
+        $bindvars = [ $date_max, $date_max ];
+        $id = $this->getOne($query, $bindvars);
+        return $id;
+    }
+
+    public function list_articles($offset = 0, $maxRecords = -1, $sort_mode = 'publishDate_desc', $find = '', $date_min = 0, $date_max = 0, $user = false, $type = '', $topicId = '', $visible_only = 'y', $topic = '', $categId = '', $creator = '', $group = '', $lang = '', $min_rating = '', $max_rating = '', $override_dates = false, $ispublished = '', $filter = '')
+    {
+
+        global $user, $prefs;
+        $userlib = TikiLib::lib('user');
+
+        $mid = $join = '';
+        $bindvars = [];
+        $fromSql = '';
+
+        if (! empty($filter)) {
+            foreach ($filter as $typeF => $val) {
+                if ($typeF == 'translationOrphan') {
+                    $multilinguallib = TikiLib::lib('multilingual');
+                    $multilinguallib->sqlTranslationOrphan('article', '`tiki_articles`', 'articleId', $val, $join, $mid, $bindvars);
+                    $mid = ' where ' . $mid;
+                }
+                if ($typeF == 'articleId' || $typeF == 'notArticleId') {
+                    $mid .= empty($mid) ? ' where ' : ' and ';
+                    $mid .= '`articleId` ' . ($typeF == 'notArticleId' ? 'not in ' : 'in') . ' (' . implode(',', array_fill(0, count($val), '?')) . ')';
+                    $bindvars = array_merge($bindvars, $val);
+                }
+            }
+        }
+
+        if ($find) {
+            $findesc = '%' . $find . '%';
+            $mid .= empty($mid) ? ' where ' : ' and ';
+            $mid .= " (`title` like ? or `heading` like ? or `body` like ? or `author` like ? or `authorName` like ?) ";
+            $bindvars = [$findesc, $findesc, $findesc, $findesc, $findesc];
+        }
+
+        // type=>[!]a+b+c+d+...
+        if ($type) {
+            $invert = '';
+            $connect = ' or ';
+            // parameter list negated?
+            if (substr($type, 0, 1) == '!') {
+                $type = substr($type, 1);
+                $invert = '!';
+                $connect = ' and ';
+            }
+            $add = '';
+            $rest = explode('+', $type);
+            foreach ($rest as $type) {
+                if ($add == '') {
+                    if ($mid) {
+                        $mid .= ' and ';
+                    } else {
+                        $mid = ' where ';
+                    }
+                } else {
+                    $add .= $connect;
+                }
+                $add .= " `tiki_articles`.`type`$invert=? ";
+                $bindvars[] = $type;
+            }
+            if ($add <> '') {
+                $mid .= ' ( ' . $add . ' ) ';
+            }
+        }
+
+        // topicId=>[!]a+b+c+d+...
+        if (($topicId) || ($topicId == '0')) {
+            $invert = '';
+            $connect = ' or ';
+            // parameter list negated?
+            if (substr($topicId, 0, 1) == '!') {
+                $topicId = substr($topicId, 1);
+                $invert = '!';
+                $connect = ' and ';
+            }
+            $add = '';
+            $rest = explode('+', $topicId);
+            foreach ($rest as $topicId) {
+                if ($add == '') {
+                    if ($mid) {
+                        $mid .= ' and ';
+                    } else {
+                        $mid = ' where ';
+                    }
+                } else {
+                    $add .= $connect;
+                }
+                $add .= " `tiki_articles`.`topicId`$invert=? ";
+                $bindvars[] = $topicId;
+            }
+            if ($add <> '') {
+                $mid .= ' ( ' . $add . ' ) ';
+            }
+        }
+
+        // topic=>[!]a+b+c+d+...
+        if ($topic) {
+            $invert = '';
+            // parameter list negated?
+            if (substr($topic, 0, 1) == '!') {
+                $topic = substr($topic, 1);
+                $invert = '!';
+            }
+            $rest = explode('\+', $topic);
+
+            if ($mid) {
+                $mid .= ' and ';
+            } else {
+                $mid = ' where ';
+            }
+            $add = $this->in('tiki_articles.topicName', $rest, $bindvars);
+            if ($add <> '') {
+                $add = ($invert ? ' NOT' : '') . ' ( ' . $add . ' ) ';
+                if ($invert) {
+                    $add = 'COALESCE(' . $add . ', TRUE)';
+                }
+                $mid .= $add;
+            }
+        }
+        if (($visible_only) && ($visible_only <> 'n')) {
+            if ($date_max <= 0) {
+                // show articles published today
+                $date_max = $this->now;
+            }
+            $bindvars[] = (int)$date_min;
+            $bindvars[] = (int)$date_max;
+            if ($override_dates) {
+                $condition = "`tiki_articles`.`publishDate`>=? and `tiki_articles`.`publishDate`<=?";
+            } else {
+                $bindvars[] = (int)$this->now;
+                $condition = "`tiki_articles`.`publishDate`>=? and (`tiki_articles`.`publishDate`<=? or `tiki_article_types`.`show_pre_publ`='y')"
+                                        . " and (`tiki_articles`.`expireDate`>? or `tiki_article_types`.`show_post_expire`='y')"
+                                        ;
+            }
+            $mid .= ( $mid ? ' and ' : ' where ' ) . $condition;
+        }
+        if (! empty($lang)) {
+            $condition = '`tiki_articles`.`lang`=?';
+            $mid .= ($mid) ? ' and ' : ' where ';
+            $mid .= $condition . ' ';
+            $bindvars[] = $lang;
+        }
+        if (! empty($ispublished)) {
+            $condition = '`tiki_articles`.`ispublished`=?';
+            $mid .= ($mid) ? ' and ' : ' where ';
+            $mid .= $condition . ' ';
+            $bindvars[] = $ispublished;
+        }
+        if ($mid) {
+            $mid2 = ' and 1 = 1 ';
+        } else {
+            $mid2 = ' where 1 = 1 ';
+        }
+
+        if ($creator != '') {
+            $mid2 .= ' and `tiki_articles`.`author` like ? ';
+            $bindvars[] = "%$creator%";
+        }
+
+        if ($min_rating || $max_rating) {
+            $min_rating = isset($min_rating) ? $min_rating : '0.0';
+            $max_rating = isset($max_rating) ? $max_rating : '10.0';
+            $mid2 .= ' and (`tiki_articles`.`rating` >= ? and `tiki_articles`.`rating` <= ? )';
+            $bindvars[] = $min_rating;
+            $bindvars[] = $max_rating;
+        }
+
+        $categlib = TikiLib::lib('categ');
+        if ($categId) {
+            $jail = $categId;
+        } else {
+            $jail = $categlib->get_jail();
+        }
+        if ($jail) {
+            $categlib->getSqlJoin($jail, 'article', '`tiki_articles`.`articleId`', $fromSql, $mid2, $bindvars);
+        }
+
+        if (empty($sort_mode)) {
+            $sort_mode = 'publishDate_desc';
+        }
+
+        if ($prefs['rating_advanced'] == 'y') {
+            $ratinglib = TikiLib::lib('rating');
+            $fromSql .= $ratinglib->convert_rating_sort($sort_mode, 'article', '`articleId`');
+        }
+
+        $fromSql .= ' inner join `tiki_article_types` on `tiki_articles`.`type` = `tiki_article_types`.`type` ';
+
+        $query = "select distinct `tiki_articles`.*,
+            `tiki_article_types`.`use_ratings`,
+            `tiki_article_types`.`show_pre_publ`,
+            `tiki_article_types`.`show_post_expire`,
+            `tiki_article_types`.`heading_only`,
+            `tiki_article_types`.`allow_comments`,
+            `tiki_article_types`.`comment_can_rate_article`,
+            `tiki_article_types`.`show_image`,
+            `tiki_article_types`.`show_avatar`,
