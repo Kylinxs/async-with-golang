@@ -1318,3 +1318,381 @@ class ArtLib extends TikiLib
             `tiki_article_types`.`comment_can_rate_article`,
             `tiki_article_types`.`show_image`,
             `tiki_article_types`.`show_avatar`,
+            `tiki_article_types`.`show_author`,
+            `tiki_article_types`.`show_pubdate`,
+            `tiki_article_types`.`show_expdate`,
+            `tiki_article_types`.`show_reads`,
+            `tiki_article_types`.`show_size`,
+            `tiki_article_types`.`show_topline`,
+            `tiki_article_types`.`show_subtitle`,
+            `tiki_article_types`.`show_linkto`,
+            `tiki_article_types`.`show_image_caption`,
+            `tiki_article_types`.`creator_edit`
+            from `tiki_articles`
+            $fromSql
+            $join
+            $mid $mid2 order by " .
+            $this->convertSortMode(
+                $sort_mode,
+                [
+                    'title',
+                    'state',
+                    'authorName',
+                    'topicId',
+                    'topicName',
+                    'publishDate',
+                    'expireDate',
+                    'created',
+                    'author',
+                    'rating',
+                    'nbreads',
+                ]
+            );
+
+        $result = $this->fetchAll($query, $bindvars, $maxRecords, $offset);
+        $query_cant = "select distinct count(*) from `tiki_articles` $fromSql $join $mid $mid2";
+        $cant = $this->getOne($query_cant, $bindvars);
+        $ret = [];
+        $articleIds = array_map(
+            function ($res) {
+                return $res['articleId'];
+            },
+            $result
+        );
+        Perms::bulk(['type' => 'article'], 'object', $articleIds);
+        foreach ($result as $res) {
+            $res['perms'] = $this->get_perm_object($res['articleId'], 'article', [], false);
+            // Determine if unpublished article should be listed
+            if ($res['ispublished'] != 'y' && $res['perms']['tiki_p_edit_article'] != 'y') {
+                $res['disp_article'] = 'n';
+            } else {
+                // no need to do all of the following if we are not adding this article to the array
+                if ($res['perms']['tiki_p_read_article'] == 'y' || $res['perms']['tiki_p_articles_read_heading'] == 'y') {
+                    $res['entrating'] = floor($res['rating']);
+                    if (empty($res['body'])) {
+                        $res['isEmpty'] = 'y';
+                    } else {
+                        $res['isEmpty'] = 'n';
+                    }
+                    if (strlen($res['image_data']) > 0) {
+                        $res['hasImage'] = 'y';
+                    } else {
+                        $res['hasImage'] = 'n';
+                    }
+                    $res['count_comments'] = 0;
+
+                    // Determine if the article would be displayed in the view page
+                    $res['disp_article'] = 'y';
+                    if (($res['show_pre_publ'] != 'y') and ($this->now < $res['publishDate']) && ! $override_dates) {
+                        $res['disp_article'] = 'n';
+                    }
+                    if (($res['show_post_expire'] != 'y') and ($this->now > $res['expireDate']) && ! $override_dates) {
+                        $res['disp_article'] = 'n';
+                    }
+                    $ret[] = $res;
+                }
+            }
+        }
+        $retval = [];
+        $retval['data'] = $ret;
+        $retval['cant'] = $cant;
+        return $retval;
+    }
+
+    /**
+     * Work out if body (or heading) should be parsed as html or not
+     * Currently (tiki 11) tries the prefs but also checks for html in body in case wysiwyg_htmltowiki wasn't enabled previously
+     *
+     * @param array $article of article data
+     * @param bool $check_heading   use heading or (default) body
+     * @return bool
+     */
+    public function is_html($article, $check_heading = false)
+    {
+        global $prefs;
+
+        $text = $check_heading ? $article['heading'] : $article['body'];
+
+        return ($prefs['feature_wysiwyg'] === 'y' || $prefs['mobile_mode'] === 'y') &&  // this now assumes that if in mobile mode any html in articles should not be encoded
+                $prefs['wysiwyg_htmltowiki'] !== 'y' ||
+                        preg_match('/(<\/p>|<\/span>|<\/div>|<\/?br>)/', $text);
+    }
+
+    public function list_submissions($offset = 0, $maxRecords = -1, $sort_mode = 'publishDate_desc', $find = '', $date = '', $type = '', $topicId = '', $lang = '')
+    {
+        if ($find) {
+            $findPattern = '%' . $find . '%';
+            $mid = " where (`title` like ? or `heading` like ? or `body` like ? or `author` like ? or `authorName` like ?) ";
+            $bindvars = [$findPattern, $findPattern, $findPattern, $findPattern, $findPattern];
+        } else {
+            $mid = '';
+            $bindvars = [];
+        }
+
+        if ($date) {
+            if ($mid) {
+                $mid .= ' and `publishDate` <= ? ';
+            } else {
+                $mid = ' where `publishDate` <= ? ';
+            }
+            $bindvars[] = $date;
+        }
+
+        if ($type) {
+            $mid .= $mid ? ' AND ' : ' WHERE ';
+            $mid .= ' `type` = ? ';
+            $bindvars[] = $type;
+        }
+
+        if ($topicId) {
+            $mid .= $mid ? ' AND ' : ' WHERE ';
+            $mid .= ' `topicId` = ? ';
+            $bindvars[] = $topicId;
+        }
+
+        if ($lang) {
+            $mid .= $mid ? ' AND ' : ' WHERE ';
+            $mid .= ' `lang` = ? ';
+            $bindvars[] = $lang;
+        }
+
+        $query = "select * from `tiki_submissions` $mid order by " . $this->convertSortMode($sort_mode);
+        $query_cant = "select count(*) from `tiki_submissions` $mid";
+        $result = $this->query($query, $bindvars, $maxRecords, $offset);
+        $cant = $this->getOne($query_cant, $bindvars);
+        $ret = [];
+
+        while ($res = $result->fetchRow()) {
+            $res['entrating'] = floor($res['rating']);
+
+            if (empty($res['body'])) {
+                $res['isEmpty'] = 'y';
+            } else {
+                $res['isEmpty'] = 'n';
+            }
+
+            if (strlen($res['image_data']) > 0) {
+                $res['hasImage'] = 'y';
+            } else {
+                $res['hasImage'] = 'n';
+            }
+
+            $ret[] = $res;
+        }
+
+        $retval = [];
+        $retval['data'] = $ret;
+        $retval['cant'] = $cant;
+        return $retval;
+    }
+
+    public function get_article($articleId, $checkPerms = true)
+    {
+        global $user, $prefs;
+        $query = "select `tiki_articles`.*,
+                                `users_users`.`avatarLibName`,
+                                `tiki_article_types`.`use_ratings`,
+                                `tiki_article_types`.`show_pre_publ`,
+                                `tiki_article_types`.`show_post_expire`,
+                                `tiki_article_types`.`heading_only`,
+                                `tiki_article_types`.`allow_comments`,
+                                `tiki_article_types`.`comment_can_rate_article`,
+                                `tiki_article_types`.`show_image`,
+                                `tiki_article_types`.`show_avatar`,
+                                `tiki_article_types`.`show_author`,
+                                `tiki_article_types`.`show_pubdate`,
+                                `tiki_article_types`.`show_expdate`,
+                                `tiki_article_types`.`show_reads`,
+                                `tiki_article_types`.`show_size`,
+                                `tiki_article_types`.`show_topline`,
+                                `tiki_article_types`.`show_subtitle`,
+                                `tiki_article_types`.`show_linkto`,
+                                `tiki_article_types`.`show_image_caption`,
+                                `tiki_article_types`.`creator_edit`
+                        from `tiki_articles`
+                        left join `tiki_article_types` ON `tiki_articles`.`type` = `tiki_article_types`.`type`
+                        left join `users_users` on `tiki_articles`.`author` = `users_users`.`login` 
+                        where `tiki_articles`.`articleId`=?"
+                        ;
+
+        $result = $this->query($query, [(int)$articleId]);
+        if ($result->numRows()) {
+            $res = $result->fetchRow();
+            $res['entrating'] = floor($res['rating']);
+        } else {
+            return '';
+        }
+        if ($checkPerms) {
+            $perms = Perms::get('article', $articleId);
+
+            $permsok = $perms->admin_cms || $perms->read_article || $perms->articles_read_heading;
+
+            if (! $permsok) {
+                return false;
+            }
+        }
+
+        if ($res['author'] != $user) {
+            TikiLib::events()->trigger(
+                'tiki.article.view',
+                [
+                    'type' => 'article',
+                    'object' => $articleId,
+                    'user' => $user,
+                    'author' => $res['author'],
+                ]
+            );
+        }
+
+        return $res;
+    }
+
+    public function get_submission($subId)
+    {
+        $query = 'select * from `tiki_submissions` where `subId`=?';
+        $result = $this->query($query, [(int) $subId]);
+        if ($result->numRows()) {
+            $res = $result->fetchRow();
+            $res['entrating'] = floor($res['rating']);
+        } else {
+            return false;
+        }
+        return $res;
+    }
+
+    public function get_topic_image($topicId)
+    {
+        $query = 'select `image_name` ,`image_size`,`image_type`, `image_data` from `tiki_topics` where `topicId`=?';
+        $result = $this->query($query, [(int) $topicId]);
+        $res = $result->fetchRow();
+        return $res;
+    }
+
+    public function get_article_image($id)
+    {
+        $query = 'select `image_name` ,`image_size`,`image_type`, `image_data` from `tiki_articles` where `articleId`=?';
+        $result = $this->query($query, [(int) $id]);
+        $res = $result->fetchRow();
+        return $res;
+    }
+
+    public function add_article_type_attribute($artType, $attributeName)
+    {
+        $relationlib = TikiLib::lib('relation');
+        $attributelib = TikiLib::lib('attribute');
+
+        $fullAttributeName = TikiFilter::get('attribute_type')->filter(trim('tiki.article.' . $attributeName));
+        $relationId = $relationlib->add_relation('tiki.article.attribute', 'articletype', $artType, 'attribute', $fullAttributeName);
+        if (! $relationId) {
+            return 0;
+        } else {
+            $attributelib->set_attribute('relation', $relationId, 'tiki.relation.target', $attributeName);
+            return $relationId;
+        }
+    }
+
+    public function delete_article_type_attribute($artType, $relationId)
+    {
+        $relationlib = TikiLib::lib('relation');
+        // double check relation is associated with article type before deleting
+        $currentAttributes = $relationlib->get_relations_from('articletype', $artType, 'tiki.article.attribute');
+        foreach ($currentAttributes as $att) {
+            if ($att['relationId'] == $relationId) {
+                $relationlib->remove_relation($att['relationId']);
+            }
+        }
+        return true;
+    }
+
+    public function get_article_type_attributes($artType, $orderby = '')
+    {
+        $relationlib = TikiLib::lib('relation');
+        $attributelib = TikiLib::lib('attribute');
+
+        $attributes = $relationlib->get_relations_from('articletype', $artType, 'tiki.article.attribute', $orderby);
+        $ret = [];
+        foreach ($attributes as $att) {
+            $relationAtt = $attributelib->get_attributes('relation', $att['relationId']);
+            if (isset($relationAtt['tiki.relation.target'])) {
+                $ret[$relationAtt['tiki.relation.target']] = $att;
+            }
+        }
+        return $ret;
+    }
+
+    public function set_article_attributes($articleId, $attributeArray, $isSubmission = false)
+    {
+        // expects attributeArray in the form of $key=>$val where $key is tiki.article.xxxx and $val is value
+        $attributelib = TikiLib::lib('attribute');
+        if ($isSubmission) {
+            $type = 'submission';
+        } else {
+            $type = 'article';
+        }
+        $currentAtt = $this->get_article_attributes($articleId);
+        foreach ($attributeArray as $name => $value) {
+            if (! in_array($name, array_keys($currentAtt)) || $value != $currentAtt[$name]['value']) {
+                $attributelib->set_attribute($type, $articleId, $name, $value);
+            }
+        }
+        return true;
+    }
+
+    public function get_article_attributes($articleId, $isSubmission = false)
+    {
+        $attributelib = TikiLib::lib('attribute');
+
+        if ($isSubmission) {
+            $type = 'submission';
+        } else {
+            $type = 'article';
+        }
+
+        $allAttributes = $attributelib->get_attributes($type, $articleId);
+        $ret = [];
+        foreach ($allAttributes as $k => $att) {
+            if (substr($k, 0, 13) == 'tiki.article.') {
+                $ret[$k] = $att;
+            }
+        }
+        return $ret;
+    }
+
+    public function transfer_attributes_from_submission($subId, $articleId)
+    {
+        $this->query(
+            'UPDATE `tiki_object_attributes` set `type` = ?, `itemId` = ? where `type` = ? and `itemId` = ?',
+            [ 'article', $articleId, 'submission', $subId ]
+        );
+    }
+
+    /**
+     * Get related articles using $freetaglib->get_similar()
+     *
+     * @param int $articleId
+     * @param int $maxResults
+     * @return array
+     */
+    public function get_related_articles($articleId, $maxResults = 5)
+    {
+        $freetaglib = TikiLib::lib('freetag');
+        $relatedArticles = $freetaglib->get_similar('article', $articleId);
+
+        foreach ($relatedArticles as $key => $article) {
+            $relatedArticles[$key]['articleId'] = $relatedId = str_replace('tiki-read_article.php?articleId=', '', $article['href']);
+
+            $relatedArticle = $this->get_article($relatedId);
+
+            // exclude articles from the list if they are not published or if no permission to view them
+            if (! $relatedArticle || $relatedArticle['ispublished'] != 'y') {
+                unset($relatedArticles[$key]);
+            }
+        }
+
+        $relatedArticles = array_splice($relatedArticles, 0, $maxResults);
+
+        return $relatedArticles;
+    }
+}
+
+$artlib = new ArtLib();

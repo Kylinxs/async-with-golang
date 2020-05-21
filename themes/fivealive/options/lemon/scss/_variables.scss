@@ -1,0 +1,137 @@
+//Custom styles for the FiveAlive Lemon option theme.
+
+// - - - - - - - Bootstrap variables (override values in vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss - - - - - - //
+$gray-600: #6c757d;
+$gray-900: #212529;
+
+$white:    #fff;
+$black:    #000;
+$light: #f9a013;
+$dark: #6D5509; // arbitrary
+
+$primary:       #F0D800; // #ffc805;
+$secondary:     #ffc805; // #ffe405; //#c85a28;
+$success:       #5cb85c;
+$info:          #f5821e;
+$warning:       #f0ad4e;
+$danger:        #D63D00; //#ff5c1a;
+$light:         #ffffff;
+$dark:          #cb9e10;
+
+$theme-colors: (
+    "primary":           #F0D800, // #ffc805,
+    "secondary":         #ffc805, //#ffe405, // #c85a28,
+    "success":             #5cb85c,
+    "info":               #f5821e,
+    "warning":             #f0ad4e,
+    "danger":           #D63D00, //   #ff5c1a,
+    "light":            #ffffff,
+    "dark":                #6D5509
+);
+
+$bg-light: #f9a013 !important;
+
+$link-color: #BB5525; //#c75a28;
+$link-hover-color:               darken($link-color, 15%);
+
+// Navs
+$nav-tabs-link-color: #000;
+$nav-tabs-link-bg: #fdf1d0; // Same as input-bg
+$nav-tabs-link-active-color: #fff;
+$nav-tabs-link-active-bg: #b25025; // same as $dropdown-link-hover-bg;
+
+// Navbars
+
+// navbar link hover colors
+$bg-dark-link-hover-color: #f2f2f2;
+$bg-dark-link-hover-bg: #003c4a;
+
+// Typography
+$hr-color: #ffc506;
+$text-muted:  #6B737B;
+$headings-font-weight: 700;
+
+$navbar-fixed-top-bg: #e4af00;
+$bg-dark: #ad5b28;
+$bg-light: #ad5b28;
+
+// Cards
+$card-border-color: #e4af00;
+
+// Tables
+$table-border-color: #a99628;
+$table-accent-bg: #f9f9f9;
+$table-hover-bg: #f5f5f5;
+
+$component-active-bg: $card-border-color; // From Grape
+
+// Forms
+$input-color: #555555;
+$input-bg: #fdf1d0;
+$input-border-color: #fee194;
+$input-border-top-color: #ceb688;
+$input-border-right-color: #fff;
+$input-border-bottom-color: #fff;
+$input-border-left-color: #ceb688;
+
+// Form validation
+
+// Dropdowns
+$dropdown-bg: #c75a29;
+$dropdown-border-color: rgba(0, 0, 0, 0.15);
+$dropdown-link-color: #ffffff;
+$dropdown-link-hover-color: #f2f2f2;
+$dropdown-link-hover-bg: #b25025;
+$dropdown-link-active-color: #ffffff;
+$dropdown-link-active-bg: #c75a28;
+$dropdown-link-disabled-color: #f2f2f2;
+$dropdown-header-color: #ffffff;
+$dropdown-divider-bg: $dropdown-bg;
+
+$dropdown-dark-color: #fff;
+$dropdown-dark-bg: $dropdown-bg;
+
+// Pagination
+$nav-pills-link-active-bg: #B35123;
+$pagination-color: #c75a28;
+$pagination-bg: #ffffff;
+$pagination-border-color: #dddddd;
+$pagination-hover-color: #f9a013;
+$pagination-hover-bg: #eeeeee;
+$pagination-hover-border-color: #dddddd;
+$pagination-active-bg: #c75a28;
+$pagination-active-border-color: #c75a28;
+$pagination-disabled-color: $text-muted; // #999999;
+$pagination-disabled-bg: #ffffff;
+$pagination-disabled-border-color: #dddddd;
+
+
+$enable-gradients: true;
+$enable-shadows: true;
+// - - - - - - - - - -  - - - - - - Other variables, if any - - - - - - - - - - - - - - - - - //
+$bg-light-alt: #ffc506 !important;
+
+$side-column-heading-color: #8F6D00;
+
+$top-bg: #e4af00;
+$top-color: #000;
+$top-link-color: #000;
+$top-link-hover-color: #5c5c5c;
+
+$topbar-bg: #ad5b28;
+$bg-dark-info: #fff;
+$navbar-fixed-top-bg: #e4af00;
+$page-header-link-color: #000;
+$topbar-link-color: #000;
+
+$topbar-dark-bg: #2c1c04;
+$top-light-bg: transparent; // #117485;
+$top-light-color: #f9f9f9;
+$top-light-link-color: $top-light-color;
+$topbar-light-bg: #063035;
+$topbar-light-color: #f9f9f9;
+//$topbar-dark-bg: #2c1c04;
+$top-dark-bg: transparent; // #117485; // $top-light-bg; defining the variable with a variable didn't work.
+$top-dark-color: $black;
+$top-dark-link-color: $top-dark-color;
+$top-da
