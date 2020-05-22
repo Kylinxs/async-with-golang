@@ -134,4 +134,95 @@ $topbar-light-color: #f9f9f9;
 $top-dark-bg: transparent; // #117485; // $top-light-bg; defining the variable with a variable didn't work.
 $top-dark-color: $black;
 $top-dark-link-color: $top-dark-color;
-$top-da
+$top-dark-link-hover-color: $gray-900;
+$topbar-dark-bg: #063035; // $topbar-light-bg;
+$topbar-dark-color: $topbar-light-color;
+
+$navbar-light-color: $top-light-color;
+$navbar-light-link-color: $top-light-color;
+$navbar-light-link-hover-color: #f2f2f2;
+//$navbar-light-link-hover-bg: #003c4a;
+
+$navbar-dark-color: $top-light-color;
+$navbar-dark-link-color: $top-light-color;
+$navbar-dark-link-hover-color: #f2f2f2;
+//$navbar-dark-hover-color: $navbar-light-link-color;
+//$navbar-light-link-hover-bg: #003c4a;
+
+$footer_liner-card-inner-border: #ffc506;
+
+$footer-accent-color: #ffc506;
+$footer-btn-secondary-color: #f4f4f4;
+$footer_liner-border-color: $footer-accent-color;
+
+//$autotoc-nav-bg: #c75a29;
+//$autotoc-color: #ffffff;
+//$autotoc-nav-link-hover-color: #f2f2f2;
+//$autotoc-nav-link-hover-bg: #b25025;
+
+
+//.bg-dark {background: #2c1c04 !important; }
+//$autotoc-nav-bg: #ffffff;
+//$autotoc-nav-border: #ffc506;
+//$autotoc-color: #c75a28;
+//$autotoc-nav-li-link-hover-color: #f2f2f2;
+//$autotoc-nav-li-link-hover-bg: #b25025;
+$topbar-dark-bg: #2c1c04;
+$postbody-title-card-title-color: #fff;
+
+// CSS variables / custom properties for base_files/scss/_tiki-pagetop_colors.scss -- Interpolation info from https://developersink.com/css/css-custom-properties-sass-variables/
+// Background images (actual images or CSS gradients, etc.), if assigned, override background colors.
+:root {
+    --tiki-top-light-bg: linear-gradient(90deg, rgba(240,219,64,1) 0%, rgba(211,205,85,1) 97%);;
+    --tiki-top-light-color: #151414;
+    --tiki-top-light-link-color: var(--tiki-top-light-color);
+    --tiki-top-light-link-hover-color: lighten(#151414,8%);
+
+    --tiki-topbar-light-bg: #f0e04f;
+    --tiki-topbar-light-color: var(--tiki-top-light-color);
+    --tiki-topbar-light-link-color: var(--tiki-topbar-light-color);
+    --tiki-topbar-light-link-hover-color: var(--tiki-top-light-link-hover-color);
+
+    --tiki-top-dark-bg: var(--tiki-top-light-bg);
+    --tiki-top-dark-color: #151414;
+    --tiki-top-dark-link-color: var(--tiki-top-dark-color);
+    --tiki-top-dark-link-hover-color: var(--tiki-topbar-light-link-hover-color);
+
+    --tiki-topbar-dark-bg: #f0e04f;
+    --tiki-topbar-dark-color: var(--tiki-top-dark-color);
+    --tiki-topbar-dark-link-color: var(--tiki-top-dark-link-color);
+    --tiki-topbar-dark-link-hover-color: var(--tiki-top-dark-link-hover-color);
+
+    --tiki-top-light-border: solid #000;
+    --tiki-top-dark-border: solid #000;
+    --tiki-top-border-top-width: 0px;
+    --tiki-top-border-bottom-width: 5px;
+}
+
+header.navbar.fixed-top {
+    --tiki-fixed-top-border-top-width: 0px;
+    --tiki-fixed-top-border-right-width: 0px;
+    --tiki-fixed-top-border-bottom-width: 5px;
+    --tiki-fixed-top-border-left-width: 0px;
+    --tiki-topbar-light-border-color: #000;
+}
+
+.tiki-admin {
+    --tiki-admin-navbar-dark-bg: var(--tiki-top-dark-bg) !important;
+    --tiki-admin-dropdown-dark-color: #{$dropdown-dark-color};
+    --tiki-admin-dropdown-dark-bg: #{$dropdown-dark-bg};
+    --tiki-admin-navbar-light-bg: var(--tiki-top-light-bg);
+    --tiki-admin-dropdown-light-color: var(--tiki-top-light-color);
+    --tiki-admin-dropdown-light-bg: #{$dropdown-bg};
+    --tiki-admin-toggle-light-bg: #{$dropdown-bg};
+    --tiki-admin-navbar-dark-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-dark-highlight-color: #{$dropdown-link-hover-color};
+    --tiki-admin-navbar-light-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-light-highlight-color: #{$dropdown-link-hover-color};
+}
+
+.accordion {
+    --bs-accordion-active-bg: #f1e682;
+    --bs-accordion-active-color: #000;
+    --bs-accordion-btn-bg: #f8f0aa;
+}
