@@ -33,4 +33,8 @@ function prefs_goal_list($partial = false)
             'type' => 'text',
             'separator' => ';',
             'filter' => 'groupname',
-        
+            'profile_reference' => 'group',
+            'default' => ['Admins', 'Anonymous'],
+        ],
+    ];
+}

@@ -1,0 +1,45 @@
+// this is to override some cypht colors when using a child theme
+// -- This file isn't imported by any child themes in the package currently  (g_c-l aug 2022)
+.tiki {
+    &.tiki-webmail, &.tiki-cypht, &.mobile.tiki-cypht, .inline-cypht {
+        a:not(.btn), a:not(.dropdown-item) .icon, .btn-link {
+            color: $link-color !important;
+            &:hover { color: $link-hover-color !important; }
+        }
+
+        .card-body {
+            .nav-link {
+                &, small { color: $link-color !important; }
+            }
+        }
+
+        .dropdown-menu {
+            background-color: $dropdown-bg !important;
+            border-color: $dropdown-border-color !important;
+            .dropdown-item {
+                &, .icon { color: $dropdown-link-color !important; }
+                &:hover, &:focus {
+                    &, .icon { color: $dropdown-link-hover-color !important; }
+                }
+            }
+        }
+
+        .form-control {
+            background-color: $input-bg !important;
+            border-color: $input-border-color !important;
+            color: $input-color !important;
+        }
+
+        .nav-tabs .nav-link {
+            &, .icon, .icon:hover { color: $nav-tabs-link-color !important; }
+        }
+
+        .nav-tabs .nav-link.active,
+        .nav-tabs .nav-item.show .nav-link {
+            &, .icon { color: $nav-tabs-link-active-color !important; }
+        }
+
+        .btn-primary { border-color: darken($child-btn-primary, 7.5%) !important; }
+        .btn-info { border-color: darken($child-btn-info, 7.5%) !important; }
+    }
+}
