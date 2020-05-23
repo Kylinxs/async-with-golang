@@ -6,6 +6,9 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 // $Id$
 
-// This redirects to the sites root to prevent directory browsing
-header("location: ../../index.php");
-die;
+interface Perms_Check
+{
+    public function check(Perms_Resolver $resolver, array $context, $name, array $groups);
+
+    public function applicableGroups(Perms_Resolver $resolver);
+}
