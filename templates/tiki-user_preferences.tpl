@@ -316,4 +316,281 @@
                     </div>
                     <label for="read-language-input" class="col-md-8 offset-md-4">
                         <input class="form-control" id="read-language-input" type="text" name="read_language" value="{$user_prefs.read_language}">
-  
+                    </label>
+                    </div>
+                {/if}
+                <div class="mb-3 row clearfix">
+                    <label class="col-form-label col-md-4" for="userbreadCrumb">
+                        {tr}Number of visited pages to remember{/tr}
+                    </label>
+                    <div class="col-md-8">
+                        <select id="userbreadCrumb" name="userbreadCrumb" class="form-control">
+                            <option value="1" {if $user_prefs.userbreadCrumb eq 1}selected="selected"{/if}>1</option>
+                            <option value="2" {if $user_prefs.userbreadCrumb eq 2}selected="selected"{/if}>2</option>
+                            <option value="3" {if $user_prefs.userbreadCrumb eq 3}selected="selected"{/if}>3</option>
+                            <option value="4" {if $user_prefs.userbreadCrumb eq 4}selected="selected"{/if}>4</option>
+                            <option value="5" {if $user_prefs.userbreadCrumb eq 5}selected="selected"{/if}>5</option>
+                            <option value="10" {if $user_prefs.userbreadCrumb eq 10}selected="selected"{/if}>10</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3 row clearfix">
+                    <label class="col-form-label col-md-4" for="display_timezone">
+                        {tr}Displayed timezone{/tr}
+                    </label>
+                    <div class="col-md-8">
+                        <select name="display_timezone" class="form-control" id="display_timezone"{if $warning_site_timezone_set eq 'y'} disabled{/if}>
+                            <option value="" style="font-style:italic;">
+                                {tr}Detect user time zone if browser allows, otherwise site default{/tr}
+                            </option>
+                            <option value="Site" style="font-style:italic;border-bottom:1px dashed #666;"
+                                    {if isset($user_prefs.display_timezone) and $user_prefs.display_timezone eq 'Site'} selected="selected"{/if}>
+                                {tr}Site default{/tr}
+                            </option>
+                            {foreach key=tz item=tzinfo from=$timezones}
+                                {math equation="floor(x / (3600000))" x=$tzinfo.offset assign=offset}
+                                {math equation="(x - (y*3600000)) / 60000" y=$offset x=$tzinfo.offset assign=offset_min format="%02d"}
+                                <option value="{$tz|escape}"{if isset($user_prefs.display_timezone) and $user_prefs.display_timezone eq $tz} selected="selected"{/if}>
+                                    {$tz|escape} (UTC{if $offset >= 0}+{/if}{$offset}h{if $offset_min gt 0}{$offset_min}{/if})
+                                </option>
+                            {/foreach}
+                        </select>
+                        {if $warning_site_timezone_set eq 'y'}
+                            <br/><strong>{tr}Warning:{/tr}</strong> <i>{tr _0=$display_timezone}Site time zone <strong>%0</strong> is enforced and overrides user preferences{/tr}</i>
+                        {/if}
+                    </div>
+                </div>
+
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" type="checkbox" name="display_12hr_clock" {if $user_prefs.display_12hr_clock eq 'y'}checked="checked"{/if}>{tr}Use 12-hour clock in time selectors{/tr}
+                    </label>
+                </div>
+                {if 1 eq 1 || $prefs.feature_community_mouseover eq 'y'}
+                    <div class="form-check">
+                        <label class="form-check-label">
+                            <input class="form-check-input" type="checkbox" name="show_mouseover_user_info" {if $show_mouseover_user_info eq 'y'}checked="checked"{/if}>{tr}Display info tooltip on mouseover for every user who allows his/her information to be public{/tr}
+                        </label>
+                    </div>
+                {/if}
+
+                {if $prefs.feature_messages eq 'y' and $tiki_p_messages eq 'y'}
+                    <legend>{tr}User Messages{/tr}</legend>
+                    <div class="mb-3 row clearfix">
+                        <label class="col-form-label col-md-4" for="mess_maxRecords">
+                            {tr}Messages per page{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <select id="mess_maxRecords" name="mess_maxRecords" class="form-control">
+                                <option value="2" {if $user_prefs.mess_maxRecords eq 2}selected="selected"{/if}>2</option>
+                                <option value="5" {if $user_prefs.mess_maxRecords eq 5}selected="selected"{/if}>5</option>
+                                <option value="10" {if empty($user_prefs.mess_maxRecords) or $user_prefs.mess_maxRecords eq 10}selected="selected"{/if}>10</option>
+                                <option value="20" {if $user_prefs.mess_maxRecords eq 20}selected="selected"{/if}>20</option>
+                                <option value="30" {if $user_prefs.mess_maxRecords eq 30}selected="selected"{/if}>30</option>
+                                <option value="40" {if $user_prefs.mess_maxRecords eq 40}selected="selected"{/if}>40</option>
+                                <option value="50" {if $user_prefs.mess_maxRecords eq 50}selected="selected"{/if}>50</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="clearfix">
+                        {if 1 eq 1 || $prefs.allowmsg_is_optional eq 'y'}
+                            <div class="form-check">
+                                <label class="form-check-label">
+                                    <input class="form-check-input" type="checkbox" name="allowMsgs" {if $user_prefs.allowMsgs eq 'y'}checked="checked"{/if}>
+                                    {tr}Allow messages from other users{/tr}
+                                </label>
+                            </div>
+                        {/if}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mess_sendReadStatus" {if $user_prefs.mess_sendReadStatus eq 'y'}checked="checked"{/if}>
+                                {tr}Notify sender when reading his mail{/tr}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3 row clearfix">
+                        <label class="col-form-label col-md-4" for="minPrio">
+                            {tr}Message priority notification{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <select class="form-select" id="minPrio" name="minPrio">
+                                <option value="1" {if $user_prefs.minPrio eq 1}selected="selected"{/if}>1 -{tr}Lowest{/tr}-</option>
+                                <option value="2" {if $user_prefs.minPrio eq 2}selected="selected"{/if}>2 -{tr}Low{/tr}-</option>
+                                <option value="3" {if $user_prefs.minPrio eq 3}selected="selected"{/if}>3 -{tr}Normal{/tr}-</option>
+                                <option value="4" {if $user_prefs.minPrio eq 4}selected="selected"{/if}>4 -{tr}High{/tr}-</option>
+                                <option value="5" {if $user_prefs.minPrio eq 5}selected="selected"{/if}>5 -{tr}Very High{/tr}-</option>
+                                <option value="6" {if $user_prefs.minPrio eq 6}selected="selected"{/if}>{tr}none{/tr}</option>
+                            </select>
+                            <span class="form-text">{tr}Send me an email for messages with priority equal to or greater than{/tr}</span>
+                        </div>
+                    </div>
+                    <div class="mb-3 row clearfix">
+                        <label class="col-form-label col-md-4" for="mess_archiveAfter" >
+                            {tr}Read message auto-archiving{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <select id="mess_archiveAfter" name="mess_archiveAfter" class="form-control">
+                                <option value="0" {if $user_prefs.mess_archiveAfter eq 0}selected="selected"{/if}>{tr}never{/tr}</option>
+                                <option value="1" {if $user_prefs.mess_archiveAfter eq 1}selected="selected"{/if}>1</option>
+                                <option value="2" {if $user_prefs.mess_archiveAfter eq 2}selected="selected"{/if}>2</option>
+                                <option value="5" {if $user_prefs.mess_archiveAfter eq 5}selected="selected"{/if}>5</option>
+                                <option value="10" {if $user_prefs.mess_archiveAfter eq 10}selected="selected"{/if}>10</option>
+                                <option value="20" {if $user_prefs.mess_archiveAfter eq 20}selected="selected"{/if}>20</option>
+                                <option value="30" {if $user_prefs.mess_archiveAfter eq 30}selected="selected"{/if}>30</option>
+                                <option value="40" {if $user_prefs.mess_archiveAfter eq 40}selected="selected"{/if}>40</option>
+                                <option value="50" {if $user_prefs.mess_archiveAfter eq 50}selected="selected"{/if}>50</option>
+                                <option value="60" {if $user_prefs.mess_archiveAfter eq 60}selected="selected"{/if}>60</option>
+                            </select>
+                            <span class="form-text">{tr}Auto-archive read messages after selected days{/tr}</span>
+                        </div>
+                    </div>
+                {/if}
+                {if $prefs.feature_tasks eq 'y' and $tiki_p_tasks eq 'y'}
+                    <legend>{tr}User Tasks{/tr}</legend>
+                    <div class="mb-3 row">
+                        <label class="col-form-label col-md-4" for="tasks_maxRecords">
+                            {tr}Tasks per page{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <select class="form-select" id="tasks_maxRecords" name="tasks_maxRecords">
+                                <option value="2" {if $user_prefs.tasks_maxRecords eq 2}selected="selected"{/if}>2</option>
+                                <option value="5" {if $user_prefs.tasks_maxRecords eq 5}selected="selected"{/if}>5</option>
+                                <option value="10" {if $user_prefs.tasks_maxRecords eq 10}selected="selected"{/if}>10</option>
+                                <option value="20" {if $user_prefs.tasks_maxRecords eq 20}selected="selected"{/if}>20</option>
+                                <option value="30" {if $user_prefs.tasks_maxRecords eq 30}selected="selected"{/if}>30</option>
+                                <option value="40" {if $user_prefs.tasks_maxRecords eq 40}selected="selected"{/if}>40</option>
+                                <option value="50" {if $user_prefs.tasks_maxRecords eq 50}selected="selected"{/if}>50</option>
+                            </select>
+                        </div>
+                    </div>
+                {/if}
+                <legend>{tr}My Account{/tr}</legend>
+                {if $prefs.xmpp_feature eq 'y'}
+                    <div class="mb-3 row mb-2">
+                        <label class="col-form-label col-md-4" for="xmpp_username">
+                            {tr}XMPP account JID{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" name="xmpp_jid" id="xmpp_jid" value="{$user_prefs.xmpp_jid|escape}">
+                            <p><small>{tr}If empty, Tiki will provide default value{/tr}</small></p>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-form-label col-md-4" for="xmpp_password">
+                            {tr}XMPP account password{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <input type="password" class="form-control" name="xmpp_password" id="xmpp_password" value="{$user_prefs.xmpp_password|escape}" autocomplete="new-password">
+                            <p><small>This password will be stored in database</small></p>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-form-label col-md-4" for="xmpp_server_http_bind">
+                            {tr}XMPP http-bind URL{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" name="xmpp_custom_server_http_bind" id="xmpp_custom_server_http_bind" value="{$user_prefs.xmpp_custom_server_http_bind|escape}">
+                            <p><small>{tr}You have to provide this when using custom XMPP server{/tr}</small></p>
+                        </div>
+                    </div>
+                {/if}
+
+                <div class="row justify-content-end mb-2">
+                    <div class="col-md-8">
+                    {if $prefs.feature_wiki eq 'y'}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_pages" {if $user_prefs.mytiki_pages eq 'y'}checked="checked"{/if}>{tr}My pages{/tr}
+                            </label>
+                        </div>
+                    {/if}
+                    {if $prefs.feature_blogs eq 'y'}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_blogs" {if $user_prefs.mytiki_blogs eq 'y'}checked="checked"{/if}>{tr}My blogs{/tr}
+                            </label>
+                        </div>
+                    {/if}
+                    {if $prefs.feature_messages eq 'y' and $tiki_p_messages eq 'y'}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_msgs" {if $user_prefs.mytiki_msgs eq 'y'}checked="checked"{/if}>{tr}My messages{/tr}
+                            </label>
+                        </div>
+                    {/if}
+                    {if $prefs.feature_tasks eq 'y' and $tiki_p_tasks eq 'y'}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_tasks" {if $user_prefs.mytiki_tasks eq 'y'}checked="checked"{/if}>{tr}My tasks{/tr}
+                            </label>
+                        </div>
+                    {/if}
+                    {if $prefs.feature_forums eq 'y' and $tiki_p_forum_read eq 'y'}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_forum_topics" {if $user_prefs.mytiki_forum_topics eq 'y'}checked="checked"{/if}>{tr}My forum topics{/tr}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_forum_replies" {if $user_prefs.mytiki_forum_replies eq 'y'}checked="checked"{/if}>{tr}My forum replies{/tr}
+                            </label>
+                        </div>
+                    {/if}
+                    {if $prefs.feature_trackers eq 'y'}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_items" {if $user_prefs.mytiki_items eq 'y'}checked="checked"{/if}>{tr}My user items{/tr}
+                            </label>
+                        </div>
+                    {/if}
+                    {if $prefs.feature_articles eq 'y'}
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input class="form-check-input" type="checkbox" name="mytiki_articles" {if $user_prefs.mytiki_articles eq 'y'}checked="checked"{/if}>{tr}My articles{/tr}
+                            </label>
+                        </div>
+                    {/if}
+                </div>
+                </div>
+                {if $prefs.feature_userlevels eq 'y'}
+                    <div class="mb-3 row clearfix">
+                        <label class="col-form-label col-md-4" for="mylevel">
+                            {tr}My level{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <select class="form-select" name="mylevel" id="mylevel">
+                                {foreach key=levn item=lev from=$prefs.userlevels}
+                                    <option value="{$levn}"{if $user_prefs.mylevel eq $levn} selected="selected"{/if}>{$lev}</option>
+                                {/foreach}
+                            </select>
+                        </div>
+                    </div>
+                {/if}
+                <div class="mb-3 row">
+                        <label class="col-form-label col-md-4" for="remember_closed_rboxes">
+                            {tr}Keep closed remarksbox hidden{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <input type="checkbox" name="remember_closed_rboxes" id="remember_closed_rboxes" {if $user_prefs.remember_closed_rboxes eq 'y'}checked="checked"{/if}>
+                            <p class="text-info">
+                                {tr}Remember which remarksbox (alert box) you have closed and don't show them again{/tr}.<br>
+                            </p>
+                        </div>
+                    <label class="col-form-label col-md-4">
+                        {tr}Reset remark boxes visibility{/tr}
+                    </label>
+                    <div class="col-md-8">
+                        {button _text="{tr}Reset{/tr}" _onclick="if (confirm('{tr}This will reset the visibility of all the tips, notices and warning remarks boxes you have closed.{/tr}')) {ldelim}deleteCookie('rbox');{rdelim}return false;" _class='btn-sm'}
+                    </div>
+                </div>
+
+                {if $prefs.webmonetization_enabled eq 'y'}
+                    <legend>{tr}Web Monetization{/tr}</legend>
+                    <div class="mb-3 row clearfix">
+                        <label class="col-form-label col-md-4" for="webmonetization_payment_pointer">
+                            {tr}Payment pointer{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" name="webmonetization_payment_pointer" id="webmonetization_payment_pointer" value="{$user_prefs.webmonetization_payment_pointer}">
+                
