@@ -593,4 +593,162 @@
                         </label>
                         <div class="col-md-8">
                             <input type="text" class="form-control" name="webmonetization_payment_pointer" id="webmonetization_payment_pointer" value="{$user_prefs.webmonetization_payment_pointer}">
-                
+                        </div>
+                    </div>
+                    <div class="mb-3 row clearfix">
+                        <label class="col-form-label col-md-4" for="webmonetization_paywall_text">
+                            {tr}Default paywall text{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <textarea id='webmonetization_paywall_text' type="text" rows="5" name="webmonetization_paywall_text" class="form-control">{$user_prefs.webmonetization_paywall_text|escape}</textarea>
+                        </div>
+                    </div>
+                {/if}
+
+                <div class="submit text-center">
+                    <input type="submit" class="btn btn-primary" name="new_prefs" value="{tr}Save changes{/tr}">
+                </div>
+            </form>
+        {/tab}
+    {/if}
+    {if $prefs.change_password neq 'n' or ! ($prefs.login_is_email eq 'y' and $userinfo.login neq 'admin')}
+        {tab name="{tr}Account Information{/tr}"}
+            <h2>{tr}Account Information{/tr}</h2>
+            <form action="tiki-user_preferences.php" method="post">
+                {include file='password_jq.tpl'}
+                {ticket}
+                <input type="hidden" name="view_user" value="{$userwatch|escape}">
+                    {if $prefs.auth_method neq 'cas' || ($prefs.cas_skip_admin eq 'y' && $user eq 'admin')}
+                        {if $prefs.change_password neq 'n' and ($prefs.login_is_email ne 'y' or $userinfo.login eq 'admin')}
+                            {remarksbox type="tip" title="{tr}Information{/tr}" close="n"}
+                                {tr}Leave "New password" and "Confirm new password" fields blank to keep current password{/tr}
+                            {/remarksbox}
+                        {/if}
+                    {/if}
+                    <div class="mb-3 row">
+                        <label class="col-md-4 col-form-label" for="username-autocomplete">
+                            {tr}Username:{/tr}
+                        </label>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" name="username-autocomplete" id="username-autocomplete" disabled="disabled" value="{$userinfo.login|escape}" autocomplete="username">
+                        </div>
+                    </div>
+                    {if $prefs.login_is_email eq 'y' and $userinfo.login neq 'admin'}
+                        <input type="hidden" name="email" value="{$userinfo.email|escape}">
+                    {else}
+                        <div class="mb-3 row">
+                            <label class="col-md-4 col-form-label" for="email">
+                                {tr}Email address:{/tr}
+                            </label>
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" name="email" id="email" value="{$userinfo.email|escape}" autocomplete="email">
+                            </div>
+                        </div>
+                    {/if}
+                    {if $prefs.auth_method neq 'cas' || ($prefs.cas_skip_admin eq 'y' && $user eq 'admin')}
+                        {if $prefs.change_password neq 'n'}
+                            <div class="mb-3 row">
+                                <label class="col-md-4 col-form-label" for="pass1">
+                                    {tr}New password:{/tr}
+                                </label>
+                                <div class="col-md-8">
+                                    <input class="form-control" type="password" name="pass1" id="pass1" autocomplete="new-password">
+                                    <div style="ms-1">
+                                        <div id="mypassword_text">{icon name='ok' istyle='display:none'}{icon name='error' istyle='display:none' } <span id="mypassword_text_inner"></span></div>
+                                        <div id="mypassword_bar" style="font-size: 5px; height: 2px; width: 0px;"></div>
+                                    </div>
+                                    <div style="mt-1">
+                                        {include file='password_help.tpl'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 row">
+                                <label class="col-md-4 col-form-label" for="pass2">
+                                    {tr}Confirm new password:{/tr}
+                                </label>
+                                <div class="col-md-8">
+                                    <input class="form-control" type="password" name="pass2" id="pass2" autocomplete="new-password">
+                                </div>
+                            </div>
+                        {/if}
+                        {if $tiki_p_admin ne 'y' or $userwatch eq $user}
+                            <div class="mb-3 row">
+                                <label class="col-md-4 col-form-label" for="pass">
+                                    {tr}Current password (required):{/tr}
+                                </label>
+                                <div class="col-md-8">
+                                    <input class="form-control" type="password" name="pass" id="pass" autocomplete="current-password">
+                                </div>
+                            </div>
+                        {/if}
+                    {/if}
+                    <div class="submit text-center">
+                        <input type="submit" class="btn btn-primary btn-sm" name="chgadmin" value="{tr}Save changes{/tr}">
+                    </div>
+            </form>
+        {/tab}
+    {/if}
+    {if $prefs.twoFactorAuth eq 'y' and ($tiki_p_admin ne 'y' or $userwatch eq $user)}
+        {tab name="{tr}Security{/tr}"}
+            <h2>{tr}Two-Factor Authentication{/tr}</h2>
+        {remarksbox type="tip"}
+        {tr}Two-factor authentication is a security measure that requires an extra code when you log in. When enabled,
+            Tiki will require a code from your mobile phone during login. This code is created by the Google Authenticator®.{/tr}
+        {/remarksbox}
+        {if $tfaSecret }
+            <form action="tiki-user_preferences.php" method="post">
+                {ticket}
+                <div class="mb-3 row">
+                    <div class="col-md-5">
+                        <img class="responsive" src="data:image/{$imageType};base64,{$tfaSecretQR}"/>
+                    </div>
+                    <div class="col-md-7 align-content-center">
+                        <div class="d-flex align-items-center" style="height: 100%">
+                            <div class="well">
+                                {tr}Install a soft token authenticator like FreeOTP or Google Authenticator from your application repository and use that app to scan this QR code. More information is available in the documentation.{/tr}
+                                <div style="margin-top: 20px" class="mb-3">
+                                    <label for="exampleInputEmail1">Pin Code</label>
+                                    <input type="text" class="form-control" name="tfaPin">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="text" value="{$tfaSecret}" hidden name="tfaSecret">
+                <div class="submit text-center">
+                    <input type="submit" class="btn btn-secondary btn-sm" name="twofactor" value="{tr}Enable Two-Factor Auth{/tr}">
+                </div>
+            </form>
+        {else}
+            <form action="tiki-user_preferences.php" method="post">
+                {ticket}
+                <div class="submit text-center">
+                    <input type="submit" class="btn btn-danger btn-sm" name="removetwofactor" value="{tr}Disable Two-Factor Auth{/tr}">
+                    <a href="tiki-user_preferences.php?tfagenerate=true" class="btn btn-secondary btn-sm">{tr}Regenerate Two-Factor Auth{/tr}</a>
+                </div>
+            </form>
+        {/if}
+        {/tab}
+    {/if}
+    {if $tiki_p_delete_account eq 'y' and $userinfo.login neq 'admin'}
+        {tab name="{tr}Account Deletion{/tr}"}
+            <div class="jumbotron text-center">
+                <h2>{tr}Account Deletion{/tr}</h2>
+                <form role="form" action="tiki-user_preferences.php" method="post">
+                    {ticket}
+                    {if !empty($userwatch)}<input type="hidden" name="view_user" value="{$userwatch|escape}">{/if}
+                    <p>
+                        <div class="form-check">
+                        <label for="deleteaccountconfirm" class="form-check-label">
+                            <input type='checkbox' class="form-check-input" name='deleteaccountconfirm' id="deleteaccountconfirm" value='1'> {tr}Check this box if you really want to delete the account{/tr}
+                        </label>
+                        </div>
+                    </p>
+                    <p>
+                        <input type="submit" class="btn btn-danger btn-lg" name="deleteaccount" value="{if !empty($userwatch)}{tr}Delete the account:{/tr} {$userwatch|escape}{else}{tr}Delete my account{/tr}{/if}" onclick="confirmPopup('{tr _0=$userwatch|escape}Delete account for %0?{/tr}')">
+                    </p>
+                </form>
+            </div>
+        {/tab}
+    {/if}
+{/tabset}
