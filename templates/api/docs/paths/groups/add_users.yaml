@@ -1,0 +1,28 @@
+---
+post:
+  description: Add users to group
+  requestBody:
+    required: true
+    content:
+      application/x-www-form-urlencoded:
+        schema:
+          type: object
+          required:
+            - group
+          properties:
+            group:
+              type: string
+            items:
+              type: array
+              items:
+                type: string
+  responses:
+    '200':
+      description: add users response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              feedback:
+                type: object
