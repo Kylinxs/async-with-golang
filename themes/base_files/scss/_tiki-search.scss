@@ -1,0 +1,19 @@
+// $Id$
+
+.searchresults {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.searchresults li {
+    margin: 10px 0 0;
+}
+
+@media (max-width: breakpoint-max(sm)) {
+    .searchresults li {
+        margin: 25px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid $nav-tabs-border-color;
+    }
+}
