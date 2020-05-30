@@ -1,0 +1,13 @@
+---
+type: object
+required:
+  - code
+  - errortitle
+  - message
+properties:
+  code:
+    type: integer
+  errortitle:
+    type: string
+  message:
+    type: string
