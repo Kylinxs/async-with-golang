@@ -108,4 +108,35 @@ textarea,
 }
 
 .simplebox {
-    border: 2px sol
+    border: 2px solid #a82a76;
+}
+
+/***** Tables, Tabs *****/
+/** Tables **/
+
+.normal,
+.wikitable {
+    border: 2px solid #a82a76;
+}
+
+.caltable .odd,
+.caltable .even,
+.caltable .calborder,
+.wikicell {
+    border: 2px solid #efcde5;
+}
+
+.caltable td.calhighlight,
+td.calheadhighlight {
+    background: #ddf4ef;
+}
+
+.odd {
+    background: #faf1f8;
+}
+
+.even {
+    background: #f4dded;
+}
+
+/* End of File */
