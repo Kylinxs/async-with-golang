@@ -388,4 +388,245 @@ class TrackerDatesTimezoneTest extends TikiTestCase
         $fields = $definition->getFields();
         self::$trklib->modify_field($itemId, $fields[0]['fieldId'], $d);
         self::$trklib->modify_field($itemId, $fields[1]['fieldId'], $dt);
-        self::$trklib->modify_field($itemI
+        self::$trklib->modify_field($itemId, $fields[2]['fieldId'], $d);
+        self::$trklib->modify_field($itemId, $fields[3]['fieldId'], $dt);
+
+        date_default_timezone_set('UTC');
+        $prefs['display_timezone'] = self::$est;
+
+        // stored previously in IST but current display is EST
+        $values = $this->getItemValues($itemId);
+        $this->assertEquals('2021-05-31', $values['test_date_legacy']);
+        $this->assertEquals('2021-06-01 00:30', $values['test_datetime_legacy']);
+        $this->assertEquals('2021-05-31', $values['test_date']);
+        $this->assertEquals('2021-06-01 00:30', $values['test_datetime']);
+
+        $d = TikiDate::shiftToNearestGMT($d);
+        self::$trklib->modify_field($itemId, $fields[0]['fieldId'], $d);
+        self::$trklib->modify_field($itemId, $fields[2]['fieldId'], $d);
+
+        // updated values should fix the dates
+        $values = $this->getItemValues($itemId);
+        $this->assertEquals('2021-06-01', $values['test_date_legacy']);
+        $this->assertEquals('2021-06-01', $values['test_date']);
+    }
+
+    public function testQueryFilters(): void
+    {
+        global $prefs;
+
+        date_default_timezone_set('UTC');
+        $d = strtotime('2021-06-01');
+        $dt = strtotime('2021-06-01 10:00:00');
+
+        date_default_timezone_set(self::$ist);
+        $prefs['display_timezone'] = self::$ist;
+
+        $itemId = $this->createItem([
+            'test_date_legacy' => '2021-06-01',
+            'test_datetime_legacy' => '2021-06-01 10:00:00',
+            'test_date' => $d - 180 * 60,
+            'test_datetime' => $dt - 180 * 60,
+        ], -180);
+
+        require_once('lib/search/refresh-functions.php');
+        refresh_index('trackeritem', $itemId);
+
+        $results = [
+            'test_date_legacy' => 1,
+            'test_datetime_legacy' => 1,
+            'test_date' => 1,
+            'test_datetime' => 1,
+        ];
+
+        foreach ($results as $field => $expectedCount) {
+            $query = self::$unifiedlib->buildQuery([
+                'type' => 'trackeritem',
+                'object_id' => $itemId,
+            ]);
+
+            $subquery = new Search_Query(null, 'or');
+
+            $filter = Tracker\Filter\Collection::getFilter('test_date', 'range', true);
+            $input = new JitFilter([
+                'tf_' . $field . '_range_from' => $d - 180 * 60,
+                'tf_' . $field . '_range_to' => $d - 180 * 60,
+                'tzoffset' => -180,
+            ]);
+            $filter->applyInput($input);
+            $filter->applyCondition($subquery);
+
+            $query->getExpr()->addPart($subquery->getExpr());
+
+            $result = $query->search(self::$unifiedlib->getIndex());
+            $resultArray = $result->getArrayCopy();
+
+            $this->assertCount($expectedCount, $resultArray, "Field: $field");
+        }
+    }
+
+    public function testTrackerBuildDate(): void
+    {
+        global $prefs;
+        date_default_timezone_set('UTC');
+        $prefs['display_timezone'] = self::$ist;
+
+        $ins_id = "ins_123";
+        $input = [
+            $ins_id . 'Year' => '2021',
+            $ins_id . 'Month' => '6',
+            $ins_id . 'Day' => '1',
+            $ins_id . 'Hour' => '10',
+            $ins_id . 'Minute' => '00',
+        ];
+
+        $timestamp = self::$trklib->build_date($input, 'dt', $ins_id);
+        date_default_timezone_set($prefs['display_timezone']);
+        $this->assertEquals('2021-06-01 10:00:00', date('Y-m-d H:i:s', $timestamp));
+    }
+
+    public function testTrackerFilter(): void
+    {
+        global $prefs;
+
+        date_default_timezone_set('UTC');
+        $d = strtotime('2021-06-01');
+        $dt = strtotime('2021-06-01 10:00:00');
+
+        date_default_timezone_set(self::$ist);
+        $prefs['display_timezone'] = self::$ist;
+
+        $utilities = new Services_Tracker_Utilities();
+        $utilities->clearTracker(self::$trackerId);
+
+        $itemId = $this->createItem([
+            'test_date_legacy' => '2021-06-01',
+            'test_datetime_legacy' => '2021-06-01 10:00:00',
+            'test_date' => $d - 180 * 60,
+            'test_datetime' => $dt - 180 * 60,
+        ], -180);
+
+        $ins_id = "ins_123";
+        $input = [
+            $ins_id . 'Year' => '2021',
+            $ins_id . 'Month' => '6',
+            $ins_id . 'Day' => '1',
+            $ins_id . 'Hour' => '10',
+            $ins_id . 'Minute' => '00',
+        ];
+
+        $timestamps = [
+            'test_date_legacy' => self::$trklib->build_date($input, 'd', $ins_id) + TikiDate::tzServerOffset(TikiLib::lib('tiki')->get_display_timezone(), $d),
+            'test_datetime_legacy' => self::$trklib->build_date($input, 'dt', $ins_id),
+            'test_date' => self::$trklib->build_date($input, 'd', $ins_id) + TikiDate::tzServerOffset(TikiLib::lib('tiki')->get_display_timezone(), $d),
+            'test_datetime' => self::$trklib->build_date($input, 'dt', $ins_id),
+        ];
+
+        $results = [
+            'test_date_legacy' => 1,
+            'test_datetime_legacy' => 1,
+            'test_date' => 1,
+            'test_datetime' => 1,
+        ];
+
+        foreach ($timestamps as $permName => $timestamp) {
+            $definition = Tracker_Definition::get(self::$trackerId);
+            $field = $definition->getFieldFromPermName($permName);
+
+            $items = self::$trklib->list_items(
+                self::$trackerId,
+                0,
+                -1,
+                '',
+                '',
+                [$field['fieldId']],
+                '',
+                '',
+                '',
+                [$timestamp]
+            );
+            $this->assertCount($results[$permName], $items['data'], "Field: $permName");
+        }
+    }
+
+    private function executeTest($input, $output, $index, $tzoffset = null)
+    {
+        $itemId = $this->createItem($input, $tzoffset);
+        $values = $this->getItemValues($itemId);
+        foreach (['test_date_legacy', 'test_datetime_legacy', 'test_date', 'test_datetime'] as $field) {
+            if (is_array($output[$field])) {
+                $this->assertContains($values[$field], $output[$field], "Field: $field");
+            } else {
+                $this->assertEquals($output[$field], $values[$field], "Field: $field");
+            }
+        }
+
+        require_once('lib/search/refresh-functions.php');
+        refresh_index('trackeritem', $itemId);
+
+        $query = self::$unifiedlib->buildQuery([
+            'type' => 'trackeritem',
+            'object_id' => $itemId,
+        ]);
+        $result = $query->search(self::$unifiedlib->getIndex());
+        $resultArray = $result->getArrayCopy();
+
+        foreach (['test_date_legacy', 'test_datetime_legacy', 'test_date', 'test_datetime'] as $field) {
+            if (is_array($index[$field])) {
+                $this->assertContains($resultArray[0]['tracker_field_' . $field], $index[$field], "Field: $field");
+            } else {
+                $this->assertEquals($index[$field], $resultArray[0]['tracker_field_' . $field], "Field: $field");
+            }
+        }
+    }
+
+    private function createItem($fieldValues, $tzoffset = null)
+    {
+        $definition = Tracker_Definition::get(self::$trackerId);
+        $fields = $definition->getFields();
+        $input = ['fields' => $fieldValues];
+        if (! empty($fieldValues['test_date_legacy'])) {
+            $date = explode('-', $fieldValues['test_date_legacy']);
+            $input['ins_' . $fields[0]['fieldId'] . 'Year'] = intval($date[0]);
+            $input['ins_' . $fields[0]['fieldId'] . 'Month'] = intval($date[1]);
+            $input['ins_' . $fields[0]['fieldId'] . 'Day'] = intval($date[2]);
+        }
+        if (! empty($fieldValues['test_datetime_legacy'])) {
+            list($date, $time) = explode(' ', $fieldValues['test_datetime_legacy']);
+            $date = explode('-', $date);
+            $time = explode(':', $time);
+            $input['ins_' . $fields[1]['fieldId'] . 'Year'] = intval($date[0]);
+            $input['ins_' . $fields[1]['fieldId'] . 'Month'] = intval($date[1]);
+            $input['ins_' . $fields[1]['fieldId'] . 'Day'] = intval($date[2]);
+            $input['ins_' . $fields[1]['fieldId'] . 'Hour'] = intval($time[0]);
+            $input['ins_' . $fields[1]['fieldId'] . 'Minute'] = $time[1];
+        }
+        if (! empty($tzoffset)) {
+            $input['tzoffset'] = $tzoffset;
+        }
+        $itemObject = Tracker_Item::newItem(self::$trackerId);
+        $processedFields = $itemObject->prepareInput(new JitFilter($input));
+        foreach ($processedFields as $k => $f) {
+            $fields[$k]['value'] = isset($f['value']) ? $f['value'] : '';
+        }
+        return self::$trklib->replace_item(self::$trackerId, 0, ['data' => $fields], 'o');
+    }
+
+    private function getItemValues($itemId)
+    {
+        $result = [];
+        $definition = Tracker_Definition::get(self::$trackerId);
+        foreach (['test_date_legacy', 'test_datetime_legacy', 'test_date', 'test_datetime'] as $permName) {
+            $field = $definition->getFieldFromPermName($permName);
+            $result[$permName] = self::$trklib->field_render_value(
+                [
+                    'field' => $field,
+                    'process' => 'y',
+                    'list_mode' => 'csv',
+                    'itemId' => $itemId,
+                ]
+            );
+        }
+        return $result;
+    }
+}
