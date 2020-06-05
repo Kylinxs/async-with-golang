@@ -165,4 +165,44 @@
             {/if}
         </div>
     {/capture}
-    {
+    {if $cpt > 1}
+        <div class="freetagsbrowse">{$smarty.capture.browse}</div>
+    {/if}
+</form>
+<div class="freetagresult">
+    {if $tagString}
+        <h4>{tr}Results{/tr} <span class="badge bg-secondary">{$cantobjects}</span></h4>
+    {/if}
+    {if $cantobjects > 0}
+        <table class="table table-hover">
+            <tbody>
+                {section name=ix loop=$objects}
+                    <tr class="{cycle} freetagitemlist" >
+                        <td>
+                            <span class="label label-info">
+                                {tr}{$objects[ix].type|replace:"wiki page":"Wiki"|replace:"article":"Article"|regex_replace:"/tracker [0-9]*/":"tracker item"}{/tr}
+                                {if !empty($objects[ix].parent_object_id)} {tr}in{/tr} {object_link type=$objects[ix].parent_object_type id=$objects[ix].parent_object_id}{/if}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{$objects[ix].href}">
+                                {$objects[ix].name|strip_tags|escape}
+                            </a>
+                            <span class="form-text">
+                                {$objects[ix].description|strip_tags|escape}
+                            </span>
+                        </td>
+                        {if $tiki_p_unassign_freetags eq 'y' or $tiki_p_admin eq 'y'}
+                            <td>
+                                <a href="tiki-browse_freetags.php?del=1&amp;tag={$tag}{if $type}&amp;type={$type|escape:'url'}{/if}&amp;typeit={$objects[ix].type|escape:'url'}&amp;itemit={$objects[ix].name|escape:'url'}" title=":{tr}Delete Tag{/tr}" class="tips text-danger">
+                                    {icon name="delete"}
+                                </a>
+                            </td>
+                        {/if}
+                    </tr>
+                {/section}
+            </tbody>
+        </table>
+        {pagination_links cant=$cant step=$maxRecords offset=$offset}{/pagination_links}
+    {/if}
+</div>
