@@ -10377,4 +10377,431 @@ body.wikitext {
   color: #d33682;
   font-size: 120%;
 }
-.trackerpluginde
+.trackerplugindesc {
+  color: #073642;
+}
+.charCount {
+  color: #073642;
+}
+.imgbox {
+  border: 1px solid #002b36;
+  background-color: #073642;
+}
+.wp-cookie-consent-required {
+  color: #d33682;
+}
+.wp-sign {
+  color: #fff;
+  background-color: #000;
+}
+.wp-sign a, .wp-sign a:visited {
+  color: white;
+}
+.wp-sign a:hover, .wp-sign a:visited:hover {
+  color: white;
+  text-decoration: none;
+}
+.toc {
+  border-top: 1px dotted #dee2e6;
+  border-bottom: 1px dotted #dee2e6;
+}
+.diff td {
+  border: 1px solid #495057;
+}
+.diff div {
+  border-top: 1px solid #dee2e6;
+}
+.diffadded {
+  background: #2aa198;
+  --bs-table-bg: #2aa198;
+  color: #d6f4f2;
+}
+.diffdeleted {
+  background: #d33682;
+  --bs-table-bg: #d33682;
+  color: white;
+}
+.diffadded a, .diffadded a:hover {
+  color: white;
+}
+.diffdeleted a, .diffdeleted a:hover {
+  color: white;
+}
+.diffinldel {
+  background: #cb4b16;
+}
+.diffbody {
+  background: #eee8d5;
+  --bs-table-bg: #eee8d5;
+  color: #495057;
+}
+.diffchar {
+  color: white;
+}
+.diffadded .diffchar {
+  color: #d6f4f2;
+}
+/* Structures drill-down menu */
+div.drillshow {
+  border: 1px solid #dee2e6;
+}
+.breadcrumb {
+  font-style: normal;
+}
+.nav-breadcrumb {
+  display: flex;
+  justify-content: space-between;
+}
+.tiki .ui-widget-content, span.plugin-mouseover {
+  background: #073642;
+  color: #839496;
+  border: 1px solid #002b36;
+}
+.tiki .ui-widget-header {
+  background: #073642;
+  color: #839496;
+  border-color: #002b36;
+}
+.tiki .ui-dialog-content {
+  background: #073642;
+  color: #839496;
+}
+.tiki .ui-dialog-content select, .tiki .ui-dialog-content input, .tiki .ui-dialog-content optgroup, .tiki .ui-dialog-content textarea {
+  background: #a9bdbd;
+  color: #073642;
+}
+.tiki .ui-widget button {
+  background: #fdf6e3;
+  color: #073642;
+}
+.tiki.tiki-listpages .ui-widget.ui-widget-content {
+  border: 1px solid #dee2e6;
+  background: #a9bdbd;
+  color: #073642;
+}
+.tiki.tiki-listpages .ui-widget.ui-widget-content .ui-menu-item-wrapper {
+  padding: 0.25rem 0.25rem 0.25rem 1.5rem;
+}
+.tiki.tiki-listpages .ui-widget.ui-widget-content .ui-state-active {
+  margin: 0;
+  background: #2aa198;
+  color: white;
+  border: none;
+}
+.tiki .modal-content .ui-state-default {
+  color: #2aa198;
+}
+.tiki .modal-content .ui-state-hover:hover {
+  color: #2aa198;
+}
+.tiki .col1 .table-responsive .table {
+  border: 1px solid #073642;
+}
+.codecaption {
+  display: inline-block;
+  color: #002b36;
+  background: #fdf6e3;
+  border: 1px solid #69e0ff;
+  border-bottom: none;
+  padding: 2px 9.5px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+code, pre.codelisting {
+  background: #fdf6e3;
+  border: 1px solid transparent;
+  padding: 0.1875rem 0.375rem;
+}
+code {
+  color: #002b36;
+}
+pre.codelisting {
+  color: var(--bs-body-color);
+  border-color: #dee2e6;
+  border-radius: 0.375rem;
+}
+pre.codelisting code {
+  color: inherit;
+  white-space: pre-wrap;
+}
+.edit-menu {
+  position: absolute;
+  top: 6px;
+  right: 2px;
+}
+@media (min-width: 768px) {
+  .edit-menu {
+    display: none;
+  }
+  .navbar-default:hover .edit-menu {
+    display: block;
+  }
+}
+.navbar-default .edit-menu {
+  top: 48px;
+}
+.adminoptionboxchild {
+  border-bottom: 1px solid inherit;
+}
+.adminoptionboxchild legend {
+  font-size: 1.35rem;
+}
+div.highlight.adminoptionbox a {
+  color: #fff !important;
+}
+input[type="checkbox"].preffilter-toggle-round + label {
+  background-color: #dee2e6;
+}
+input[type="checkbox"].preffilter-toggle-round + label:before {
+  color: #073642;
+  background-color: #a9bdbd;
+  border-color: #8ca7a7;
+}
+input[type="checkbox"].preffilter-toggle-round:checked + label:before {
+  background-color: #2aa198;
+  border-color: #826200;
+  color: white;
+}
+.tiki .ui-widget {
+  font-family: var(--bs-font-sans-serif);
+  font-size: 1rem;
+}
+.btn-primary.btn-files {
+  --bs-btn-color: #839496;
+  --bs-btn-bg: #839496;
+  --bs-btn-border-color: #839496;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #96a4a6;
+  --bs-btn-hover-border-color: #8f9fa1;
+  --bs-btn-focus-shadow-rgb: 131, 148, 150;
+  --bs-btn-active-color: #000;
+  --bs-btn-active-bg: #9ca9ab;
+  --bs-btn-active-border-color: #8f9fa1;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #839496;
+  --bs-btn-disabled-border-color: #839496;
+}
+.intertrans .switch {
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  margin: 6px;
+  transform: translateY(50%);
+  position: relative;
+}
+.intertrans .switch input {
+  display: none;
+}
+.intertrans .slider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 30px;
+  box-shadow: 0 0 0 2px #b1c5d8, 0 0 4px #3e4551;
+  cursor: pointer;
+  border: 4px solid transparent;
+  overflow: hidden;
+  transition: 0.4s;
+}
+.intertrans .slider:before {
+  position: absolute;
+  content: "";
+  width: 100%;
+  height: 100%;
+  background: #33b5e5;
+  border-radius: 30px;
+  transform: translateX(-30px);
+  transition: 0.4s;
+}
+.intertrans input:checked + .slider {
+  box-shadow: 0 0 0 2px #c1c2cd, 0 0 2px #f4f5ff;
+}
+.intertrans input:checked + .slider:before {
+  transform: translateX(0px);
+  background: #ff8800;
+}
+.permission_table .form-row {
+  margin-left: 0;
+  margin-right: 0;
+}
+.permission_table .form-row > .col {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.tiki-admin_modules .t_navbar .btn {
+  margin-right: 5px;
+}
+@media (max-width: 575.98px) {
+  .navbar-nav {
+    padding: 0 15px;
+    margin: 15px 0;
+  }
+  .tiki-view_tracker .t_navbar .btn-group > .btn:not(.dropdown-toggle), .tiki-view_tracker .t_navbar.btn-group > .btn:not(.dropdown-toggle), .tiki-admin_tracker_fields .t_navbar .btn-group > .btn:not(.dropdown-toggle), .tiki-admin_tracker_fields .t_navbar.btn-group > .btn:not(.dropdown-toggle), .tiki-lastchanges .t_navbar .btn-group > .btn:not(.dropdown-toggle), .tiki-lastchanges .t_navbar.btn-group > .btn:not(.dropdown-toggle), .tiki-admin_survey_questions .t_navbar .btn-group > .btn:not(.dropdown-toggle), .tiki-admin_survey_questions .t_navbar.btn-group > .btn:not(.dropdown-toggle), .tiki-assignuser .t_navbar .btn-group > .btn:not(.dropdown-toggle), .tiki-assignuser .t_navbar.btn-group > .btn:not(.dropdown-toggle), .tiki_user_messages .t_navbar .btn-group > .btn:not(.dropdown-toggle), .tiki_user_messages .t_navbar.btn-group > .btn:not(.dropdown-toggle), .tiki-view_banner .t_navbar .btn-group > .btn:not(.dropdown-toggle), .tiki-view_banner .t_navbar.btn-group > .btn:not(.dropdown-toggle) {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    border-radius: 0.25rem;
+  }
+  #pagehistory .multi .input-group-append {
+    display: block;
+    margin: 0 !important;
+  }
+  #pagehistory .multi .input-group-append .btn {
+    width: 100%;
+    margin-top: 5px;
+    border-radius: 0.25rem;
+  }
+  .t_navbar .btn-group {
+    display: inline-block;
+  }
+  .tiki-admin_menu_options #preview_code {
+    white-space: normal;
+  }
+  .tiki-wizard_admin #wizardBody {
+    margin-top: 2em;
+  }
+  .tiki-wizard_admin #wizardBody .media {
+    display: block;
+    margin-top: 1.5rem;
+  }
+  .tiki-page_contribution .wikitext {
+    word-break: break-word;
+  }
+  .nav-breadcrumb {
+    display: block;
+  }
+  .nav-breadcrumb .breadcrumb {
+    width: 100%;
+  }
+  .nav-breadcrumb .breadcrumb + form {
+    display: block !important;
+  }
+  .tiki-edit_translation .ui-dialog, .tiki-edit_structure .ui-dialog {
+    width: 100% !important;
+  }
+  #page-data.col-sm-9 {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .syslog-table textarea {
+    min-height: 5.5em;
+  }
+  .tiki .ui-dialog {
+    width: 80vw !important;
+  }
+}
+blockquote {
+  color: #595959;
+  border-left: 0.25rem solid #e5e5e5;
+}
+.to-translate {
+  color: #d33682;
+}
+.dropdown-menu.mega-menu a {
+  color: #839496;
+}
+.inline-cypht input[type="button"], .inline-cypht button, .inline-cypht input[type="submit"] {
+  --bs-btn-padding-x: 0.75rem;
+  --bs-btn-padding-y: 0.375rem;
+  --bs-btn-font-size: 1rem;
+  --bs-btn-font-weight: 400;
+  --bs-btn-line-height: 1.5;
+  --bs-btn-color: #fff;
+  --bs-btn-bg: transparent;
+  --bs-btn-border-width: 1px;
+  --bs-btn-border-color: transparent;
+  --bs-btn-border-radius: 0.375rem;
+  --bs-btn-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075);
+  --bs-btn-disabled-opacity: 0.65;
+  --bs-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), 0.5);
+  display: inline-block;
+  padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
+  font-family: var(--bs-btn-font-family);
+  font-size: var(--bs-btn-font-size);
+  font-weight: var(--bs-btn-font-weight);
+  line-height: var(--bs-btn-line-height);
+  color: var(--bs-btn-color);
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: var(--bs-btn-border-width) solid var(--bs-btn-border-color);
+  border-radius: var(--bs-btn-border-radius);
+  background-color: var(--bs-btn-bg);
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.inline-cypht input[type="button"]:hover, .inline-cypht button:hover, .inline-cypht input[type="submit"]:hover {
+  color: var(--bs-btn-hover-color);
+  text-decoration: none;
+  background-color: var(--bs-btn-hover-bg);
+  border-color: var(--bs-btn-hover-border-color);
+}
+.inline-cypht input[type="button"]:focus, .inline-cypht button:focus, .inline-cypht input[type="submit"]:focus {
+  color: var(--bs-btn-hover-color);
+  background-color: var(--bs-btn-hover-bg);
+  border-color: var(--bs-btn-hover-border-color);
+  outline: 0;
+  box-shadow: var(--bs-btn-focus-box-shadow);
+}
+.inline-cypht input[type="button"]:disabled, .inline-cypht button:disabled, .inline-cypht input[type="submit"]:disabled {
+  color: var(--bs-btn-disabled-color);
+  pointer-events: none;
+  background-color: var(--bs-btn-disabled-bg);
+  border-color: var(--bs-btn-disabled-border-color);
+  opacity: var(--bs-btn-disabled-opacity);
+}
+.filter_subblock button.add_filter, .filter_subblock button.add_script {
+  background-color: #839496;
+  color: #002b36;
+}
+.layout_basic .page-header.navbar-light-parent.bg-light-parent, .layout_classic .header_outer.bg-light-parent, .tiki-admin .navbar-light-parent, .tiki-admin .top_modules.navbar-light-parent, .layout_social header.navbar-light-parent.bg-light-parent, .layout_social header.navbar.navbar-light.bg-light {
+  background: var(--tiki-top-light-bg) !important;
+  color: var(--tiki-top-light-color);
+  box-shadow: var(--tiki-top-light-box-shadow);
+}
+.layout_basic .page-header.navbar-light-parent.bg-light-parent a:not(.dropdown-item), .layout_basic .page-header.navbar-light-parent.bg-light-parent .btn.btn-link, .layout_classic .header_outer.bg-light-parent a:not(.dropdown-item), .layout_classic .header_outer.bg-light-parent .btn.btn-link, .tiki-admin .navbar-light-parent a:not(.dropdown-item), .tiki-admin .navbar-light-parent .btn.btn-link, .tiki-admin .top_modules.navbar-light-parent a:not(.dropdown-item), .tiki-admin .top_modules.navbar-light-parent .btn.btn-link, .layout_social header.navbar-light-parent.bg-light-parent a:not(.dropdown-item), .layout_social header.navbar-light-parent.bg-light-parent .btn.btn-link, .layout_social header.navbar.navbar-light.bg-light a:not(.dropdown-item), .layout_social header.navbar.navbar-light.bg-light .btn.btn-link {
+  color: var(--tiki-top-light-link-color);
+}
+.layout_basic .page-header.navbar-light-parent.bg-light-parent a:not(.dropdown-item):hover, .layout_basic .page-header.navbar-light-parent.bg-light-parent .btn.btn-link:hover, .layout_classic .header_outer.bg-light-parent a:not(.dropdown-item):hover, .layout_classic .header_outer.bg-light-parent .btn.btn-link:hover, .tiki-admin .navbar-light-parent a:not(.dropdown-item):hover, .tiki-admin .navbar-light-parent .btn.btn-link:hover, .tiki-admin .top_modules.navbar-light-parent a:not(.dropdown-item):hover, .tiki-admin .top_modules.navbar-light-parent .btn.btn-link:hover, .layout_social header.navbar-light-parent.bg-light-parent a:not(.dropdown-item):hover, .layout_social header.navbar-light-parent.bg-light-parent .btn.btn-link:hover, .layout_social header.navbar.navbar-light.bg-light a:not(.dropdown-item):hover, .layout_social header.navbar.navbar-light.bg-light .btn.btn-link:hover {
+  color: var(--tiki-top-light-link-hover-color);
+  background: var(--tiki-top-light-link-hover-bg);
+}
+.layout_basic .topbar_modules.navbar-light.bg-light, .layout_classic .topbar-wrapper.bg-light-parent, .layout_social .topbar-wrapper.navbar-light-parent.bg-light-parent, .admin-content .bg-light {
+  background: var(--tiki-topbar-light-bg) !important;
+  color: var(--tiki-topbar-light-color);
+  border: var(--tiki-topbar-light-border);
+  border-width: var(--tiki-topbar-border-width);
+  box-shadow: var(--tiki-topbar-light-box-shadow);
+}
+.layout_basic .topbar_modules.navbar-light.bg-light a:not(.dropdown-item), .layout_basic .topbar_modules.navbar-light.bg-light .btn.btn-link, .layout_basic .topbar_modules.navbar-light.bg-light a.nav-link, .layout_classic .topbar-wrapper.bg-light-parent a:not(.dropdown-item), .layout_classic .topbar-wrapper.bg-light-parent .btn.btn-link, .layout_classic .topbar-wrapper.bg-light-parent a.nav-link, .layout_social .topbar-wrapper.navbar-light-parent.bg-light-parent a:not(.dropdown-item), .layout_social .topbar-wrapper.navbar-light-parent.bg-light-parent .btn.btn-link, .layout_social .topbar-wrapper.navbar-light-parent.bg-light-parent a.nav-link, .admin-content .bg-light a:not(.dropdown-item), .admin-content .bg-light .btn.btn-link, .admin-content .bg-light a.nav-link {
+  color: var(--tiki-topbar-light-link-color);
+}
+.layout_basic .topbar_modules.navbar-light.bg-light a:not(.dropdown-item):hover, .layout_basic .topbar_modules.navbar-light.bg-light .btn.btn-link:hover, .layout_basic .topbar_modules.navbar-light.bg-light a.nav-link:hover, .layout_classic .topbar-wrapper.bg-light-parent a:not(.dropdown-item):hover, .layout_classic .topbar-wrapper.bg-light-parent .btn.btn-link:hover, .layout_classic .topbar-wrapper.bg-light-parent a.nav-link:hover, .layout_social .topbar-wrapper.navbar-light-parent.bg-light-parent a:not(.dropdown-item):hover, .layout_social .topbar-wrapper.navbar-light-parent.bg-light-parent .btn.btn-link:hover, .layout_social .topbar-wrapper.navbar-light-parent.bg-light-parent a.nav-link:hover, .admin-content .bg-light a:not(.dropdown-item):hover, .admin-content .bg-light .btn.btn-link:hover, .admin-content .bg-light a.nav-link:hover {
+  color: var(--tiki-topbar-light-link-hover-color);
+  background: var(--tiki-topbar-light-link-hover-bg);
+}
+.layout_basic .page-header.navbar-dark-parent.bg-dark-parent, .layout_classic .header_outer.bg-dark-parent, .tiki-admin .navbar-dark-parent, .tiki-admin .top_modules.navbar-dark-parent, .layout_social header.navbar-light-parent.bg-dark-parent, .layout_social header.navbar.navbar-dark.bg-dark {
+  background: var(--tiki-top-dark-bg) !important;
+  color: var(--tiki-top-dark-color);
+  box-shadow: var(--tiki-top-dark-box-shadow);
+}
+.layout_basic .page-header.navbar-dark-parent.bg-dark-parent a:not(.dropdown-item), .layout_basic .page-header.navbar-dark-parent.bg-dark-parent .btn.btn-link, .layout_basic .page-header.navbar-dark-parent.bg-dark-parent a.nav-link, .layout_classic .header_outer.bg-dark-parent a:not(.dropdown-item), .layout_classic .header_outer.bg-dark-parent .btn.btn-link, .layout_classic .header_outer.bg-dark-parent a.nav-link, .tiki-admin .navbar-dark-parent a:not(.dropdown-item), .tiki-admin .navbar-dark-parent .btn.btn-link, .tiki-admin .navbar-dark-parent a.nav-link, .tiki-admin .top_modules.navbar-dark-parent a:not(.dropdown-item), .tiki-admin .top_modules.navbar-dark-parent .btn.btn-link, .tiki-admin .top_modules.navbar-dark-parent a.nav-link, .layout_social header.navbar-light-parent.bg-dark-parent a:not(.dropdown-item), .layout_social header.navbar-light-parent.bg-dark-parent .btn.btn-link, .layout_social header.navbar-light-parent.bg-dark-parent a.nav-link, .layout_social header.navbar.navbar-dark.bg-dark a:not(.dropdown-item), .layout_social header.navbar.navbar-dark.bg-dark .btn.btn-link, .layout_social header.navbar.navbar-dark.bg-dark a.nav-link {
+  color: var(--tiki-top-dark-link-color);
+}
+.layout_basic .page-header.navbar-dark-parent.bg-dark-parent a:not(.dropdown-item):hover, .layout_basic .page-header.navbar-dark-parent.bg-dark-parent .btn.btn-link:hover, .layout_basic .page-header.navbar-dark-parent.bg-dark-parent a.nav-link:hover, .layout_classic .header_outer.bg-dark-parent a:not(.dropdown-item):hover, .layout_classic .header_outer.bg-dark-parent .btn.btn-link:hover, .layout_classic .header_outer.bg-dark-parent a.nav-link:hover, .tiki-admin .navbar-dark-parent a:not(.dropdown-item):hover, .tiki-admin .navbar-dark-parent .btn.btn-link:hover, .tiki-admin .navbar-dark-parent a.nav-link:hover, .tiki-admin .top_modules.navbar-dark-parent a:not(.dropdown-item):hover, .tiki-admin .top_modules.navbar-dark-parent .btn.btn-link:hover, .tiki-admin .top_modules.navbar-dark-parent a.nav-link:hover, .layout_social header.navbar-light-parent.bg-dark-parent a:not(.dropdown-item):hover, .layout_social header.navbar-light-parent.bg-dark-parent .btn.btn-link:hover, .layout_social header.navbar-light-parent.bg-dark-parent a.nav-link:hover, .layout_social header.navbar.navbar-dark.bg-dark a:not(.dropdown-item):hover, .layout_social header.navbar.navbar-dark.bg-dark .btn.btn-link:hover, .layout_social header.navbar.navbar-dark.bg-dark a.nav-link:hover {
+  color: var(--tiki-top-dark-link-hover-color);
+  background: var(--tiki-top-dark-link-hover-bg);
+}
+.layout_basic .topbar_modules.bg-dark, .layout_classic .topbar-wrapper.bg-dark-parent, .layout_social .topbar-wrapper.navbar-dark-parent.bg-dark-parent, .admin-content .bg-dark {
+  background: var(--tiki-topbar-dark-bg) !important;
+  color: var(--tiki-topbar-dark-color);
+  border: var(--tiki-topbar-dark-border);
+  border-width: var(--tiki-topbar-border-width);
+  box-shadow: var(--tiki-topbar-dark-box-shadow);
+}
+.layout_basic .topbar_modules.bg-dark a:not(.dropdown-item), .layout_basic .topbar_modules.bg-dark .btn.btn-link, .layout_basic .topbar_modules.bg-dark a.nav-link, .layout_classic .topbar-wrapper.bg-dark-parent a:not(.dropdown-item), .layout_classic .topbar-wrapper.bg-dark-parent .btn.btn-link, .layout_classic .topbar-wrapper.bg-dark-parent a.nav-link, .layout_social .topbar-wrapper.navbar-dark-parent.bg-dark-parent a:not(.dropdown-item), .layout_social .topbar-wrapper.navbar-dark-parent.bg-dark-parent .btn.btn-link, .layout_social .topbar-wrapper.navbar-dark-parent.bg-dark-parent a.nav-link, .admin-content .bg-dark a:not(.dropdown-item), .admin-content .bg-dark .btn.btn-link, .admin-content .bg-dark a.nav-link {
+  color: var(--tiki-topbar-dark-link-color);
+}
+.layout_basic .topbar_modules.bg-dark a:not(.dropdown-item):hover, .layout_basic .topbar_modules.bg-dark .btn.btn-link:hover, .layout_basic .topbar_modules.bg-dark a.nav-link:hover, .layout_classic .topbar-wrapper.bg-dark-parent a:not(.dropdown-item):hover, .layout_classic .topbar-wrapper.bg-dark-parent .btn.btn-link:hover, .layout_classic .topbar-wrapper.bg-dark-parent a.nav-link:hover, .layout_social .topbar-wrapper.navbar-dark-parent.bg-dark-parent a:not(.dropdown-item):hover, .layout_social .topbar-wrapper.navbar-dark-parent.bg-dark-parent .btn.btn-link:hover, .layout_social .topbar-wrapper.navbar-dark-parent.bg-dark-parent a.nav-link:hover, .admin-content .bg-dark 
