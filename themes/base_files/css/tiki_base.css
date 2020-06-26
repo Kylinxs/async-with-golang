@@ -1,0 +1,763 @@
+@charset "UTF-8";
+/* $Id$
+    This Tiki Wiki CMS Groupware file contains global design
+    and layout properties. */
+:root {
+  --tiki-fixed-top-site-title-font-size: 1.8rem;
+  --tiki-fixed-top-site-title-font-weight: 700;
+  --tiki-fixed-top-site-subtitle-font-size: 1.4rem;
+  --tiki-fixed-top-site-subtitle-font-weight: 400;
+  --tiki-site-title-font-size: 2rem;
+  --tiki-site-title-font-weight: 700;
+  --tiki-site-subtitle-font-size: 1.5rem;
+  --tiki-site-subtitle-font-weight: 400;
+  --tiki-top-border-width: 0;
+  --tiki-static-top-light-border: none;
+}
+header.navbar.fixed-top {
+  --tiki-fixed-top-border-top-width: 0px;
+  --tiki-fixed-top-border-right-width: 0px;
+  --tiki-fixed-top-border-bottom-width: 0px;
+  --tiki-fixed-top-border-left-width: 0px;
+}
+.navbar-dark > a {
+  color: rgba(255, 255, 255, 0.55);
+}
+.navbar-dark > a:hover {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+}
+.navbar-dark .sitetitle a {
+  color: #fff;
+}
+.navbar-dark .sitetitle a:hover {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+}
+.warning a, .warning a:link, .warning a:visited {
+  color: #ffc107;
+}
+.module h3.card-title {
+  font-size: 1.25rem;
+}
+.calhighlight {
+  color: #fff;
+  background: #0dcaf0;
+}
+.calhighlight > a {
+  color: #fff;
+}
+a.fc-event:hover {
+  color: #fff;
+}
+.filter .fancyfilter {
+  border: thin solid #0d6efd;
+  /*black*/
+}
+.filter .fancyfilter .token {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  font-size: 11px;
+  padding: 3px;
+}
+.note-list .postbody-title {
+  background: #fff;
+  color: #212529;
+}
+.post-approved-n {
+  border-left: 3px dotted #198754;
+}
+.post-approved-r {
+  border-left: 3px double #ffc107;
+}
+.post-approved-r .content * {
+  background: url("../../../img/icons/dots.gif");
+}
+#topbar_modules_social .form-control {
+  margin-top: 0.5rem;
+}
+.dropdown-menu {
+  text-align: start !important;
+}
+.thumbinfosothers {
+  color: #e9ecef;
+}
+table.treetable.objectperms td.added {
+  background-color: #198754;
+}
+table.treetable.objectperms td.removed {
+  background-color: #ffc107;
+}
+.progressBarInProgress {
+  background-color: #0dcaf0;
+  color: #fff;
+}
+.progressBarComplete {
+  background-color: #198754;
+  color: #fff;
+}
+.progressBarError {
+  background-color: #ffc107;
+  color: #fff;
+}
+.progressContainer {
+  border: solid 1px var(--bs-border-color-translucent);
+  background-color: #fff;
+}
+.filter-panel-heading a:after {
+  color: #adb5bd;
+}
+.olControlMousePosition {
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+}
+.olControlScaleLineTop, .olControlScaleLineBottom {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+.ui-selectmenu-icon {
+  background-color: inherit;
+  border: solid 5px transparent !important;
+  -webkit-box-shadow: -5px 0 5px 2px rgba(0, 0, 0, 0.1), -1px 0 0 rgba(0, 0, 0, 0.1), -2px 0 0 rgba(255, 255, 255, 0.25);
+  box-shadow: -5px 0 5px 2px rgba(0, 0, 0, 0.1), -1px 0 0 rgba(0, 0, 0, 0.1), -2px 0 0 rgba(255, 255, 255, 0.25);
+}
+#resultzone > div:hover {
+  background: #198754;
+}
+.searchresults blockquote em, .highlight, .btn-primary.highlight a, .btn-primary a.highlight {
+  background: #dc3545;
+  color: #fff;
+  border-color: #bd2130;
+}
+.btn-primary.highlight:hover {
+  background: #a71d2a;
+}
+.btn-primary.btn-link, .btn-primary.btn-link:hover {
+  background: transparent;
+  border: none;
+}
+.tiki .wiki.external + .icon-link-external, .tiki .wiki.external .icon-link-external, .editable-inline .icon {
+  color: #0d6efd;
+}
+#ajaxLoadingBG {
+  background: transparent url("../../../img/overlay-light.png");
+}
+#ajaxLoading {
+  color: #dee2e6;
+  background: transparent url("../../../img/loading-light.gif") no-repeat 50% 50%;
+}
+#cookie_consent_div .description a {
+  color: #240dfd;
+  font-weight: bold;
+}
+html#print, body.print * {
+  background: #ffffff;
+  color: #000000;
+}
+body.fullscreen {
+  background: #ffffff;
+}
+.attention {
+  color: #dc3545;
+}
+#debugconsole {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.9);
+}
+#debugconsole form {
+  color: rgba(0, 0, 0, 0.9);
+}
+#debugconsole a {
+  color: rgba(0, 0, 0, 0.9);
+}
+#debugconsole a.btn {
+  color: rgba(0, 0, 0, 0.9);
+}
+a.icon, img.icon {
+  background: transparent;
+}
+div #metadata fieldset.tabcontent, div #metadata div.tabs {
+  background-color: transparent;
+}
+input:-webkit-autofill {
+  background-color: #fff !important;
+  /* needs important because Chrome has it already important */
+  background-image: none !important;
+  color: #212529 !important;
+  /* the Google guys forgot the number-one rule... when they specify background they should specify forgeround color too ;) */
+}
+#cboxTitle {
+  background-color: #fff;
+}
+#captchaImg {
+  border: 1px solid #dee2e6;
+}
+form.simple label.error {
+  background: url("../../../img/icons/error.png") no-repeat 0 4px;
+  color: #dc3545;
+}
+form.simple label .warning {
+  color: #dc3545;
+}
+.tiki-modal .mask {
+  background-color: #fff;
+}
+.ui-dialog {
+  background: #fff;
+  color: #212529;
+}
+.box-switch_lang .box-data img.highlight {
+  border: 0.1em solid #dc3545;
+}
+.box-switch_lang .box-data .highlight {
+  border: 0.1em solid #dc3545;
+}
+.box-switch_lang .flags .highlight {
+  border: solid 1px #0dcaf0;
+}
+.navbar-light .dropdown-toggle, .navbar-light a.nav-link.dropdown-toggle, .navbar-light h1.sitetitle a, .navbar-light h2.sitesubtitle {
+  color: rgba(0, 0, 0, 0.55);
+}
+.navbar-dark .dropdown-toggle, .navbar-dark a.nav-link.dropdown-toggle, .navbar-dark h1.sitetitle a, .navbar-dark h2.sitesubtitle {
+  color: rgba(255, 255, 255, 0.55);
+}
+.navbar-nav {
+  padding: 0;
+}
+.prio5 {
+  color: #212529;
+}
+.prio5 a {
+  color: #212529;
+}
+.prio4 {
+  color: #198754;
+}
+.prio4 a {
+  color: #198754;
+}
+.prio3 {
+  color: #0dcaf0;
+}
+.prio3 a {
+  color: #0dcaf0;
+}
+.prio2 {
+  color: #ffc107;
+}
+.prio2 a {
+  color: #ffc107;
+}
+.prio1 {
+  color: #dc3545;
+}
+.prio1 a {
+  color: #dc3545;
+}
+.messureadflag {
+  background: #adb5bd;
+}
+.messureadhead {
+  background: #adb5bd;
+}
+.messureadbody {
+  background: #dee2e6;
+}
+.readlink {
+  color: #212529;
+}
+.webmail_item {
+  font-size: 0.8rem;
+}
+.webmail_list .odd {
+  background: transparent;
+}
+.webmail_list .btn {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+.tiki_sheet table td {
+  border: 1px solid #dee2e6;
+}
+.odd {
+  background: transparent;
+  color: #212529;
+}
+.even {
+  background: transparent;
+  color: #212529;
+}
+.objectperms .checkBoxHeader:nth-of-type(odd) > div > label, .objectperms td.checkBoxCell:nth-of-type(odd), .objectperms .checkBoxHeader:nth-of-type(odd) > .checkBoxLabel {
+  background: rgba(0, 0, 0, 0);
+}
+.helptool-admin {
+  border-left: medium double #e9ecef;
+}
+.toolbar-list {
+  border-left: medium double #e9ecef;
+}
+.toolbars-picker {
+  background: #fff;
+  border: thin solid #212529;
+  color: #212529;
+}
+.toolbars-picker a {
+  border: 1px solid #fff;
+  color: #212529;
+}
+.toolbars-picker a:hover {
+  border: 1px solid #dc3545;
+  background: #dee2e6;
+  color: #212529;
+}
+.textarea-toolbar > div, .textarea-toolbar > ul {
+  background-color: #e9ecef;
+  border: outset 1px #e9ecef;
+}
+a.toolbar, li.toolbar {
+  /* each tool button */
+  border: none;
+  background: transparent;
+  color: #212529;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+}
+a.toolbar:hover, li.toolbar:hover {
+  color: #5a6570;
+  text-shadow: -1px -1px 4px rgba(0, 0, 0, 0.2);
+}
+a.toolbar:active, li.toolbar:active {
+  color: #dc3545;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+#intertrans-indicator {
+  background-color: #03657d;
+  color: #198754;
+}
+#intertrans-form {
+  background-color: #fff;
+  border: 1px solid var(--bs-border-color-translucent);
+  color: #212529;
+}
+#edit_translations tr.last {
+  border-bottom: 2px solid #198754;
+}
+ul.all_languages > li {
+  border: 1px solid #198754;
+}
+.plugin-mouseover {
+  background: #fff;
+  border: 1px solid var(--bs-border-color-translucent);
+}
+.mandatory_note {
+  color: #dc3545;
+}
+.author0 {
+  color: #198754;
+}
+.author1 {
+  color: #0dcaf0;
+}
+.author2 {
+  color: #0dcaf0;
+}
+.author3 {
+  color: #dc3545;
+}
+.author4 {
+  color: #195e87;
+}
+.author5 {
+  color: #590df0;
+}
+.author6 {
+  color: #6eff07;
+}
+.author7 {
+  color: #dcb035;
+}
+.author8 {
+  color: #2f1987;
+}
+.author9 {
+  color: #ca0df0;
+}
+.author10 {
+  color: #07ff6e;
+}
+.author11 {
+  color: #7ddc35;
+}
+.author12 {
+  color: #87195e;
+}
+.author13 {
+  color: #f00d7e;
+}
+.author14 {
+  color: #0798ff;
+}
+.author15 {
+  color: #35dc94;
+}
+.structuremenu .menuSection {
+  border-left: 1px dotted #adb5bd;
+}
+.cke_editable:hover {
+  outline: #adb5bd dotted 1px;
+}
+.tiki .cke_wysiwyg_frame, .tiki .cke_wysiwyg_div {
+  background: #fff;
+  color: #212529;
+}
+.tiki_plugin {
+  background-color: transparent;
+  border: 1px solid #dee2e6;
+}
+.unsavedChangesInEditor {
+  border: 1px solid;
+  border-color: #ffc107;
+}
+#autotoc .nav-link.active, #autotoc .nav-link.active:hover, #autotoc .nav-link.active:focus {
+  border-left-color: #0d6efd !important;
+}
+#autotoc .nav > li > a:hover, #autotoc .nav > li > a:focus {
+  border-left-color: #6c757d !important;
+}
+.autotoc > .nav {
+  background: #fff;
+  border: 1px solid var(--bs-border-color-translucent);
+  border-radius: 0.375rem;
+}
+.autotoc * {
+  color: #0d6efd;
+}
+.autotoc .nav > li > a:hover, .autotoc .nav .nav > li > a:hover {
+  color: #0a58ca;
+}
+.plugin-form-float {
+  background: #fff;
+  color: #212529;
+  border: solid 2px #212529;
+}
+body.wikitext {
+  background: #fff;
+  color: #212529;
+}
+.editable-inline {
+  padding-right: 20px;
+  display: inline-block;
+}
+.editable-inline .icon {
+  font-size: small;
+  margin-left: 0.4rem;
+}
+.editable-inline.loaded {
+  background: #fff;
+  padding: 6px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  z-index: 2;
+}
+.editable-inline.failure .icon {
+  opacity: 50%;
+}
+.editable-inline.modified {
+  border: solid 2px #dc3545;
+  padding: 2px;
+}
+.editable-inline.unsaved {
+  border: solid 2px #dc3545;
+}
+.TextArea-fullscreen, .TextArea-fullscreen .edit-zone-footer, .CodeMirror-fullscreen, .CodeMirror-fullscreen .edit-zone-footer {
+  background-color: #fff;
+}
+.TextArea-fullscreen .actions, .CodeMirror-fullscreen .actions {
+  background-color: #fff;
+  border-top: #dee2e6 1px solid;
+}
+#autosave_preview {
+  background-color: #fff;
+  color: #212529;
+}
+#autosave_preview_grippy {
+  background-color: #dee2e6;
+  background-image: url("../../../img/icons/shading.png");
+}
+.wiki .namespace {
+  background: #dee2e6;
+}
+.site_report a {
+  border-left: 1px solid #adb5bd;
+  border-right: 1px solid #adb5bd;
+}
+.quotebody {
+  border-left: 2px solid #dee2e6;
+}
+.mandatory_star {
+  color: #dc3545;
+  font-size: 120%;
+}
+.trackerplugindesc {
+  color: #343a40;
+}
+.charCount {
+  color: #343a40;
+}
+.imgbox {
+  border: 1px solid var(--bs-border-color-translucent);
+  background-color: #fff;
+}
+.wp-cookie-consent-required {
+  color: #dc3545;
+}
+.wp-sign {
+  color: #fff;
+  background-color: #000;
+}
+.wp-sign a, .wp-sign a:visited {
+  color: white;
+}
+.wp-sign a:hover, .wp-sign a:visited:hover {
+  color: white;
+  text-decoration: none;
+}
+.toc {
+  border-top: 1px dotted #dee2e6;
+  border-bottom: 1px dotted #dee2e6;
+}
+.diff td {
+  border: 1px solid #495057;
+}
+.diff div {
+  border-top: 1px solid #dee2e6;
+}
+.diffadded {
+  background: #198754;
+  --bs-table-bg: #198754;
+  color: #aff0d2;
+}
+.diffdeleted {
+  background: #dc3545;
+  --bs-table-bg: #dc3545;
+  color: white;
+}
+.diffadded a, .diffadded a:hover {
+  color: white;
+}
+.diffdeleted a, .diffdeleted a:hover {
+  color: white;
+}
+.diffinldel {
+  background: #ffc107;
+}
+.diffbody {
+  background: #e9ecef;
+  --bs-table-bg: #e9ecef;
+  color: #495057;
+}
+.diffchar {
+  color: white;
+}
+.diffadded .diffchar {
+  color: #aff0d2;
+}
+/* Structures drill-down menu */
+div.drillshow {
+  border: 1px solid #dee2e6;
+}
+.breadcrumb {
+  font-style: normal;
+}
+.nav-breadcrumb {
+  display: flex;
+  justify-content: space-between;
+}
+.tiki .ui-widget-content, span.plugin-mouseover {
+  background: #fff;
+  color: #212529;
+  border: 1px solid var(--bs-border-color-translucent);
+}
+.tiki .ui-widget-header {
+  background: #fff;
+  color: #212529;
+  border-color: var(--bs-border-color-translucent);
+}
+.tiki .ui-dialog-content {
+  background: #fff;
+  color: #212529;
+}
+.tiki .ui-dialog-content select, .tiki .ui-dialog-content input, .tiki .ui-dialog-content optgroup, .tiki .ui-dialog-content textarea {
+  background: #fff;
+  color: #212529;
+}
+.tiki .ui-widget button {
+  background: #f8f9fa;
+  color: #212529;
+}
+.tiki.tiki-listpages .ui-widget.ui-widget-content {
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #212529;
+}
+.tiki.tiki-listpages .ui-widget.ui-widget-content .ui-menu-item-wrapper {
+  padding: 0.25rem 0.25rem 0.25rem 1.5rem;
+}
+.tiki.tiki-listpages .ui-widget.ui-widget-content .ui-state-active {
+  margin: 0;
+  background: #0d6efd;
+  color: white;
+  border: none;
+}
+.tiki .modal-content .ui-state-default {
+  color: #0d6efd;
+}
+.tiki .modal-content .ui-state-hover:hover {
+  color: #0a58ca;
+}
+.tiki .col1 .table-responsive .table {
+  border: 1px solid var(--bs-border-color);
+}
+.codecaption {
+  display: inline-block;
+  color: #212529;
+  background: #f8f9fa;
+  border: 1px solid #b7bec5;
+  border-bottom: none;
+  padding: 2px 9.5px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+code, pre.codelisting {
+  background: #f8f9fa;
+  border: 1px solid transparent;
+  padding: 0.1875rem 0.375rem;
+}
+code {
+  color: #212529;
+}
+pre.codelisting {
+  color: var(--bs-body-color);
+  border-color: #dee2e6;
+  border-radius: 0.375rem;
+}
+pre.codelisting code {
+  color: inherit;
+  white-space: pre-wrap;
+}
+.edit-menu {
+  position: absolute;
+  top: 6px;
+  right: 2px;
+}
+@media (min-width: 768px) {
+  .edit-menu {
+    display: none;
+  }
+  .navbar-default:hover .edit-menu {
+    display: block;
+  }
+}
+.navbar-default .edit-menu {
+  top: 48px;
+}
+.adminoptionboxchild {
+  border-bottom: 1px solid inherit;
+}
+.adminoptionboxchild legend {
+  font-size: 1.35rem;
+}
+div.highlight.adminoptionbox a {
+  color: #fff !important;
+}
+input[type="checkbox"].preffilter-toggle-round + label {
+  background-color: #dee2e6;
+}
+input[type="checkbox"].preffilter-toggle-round + label:before {
+  color: #212529;
+  background-color: #fff;
+  border-color: #e6e6e6;
+}
+input[type="checkbox"].preffilter-toggle-round:checked + label:before {
+  background-color: #198754;
+  border-color: #0257d5;
+  color: white;
+}
+.tiki .ui-widget {
+  font-family: var(--bs-font-sans-serif);
+  font-size: 1rem;
+}
+.btn-primary.btn-files {
+  --bs-btn-color: #6c757d;
+  --bs-btn-bg: #6c757d;
+  --bs-btn-border-color: #6c757d;
+  --bs-btn-hover-color: #000;
+  --bs-btn-hover-bg: #828a91;
+  --bs-btn-hover-border-color: #7b838a;
+  --bs-btn-focus-shadow-rgb: 108, 117, 125;
+  --bs-btn-active-color: #000;
+  --bs-btn-active-bg: #899197;
+  --bs-btn-active-border-color: #7b838a;
+  --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #6c757d;
+  --bs-btn-disabled-border-color: #6c757d;
+}
+.intertrans .switch {
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  margin: 6px;
+  transform: translateY(50%);
+  position: relative;
+}
+.intertrans .switch input {
+  display: none;
+}
+.intertrans .slider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 30px;
+  box-shadow: 0 0 0 2px #b1c5d8, 0 0 4px #3e4551;
+  cursor: pointer;
+  border: 4px solid transparent;
+  overflow: hidden;
+  transition: 0.4s;
+}
+.intertrans .slider:before {
+  position: absolute;
+  content: "";
+  width: 100%;
+  height: 100%;
+  background: #33b5e5;
+  border-radius: 30px;
+  transform: translateX(-30px);
+  transition: 0.4s;
+}
+.intertrans input:checked + .slider {
+  box-shadow: 0 0 0 2px #c1c2cd, 0 0 2px #f4f5ff;
+}
+.intertrans input:checked + .slider:before {
+  transform: translateX(0px);
+  background: #ff8800;
+}
+.permission_table .form-row {
+  margin-left: 0;
+  margin-right: 0;
+}
+.permission_table .form-row > .col {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.tiki-admin_modules .t_navbar .btn {
+  margin-right: 5px;
+}
+@media (max-width: 575.98px) {
+  .navbar-nav {
+    padding: 0 15px;
+    margin: 15px 0;
+  }
+  .tiki-view

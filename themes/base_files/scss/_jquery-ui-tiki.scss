@@ -1,0 +1,84 @@
+// $Id$
+// For theme overrides of jQuery-UI styles
+
+.tiki {
+    .ui-widget-header {
+        background: $tiki-ui-default-bg;
+//        color: #fff;
+        border-color: $tiki-ui-default-border;
+    }
+    .ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited, a.ui-button, a:link.ui-button, a:visited.ui-button, .ui-button {
+        color: $tiki-ui-default-link-color;
+    }
+    .ui-state-active a, .ui-state-active a:link, .ui-state-active a:visited {
+        color: $tiki-ui-default-link-active-color;
+    //    background: $tiki-ui-default-link-active-bg;
+    }
+    .ui-state-default,
+    .ui-widget-content .ui-state-default,
+    .ui-widget-header .ui-state-default,
+    .ui-button,
+    html .ui-button.ui-state-disabled:hover,
+    html .ui-button.ui-state-disabled:active {
+        border: 1px solid;
+        border-color: $tiki-ui-default-border; //$btn-primary-border;
+        background: $tiki-ui-default-bg; //$btn-primary-bg;
+        font-weight: $tiki-ui-font-weight;
+        color: $tiki-ui-default-color; //$btn-primary-color;
+    }
+    .ui-state-active,
+    .ui-widget-content .ui-state-active,
+    .ui-widget-header .ui-state-active,
+    a.ui-button:active,
+    .ui-button:active,
+    .ui-button.ui-state-active:hover {
+        border: 1px solid;
+        border-color: $tiki-ui-active-border-color;
+        background: $tiki-ui-active-bg;
+        font-weight: $tiki-ui-font-weight;
+        color: $tiki-ui-active-color;
+    }
+//    .ui-state-default,
+//    .ui-widget-content .ui-state-default,
+//    .ui-widget-header .ui-state-default,
+    .ui-button,
+    html .ui-button.ui-state-disabled:hover,
+    html .ui-button.ui-state-disabled:active {
+        border: 1px solid;
+        border-color: $border-color; // $btn-primary-border; Temporary comment out (here and below) May 2022 Gary
+        background: $light; // $btn-primary-bg;
+        font-weight: $tiki-jq-ui-btn-font-weight;
+        color: $dark; // $btn-primary-color;
+        font-size: $font-size-base;
+    }
+//    .ui-widget-content,
+//    .ui-state-hover,
+//    .ui-widget-header .ui-state-hover,
+//    .ui-state-focus,
+    .ui-widget-content .ui-state-focus,
+    .ui-widget-header .ui-state-focus,
+    .ui-button:hover,
+    .ui-button:focus {
+        border: 1px solid $primary; // $btn-primary-border;
+        background: $light; // $btn-primary-bg;
+        font-weight: normal;
+        color: $primary; // $btn-primary-color;
+    }
+    .ui-widget-header a { color: $link-color; }
+    .ui-tabs-nav.ui-widget-header {
+        border-top: none;
+        border-left: none;
+        border-right: none;
+    }
+    .ui-tabs-nav {
+        .ui-state-default,
+        .ui-widget-content .ui-state-default,
+        .ui-widget-header .ui-state-default,
+        .ui-state-active,
+        .ui-widget-content .ui-state-active,
+        .ui-widget-header .ui-state-active,
+        .ui-state-default.ui-tab.ui-tabs-active.ui-state-active {
+            border-bottom-width: 0 !important;
+        }
+    }
+}
