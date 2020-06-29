@@ -1557,4 +1557,904 @@ footer.footer .modules > .module:not(.card) {
   font-weight: var(--tiki-fixed-top-site-subtitle-font-weight);
 }
 .navbar-fixed-top .sitesubtitle #topbar_modules, .layout_social .top_modules .sitesubtitle #topbar_modules, header.fixed-top .sitesubtitle #topbar_modules {
-  display: inline-bloc
+  display: inline-block;
+}
+.navbar-fixed-top .sitesubtitle select.form-control, .layout_social .top_modules .sitesubtitle select.form-control, header.fixed-top .sitesubtitle select.form-control {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.navbar-fixed-top .navbar, #navbar-collapse-social .navbar {
+  margin-bottom: 0;
+  min-height: 32px;
+}
+.box-menu .nav .nav-link {
+  padding-left: 0;
+  padding-right: 0;
+}
+@media (min-width: 576px) {
+  .layout_social_modules .navbar-header {
+    margin-top: -34px;
+  }
+}
+.box-search .form-inline .input-group {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+.box-search .form-inline .input-group .form-control {
+  width: auto;
+}
+.box-search .form-inline .input-group .input-group-append {
+  float: left;
+  width: auto;
+}
+.box-search .panel-body .form-inline .input-group {
+  width: 100%;
+}
+.box-search .panel-body .form-inline .input-group .input-group-addon, .box-search .panel-body .form-inline .input-group .input-group-append, .box-search .panel-body .form-inline .input-group .form-control {
+  width: 100%;
+}
+@media (max-width: 575.98px) {
+  .tiki-admin_modules .q1 {
+    width: 50%;
+    padding-right: 10px;
+  }
+  .tiki-admin_modules .q23 {
+    width: 50%;
+  }
+  .tiki-admin_modules .tips em {
+    display: block;
+    word-break: break-word;
+  }
+}
+.textarea-toolbar img.icon {
+  vertical-align: middle;
+  margin: 1px 3px;
+}
+.helptool-admin {
+  padding-left: 8px;
+  margin-left: 8px;
+}
+a.toolbar {
+  /* each tool button */
+  padding: 6px 4px;
+  display: inline-block;
+}
+.toolbar-list {
+  padding: 0 0 0 0.5em;
+  line-height: 20px;
+}
+.toolbars-picker {
+  position: absolute;
+  width: 128px;
+  z-index: 1050;
+  line-height: 12px;
+  padding: 4px;
+}
+.toolbars-picker.specialchar {
+  width: 25em;
+}
+.toolbars-picker a {
+  padding: 4px 0 4px 4px;
+  margin: 0;
+  display: inline-block;
+  overflow: hidden;
+}
+.toolbars-picker.color a, .toolbars-picker.bgcolor a {
+  width: 14px;
+  height: 12px;
+  padding: 0;
+}
+.toolbars-picker-reset {
+  width: 100% !important;
+  text-align: center;
+  border: none !important;
+}
+.toolbars-picker span {
+  display: block;
+  width: 14px;
+  height: 12px;
+}
+/* tiki-admin_toolbars.php toolbar icon alignment */
+a.cke_button span.cke_icon {
+  display: inline-block;
+  height: 16px;
+  width: 16px;
+  margin-top: -5px;
+}
+.error .rbox-data .adminoption, .error .rbox-data .adminoptionlabel {
+  display: inline;
+}
+.modules {
+  position: relative;
+}
+h3.card-title {
+  display: block;
+  padding-top: 0;
+  margin: 0;
+}
+.moduleflip {
+  display: none;
+  position: absolute;
+  right: 0.2rem;
+  top: 0.2rem;
+}
+.moduleflip > * {
+  padding: 0 0.2rem;
+}
+.moduleflip > form .close {
+  font-size: 1.3rem;
+}
+.flipmodtitle.close {
+  line-height: 0.75;
+}
+a.flipmodtitle .icon {
+  font-size: 80%;
+}
+.card:hover .moduleflip, .card:hover .moduleflip img {
+  display: block;
+}
+.card-body table {
+  width: 100%;
+}
+.card-body a.linkmenu {
+  display: block;
+}
+.card-body ol {
+  padding-left: 2rem;
+}
+.module .card-body > ol, .module .card-body > ul {
+  margin-left: -7px;
+  overflow: hidden;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.box-months_links ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+.box-months_links ul li {
+  list-style-type: none;
+  padding-left: 0.5em;
+}
+.box-months_links ul li li {
+  list-style-type: none;
+  padding-left: 1.3em;
+}
+.modcontrols > div > button.btn-link {
+  padding: 0;
+}
+.box-minichat {
+  width: 100%;
+}
+.minichat, .minichatdiv, .minichatchan {
+  overflow: auto;
+}
+#autosave_preview > div {
+  height: 30ex;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.module .card-footer {
+  display: none;
+}
+.ui-accordion .normal, .ui-accordion .normalnoborder, .ui-accordion .admin {
+  width: auto;
+}
+td.italiclabel {
+  text-align: right;
+  padding-right: 5px;
+  font-style: italic;
+}
+.normal td, .wikitable td, .odd, .even, .form, .editblogform td {
+  margin: 0;
+  padding: 3px;
+}
+.normal td, .wikitable td, td.odd, td.even {
+  padding: 0.2em;
+  border-collapse: collapse;
+}
+td.form {
+  padding: 0.2em;
+}
+td.integer {
+  text-align: right;
+}
+td.checkbox-cell {
+  text-align: center;
+  width: 20px;
+  position: relative;
+}
+td.action {
+  white-space: nowrap;
+}
+td.norecords {
+  text-align: left;
+  font-weight: bold;
+}
+td.id, td.icon {
+  text-align: center;
+}
+td.third, td.heading, tr.diffheader {
+  text-align: center;
+}
+td.numeric {
+  text-align: right;
+  padding-right: 1px;
+}
+/* Chrome & safari do not break urls or filenames at all. This causes
+    serious display issues within tables with long urls/filenames. */
+td.url {
+  word-break: break-all;
+}
+.normal.item th {
+  text-align: right;
+  padding: 0.2em 0.5em;
+}
+.normal.item td {
+  text-align: left;
+  padding: 0.2em 0.5em;
+}
+#score-table tbody.event-section tr:first-child {
+  background: #e9ecef;
+  color: #000;
+}
+#score-table .condition-row, .table .advanced-row {
+  padding: 1em;
+}
+#score-table .condition-row td {
+  border-bottom: none;
+}
+#score-table .advanced-row td {
+  border-top: none;
+}
+@media (min-width: 992px) {
+  .table-responsive > #score-table {
+    table-layout: auto;
+  }
+}
+@media only screen and (max-width: 575.98px) {
+  .btn.table-expand-toggle, .btn.tracker-resize-expand, .btn.tracker-resize-compress {
+    display: none;
+  }
+  .toggle-table-wrap {
+    width: 100%;
+    text-align: right;
+  }
+  .toggle-table-wrap .btn-link {
+    padding: 0;
+    padding-left: 0.75rem;
+    font-weight: 600;
+    font-size: 1.8em;
+    text-decoration: none !important;
+  }
+  .tiki #col1 .table-responsive .form-check-input {
+    position: static;
+    margin-left: 0;
+  }
+  .tiki #col1 .table-responsive .form-check .form-check-input {
+    margin-left: -1.25rem;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) thead th:not(.visible-header), .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody th:not(.visible-header) {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) thead th.visible-header, .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody th.visible-header {
+    display: inline-block;
+    border: none;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody th.visible-header {
+    padding-top: 0.35rem;
+    padding-bottom: 0.69rem;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) thead tr {
+    display: block;
+    width: calc(100vw - 30px);
+    padding: 0;
+    background-color: transparent;
+    border-bottom: 1px solid #dee2e6;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody tr {
+    position: relative;
+    display: block;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #dee2e6;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody td {
+    display: block;
+    padding: 0.25rem 0.75rem 0.5rem;
+    border-top: none;
+    text-align: left !important;
+    word-break: break-word;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody td:after {
+    display: block;
+    clear: both;
+    content: "";
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody td.icon + td.checkbox-cell {
+    position: absolute;
+    top: 40px;
+    left: 2px;
+    margin-left: 0;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody td.checkbox-cell {
+    width: auto;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody > tr.active {
+    display: none;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody td.checkall {
+    position: absolute;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody td.checkmargin {
+    margin-left: 30px;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody .header {
+    display: block !important;
+    font-weight: bold;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody .hidecell {
+    display: none;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody .float-right {
+    float: none !important;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody .form-check-input {
+    margin: 5px 0 0;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tbody .form-check {
+    padding-left: 0;
+  }
+  .tiki #col1 .table-responsive.large-table .table:not(.tablesorter):not(.caltable) tfoot tr {
+    display: block;
+  }
+  .tiki #col1 .table-responsive.large-table .table.caltable > tbody > tr:first-child > td:not(.visible-header) {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  .tiki #col1 .table-responsive.large-table .table.caltable .heading.weeks {
+    width: 50px;
+  }
+  .tiki #col1 .table-responsive.large-table .table.caltable .heading.weeks ~ td {
+    margin-bottom: 15px;
+  }
+  .tiki #col1 .table-responsive.large-table .table.caltable .header {
+    display: block !important;
+    font-weight: bold;
+  }
+  .tiki #col1 .table-responsive.large-table .table.caltable .text-muted, .tiki #col1 .table-responsive.large-table .table.caltable .even, .tiki #col1 .table-responsive.large-table .table.caltable .odd {
+    display: block;
+    width: 100%;
+  }
+  .tiki #col1 .table-responsive.large-table .table.caltable .even {
+    background: transparent;
+  }
+  .tiki #pagehistory .table-responsive.large-table .table:not(.tablesorter) tbody th.compare-pages {
+    float: right;
+  }
+  .tiki #pagehistory .table-responsive.large-table .table:not(.tablesorter) tbody tr td:nth-last-child(-n+2) {
+    display: inline-block;
+  }
+  .tiki #pagehistory .table-responsive.large-table .table:not(.tablesorter) tbody tr td:nth-last-child(-n+2) input[type=radio] {
+    position: absolute;
+    top: 15px;
+  }
+  .tiki #pagehistory .table-responsive.large-table .table:not(.tablesorter) tbody tr td:nth-last-child(2) input[type=radio] {
+    right: 65px;
+  }
+  .tiki #pagehistory .table-responsive.large-table .table:not(.tablesorter) tbody tr td:nth-last-child(1) input[type=radio] {
+    right: 20px;
+  }
+}
+.article .actions form {
+  display: inline;
+}
+.articletrailer span {
+  display: inline-block;
+  margin: auto;
+  white-space: nowrap;
+}
+.articletrailer .wikitopline {
+  float: left;
+}
+.articleheading .thumbnail {
+  margin-right: 1rem;
+  display: block;
+}
+.tiki_blogs .card.blogpost, .tiki_blogs .card.blogpost .card-header, .tiki_blogs .card.blogpost .card-footer {
+  background-color: transparent;
+  border: none;
+}
+.blogheading {
+  display: block;
+  width: 100%;
+  clear: both;
+}
+.blogdesc {
+  display: block;
+  width: 40%;
+  padding: 8px;
+  margin-top: 8px;
+  margin-left: 6px;
+}
+.bloginfo {
+  display: block;
+}
+.blogactions {
+  float: right;
+}
+.postinfo {
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+.postinfo div {
+  margin-top: 30%;
+}
+div.posthead {
+  text-align: left;
+  padding: 3px;
+}
+span.posthead {
+  display: block;
+}
+.postbody-title .panel-title {
+  font-size: 1.4em;
+}
+.breadcrumb {
+  font-style: normal;
+}
+small.description {
+  display: block;
+}
+.description {
+  font-size: 0.95em;
+  font-style: italic;
+}
+.related_posts, .related_articles {
+  margin-top: 3em;
+}
+.related_posts h4, .related_articles h4 {
+  margin: 0;
+}
+body.tiki_forums .normal {
+  margin: auto;
+}
+#forumpostopen {
+  display: block;
+}
+.post .postbody {
+  clear: both;
+  margin: 0;
+  padding: 0;
+}
+.post .postbody .content {
+  padding: 0 3px 3px 3px;
+  margin: 0;
+  text-align: left;
+}
+.post .postbody-title {
+  overflow: hidden;
+}
+.post .postbody-title .checkbox {
+  float: left;
+}
+.post .postbody-title .title {
+  margin-left: 5px;
+  margin-top: 3px;
+}
+.post .author_post_info {
+  padding-left: 4px;
+  padding-bottom: 4px;
+}
+.post .author_info .icons {
+  display: block;
+}
+.post .author_info .icons .actions {
+  margin-right: 10px;
+}
+.commentStyle_headers .author_info {
+  float: left;
+}
+.post .postbody .attachments {
+  clear: both;
+  margin-top: 5px;
+}
+.post .postbody .attachments img {
+  vertical-align: text-bottom;
+}
+.post .postfooter .rating {
+  display: inline;
+}
+.post .avatar {
+  float: right;
+  margin-bottom: 5px;
+  margin-left: 4px;
+  padding: 3px;
+}
+.post .forumDeliberationRatingForm {
+  width: 100%;
+  float: none !important;
+  text-align: right;
+}
+.postfooter-nav {
+  width: 100%;
+  display: block;
+  margin-top: 1em;
+}
+.postfooter-nav .postfooter-nav-prev {
+  text-align: left;
+  float: left;
+  width: 50%;
+}
+.postfooter-nav .postfooter-nav-next {
+  text-align: right;
+  float: right;
+  width: 50%;
+}
+.sub_comment {
+  padding-left: 20px;
+}
+.sub_comment_area {
+  clear: both;
+  background: url("../../../img/edge.gif") no-repeat top left;
+}
+.forum_actions .actions {
+  clear: both;
+  padding: 3px;
+  vertical-align: middle;
+}
+.forum_actions .actions .action {
+  margin-right: 10px;
+}
+.forum_actions .headers {
+  vertical-align: bottom;
+}
+.forum_actions .headers .title {
+  float: left;
+  border-bottom: 0;
+  padding: 1px;
+}
+.forum_actions .headers .infos {
+  float: right;
+  padding-top: 2px;
+}
+.nb_replies {
+  white-space: nowrap;
+}
+.post_preview, .top_post {
+  margin-bottom: 15px;
+}
+.filter-panel-heading a:after {
+  content: "−";
+  float: left;
+  margin-right: 15px;
+}
+.filter-panel-heading a.collapsed:after {
+  content: "+";
+}
+#comment-container {
+  display: none;
+  margin: 15px 0;
+}
+#comment-container-below {
+  display: none;
+}
+#comment-container h4, #comment-container-below h4 {
+  font-weight: bold;
+  font-size: 1.2em;
+}
+#comment-container .notitle h4, #comment-container-below .notitle h4 {
+  margin-bottom: 0.2em;
+}
+#comment-container .actions, #comment-container-below .actions {
+  float: right;
+}
+#comment-container .author_info, #comment-container-below .author_info {
+  padding: 0;
+}
+#comment-container .date, #comment-container-below .date {
+  font-style: italic;
+}
+#comment-container .commentRatingForm, #comment-container-below .commentRatingForm {
+  white-space: nowrap;
+  padding-left: 0.5em;
+  display: inline-block;
+}
+#comment-container .comment-item .actions {
+  display: none;
+}
+#comment-container .comment-item:hover .actions {
+  display: block;
+}
+#comment-container .comment-body, #comment-container-below .comment-body {
+  word-break: break-word;
+}
+dl.note-list {
+  margin: 0.5em;
+}
+#note-editor-comment {
+  padding: 0;
+  z-index: 2;
+}
+.subcomment {
+  margin-left: 10px;
+}
+#wikihelp-tab table td {
+  padding: 2px;
+}
+#note-editor-comment, .note-list .postbody-title {
+  padding: 0.5em;
+}
+.note-list .title a {
+  font-size: larger;
+  font-weight: bold;
+}
+.note-list .actions {
+  float: right;
+}
+.note-list .author {
+  font-size: smaller;
+  text-align: right;
+}
+@media (max-width: 575.98px) {
+  .comment .media.comment {
+    display: block;
+  }
+  .comment .media.comment .align-self-start {
+    float: left;
+  }
+  .comment .media.comment .userlink {
+    display: block;
+  }
+}
+body.filegal_popup #tiki-center {
+  margin: 0 1em;
+}
+.thumbinfosothers {
+  font-size: 95%;
+}
+.thumbdescription {
+  text-align: left;
+}
+/* ColorBox */
+#cboxTitle div {
+  overflow: auto;
+  margin: 3px 100px 0;
+}
+#cboxContent, #cboxLoadedContent {
+  min-width: 1.4%;
+}
+table.treetable {
+  padding-left: 19px;
+  width: 100%;
+}
+.treetable .checkBoxHeader {
+  font-size: 0.8em;
+}
+table.treetable.objectperms span.indenter {
+  display: inline;
+  width: auto;
+}
+table.treetable.objectperms .subHeader td {
+  font-weight: bold;
+}
+table.treetable .checkBoxHeader {
+  width: 5em;
+  white-space: nowrap;
+}
+table.treetable tr.collapsed span.indenter a {
+  background-image: url("../../../img/toggle-expand-dark.png");
+}
+table.treetable tr.expanded span.indenter a {
+  background-image: url("../../../img/toggle-collapse-dark.png");
+}
+.tree {
+  list-style: none;
+}
+.thumbnailcontener {
+  margin: 1px;
+  text-align: center;
+  display: block;
+  vertical-align: top;
+}
+.thumbnailcontener .thumbnail {
+  display: block;
+}
+.tree li {
+  display: block;
+  width: 98%;
+}
+.tree li ul li {
+  width: auto;
+}
+.treeTable .subHeader td {
+  font-weight: bold;
+}
+.treeTable .parent td {
+  font-style: italic;
+}
+.podcast {
+  margin-left: -25px;
+}
+.podcast .moduledescription {
+  margin-left: 25px;
+}
+.flashButton {
+  display: inline;
+  overflow: hidden;
+}
+.flashButtonText {
+  position: absolute;
+  z-index: 1;
+}
+.flashButton object {
+  opacity: 0;
+  position: absolute;
+  z-index: 2;
+}
+.progressName {
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  font-weight: bold;
+}
+.progressBarInProgress, .progressBarComplete, .progressBarError {
+  width: 0;
+  height: 20px;
+  margin-top: 2px;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+}
+.progressBarComplete {
+  width: 100%;
+  visibility: hidden;
+}
+.progressBarError {
+  width: 100%;
+  visibility: hidden;
+}
+.progressBarStatus {
+  margin-top: 2px;
+  width: 337px;
+  text-align: left;
+  white-space: nowrap;
+}
+.progressWrapper {
+  width: 357px;
+  overflow: hidden;
+}
+.progressContainer {
+  margin: 5px;
+  padding: 4px;
+  overflow: hidden;
+}
+#fgalexplorer > div > ul {
+  padding: 0;
+  margin: 0;
+}
+#fgalexplorer > div > ul ul {
+  padding-left: 16px;
+}
+/* additions for jquery file upload */
+.files .file-list {
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+.files .file-list .file-to-upload {
+  display: inline-block;
+  width: 120px;
+  overflow: hidden;
+  padding: 10px;
+  text-overflow: ellipsis;
+}
+.files .file-list .file-to-upload span {
+  font-size: x-small;
+}
+.files .file-list .file-to-upload span.text-danger {
+  white-space: normal;
+  display: block;
+}
+.files .file-list .file-to-upload code {
+  font-size: x-small;
+  white-space: normal;
+}
+.files .file-list .buttons {
+  clear: both;
+  margin: 10px;
+}
+.files .file-list span.icon {
+  font-size: 90px;
+  width: 100px;
+  height: 100px;
+}
+.file-uploader {
+  border: dotted 2px #ced4da;
+}
+.file-uploader.active {
+  border-style: dashed;
+}
+@media (max-width: 575.98px) {
+  #fgalform .media {
+    display: block;
+  }
+  #fgalform [id*="uploadinfos"] .text-right {
+    text-align: left !important;
+    margin-top: 0.5rem;
+  }
+}
+.statuson, .statusoff {
+  padding: 3px 2px 0 2px;
+  vertical-align: middle;
+  height: 15px;
+}
+.multiselect .selection {
+  display: none;
+  overflow: auto;
+  position: relative;
+  height: auto;
+  z-index: 1000;
+  width: 100%;
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+.tracker-item-files li {
+  position: relative;
+  clear: right;
+  padding-right: 1.5em;
+  margin-bottom: 1em;
+  font-size: 0.9em;
+}
+.tracker-item-files li img, .tracker-item-files li span {
+  margin-right: 6px;
+}
+.tracker-item-files .file-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.tracker-item-files {
+  padding-left: 15px;
+}
+#tracker_selector {
+  z-index: 1;
+  min-width: 250px;
+}
+.file-drop {
+  min-height: 100px;
+}
+.tracker-form-text {
+  margin-top: -15px;
+}
+.card-accordian > .card-header {
+  padding: 0;
+}
+.card-accordian > .card-header h4.card-title {
+  padding: 0;
+  margin: 0;
+}
+.card-accordian > .card-header h4.card-title a {
+  display: block;
+  padding: 1rem 1rem;
+}
+.tracker-field-h {
+  font-weight: bold;
+}
+[class*="tracker-status"]:before {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  font-family: "Font Awesome 5 Free";
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  line-height: 1;
+}
+[class*="tracker-status"].highlighted:before {
+  color: inherit !important;
+}
+.tracker-status-open:before, .tracker-status-o:before {
+  co
