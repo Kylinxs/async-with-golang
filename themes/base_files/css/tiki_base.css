@@ -4230,4 +4230,789 @@ div.tiki_plugin {
   background-color: transparent;
 }
 .autotoc .nav .nav {
-  padding-bottom: 0
+  padding-bottom: 0;
+  list-style: none;
+}
+.autotoc .nav .nav .nav {
+  display: none;
+}
+.autotoc .nav .nav > li > a {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 30px;
+  font-size: 12px;
+  font-weight: 400;
+}
+.autotoc .nav .nav .nav > li > a {
+  padding-left: 40px;
+}
+.autotoc .nav .nav .nav .nav > li > a {
+  padding-left: 50px;
+}
+.autotoc .nav .nav .nav .nav .nav > li > a {
+  padding-left: 60px;
+}
+.autotoc .nav .nav > li > a:focus, .autotoc .nav .nav > li > a:hover {
+  padding-left: 29px;
+}
+.autotoc .nav .nav .nav > li > a:focus, .autotoc .nav .nav .nav > li > a:hover {
+  padding-left: 40px;
+}
+.autotoc .nav .nav > .active > ul {
+  display: block;
+}
+.autotoc .nav .nav > .active:focus > a, .autotoc .nav .nav > .active:hover > a, .autotoc .nav .nav > .active > a {
+  padding-left: 28px;
+  font-weight: 500;
+}
+/* reset tabs styling */
+.autotoc > ul > li.active > a, .autotoc > ul > li.active > a:hover, .autotoc > ul > li.active > a:focus {
+  color: inherit;
+  background-color: inherit;
+  border-bottom-color: transparent;
+  cursor: default;
+  border-radius: 0;
+}
+.autotoc .nav {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  flex-direction: row;
+}
+.autotoc .nav > li {
+  width: 100%;
+}
+.autotoc .nav > li > a {
+  white-space: initial;
+}
+.autotoc .nav > li > a.active + ul, .autotoc .nav > li.open > ul {
+  display: block !important;
+}
+.autotoc .nav > li .active, .autotoc .nav > li.open > a {
+  padding-left: 19px;
+  background-color: #f8f9fa;
+  color: #0a58ca;
+  border-left: 1px solid #0d6efd;
+}
+.autotoc .nav .nav > li.open > a, .autotoc .nav .nav > li .active, .autotoc .nav .nav > li a:hover {
+  padding-left: 29px;
+}
+.autotoc .nav .nav .nav > li.open > a, .autotoc .nav .nav .nav > li .active, .autotoc .nav .nav .nav > li a:hover {
+  padding-left: 39px;
+}
+.autotoc .nav .nav .nav .nav > li.open > a, .autotoc .nav .nav .nav .nav > li .active, .autotoc .nav .nav .nav .nav > li a:hover {
+  padding-left: 49px;
+}
+.back-to-top {
+  display: none;
+  padding: 4px 10px;
+  margin-top: 10px;
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.back-to-top:hover, .bs-docs-theme-toggle:hover {
+  color: #563d7c;
+  text-decoration: none;
+}
+@media (max-width: 575.98px) {
+  #autotoc, #page-data.page-data-autotoc {
+    max-width: 100%;
+  }
+  .autotoc > .nav {
+    position: static;
+    max-width: calc(100vw - 30px);
+  }
+}
+/* end autotoc */
+.plugin-form-float {
+  position: fixed;
+  left: 5%;
+  right: 365px;
+  top: 5%;
+  max-height: 90%;
+  overflow: auto;
+  z-index: 1000;
+  padding: 10px;
+}
+.icon_edit_section {
+  float: right;
+}
+.icon_edit_section img.icon {
+  margin-top: -1px !important;
+}
+.ui-menu {
+  z-index: 10100 !important;
+}
+.structure_select {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  background: none;
+  height: 16px;
+  width: 18px;
+}
+.structure_select li.tabmark {
+  background: none;
+  border: 0;
+  top: 0;
+  padding: 0;
+}
+.structure_select .clearfix:after {
+  display: inline-block;
+}
+.structure_select .selected {
+  font-weight: bold;
+  font-style: italic;
+}
+.structure-container ol.depth-0 {
+  padding-inline-start: 0;
+}
+.structure-container ol.depth-0 > li {
+  padding: 0.5em;
+  margin: 0.2em;
+  border: 1px solid #e9ecef;
+}
+#page_list_container {
+  list-style: none;
+  max-height: 20em;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+}
+#page_list_container li {
+  list-style: none;
+  margin: 0.2em;
+  padding: 0.2em;
+}
+.options-container ol, .new-option, .dragging-options, .dragging-options li {
+  list-style: none;
+}
+.options-container #options {
+  min-height: 10em;
+  border: 4px #e9ecef dashed;
+}
+.options-container li {
+  position: relative;
+}
+li .label-group {
+  max-width: 16em;
+  margin-right: 1em;
+}
+li .label-group .drag-handle, li .label-group .drag-handle .icon {
+  cursor: pointer;
+}
+li .url-group {
+  max-width: 25em;
+}
+.options-container > ol > li {
+  outline: 1px solid #e9ecef;
+  margin-bottom: 5px;
+}
+.options-container .child-options {
+  width: 100%;
+}
+.options--group-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.options-container .child-options > li, .dragging-options li {
+  margin-bottom: 5px;
+}
+.new-option .label-group {
+  max-width: 100%;
+}
+@media (max-width: 575.98px) {
+  li .label-group, li .url-group {
+    max-width: 100%;
+  }
+  .options-container #options {
+    padding-left: 0;
+  }
+  .child-options {
+    padding-left: 7px;
+  }
+}
+.TextArea-fullscreen {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 1;
+  top: 0 !important;
+  left: 0 !important;
+  position: fixed !important;
+  z-index: 100 !important;
+}
+.TextArea-fullscreen .ui-wrapper {
+  width: auto !important;
+  height: 100% !important;
+}
+.TextArea-fullscreen .ui-wrapper #editwiki {
+  position: absolute !important;
+  width: 100% !important;
+}
+.TextArea-fullscreen .edit-zone-footer, .CodeMirror-fullscreen .edit-zone-footer {
+  position: absolute;
+  margin: 0 !important;
+  padding: 4px 12px 12px;
+  width: 100%;
+  bottom: 49px;
+  z-index: 2;
+}
+.TextArea-fullscreen .edit-zone-footer .form-check, .CodeMirror-fullscreen .edit-zone-footer .form-check {
+  position: absolute;
+  padding: 4px 12px 12px;
+  bottom: 49px;
+  right: 0;
+}
+.TextArea-fullscreen .actions, .CodeMirror-fullscreen .actions {
+  bottom: 0 !important;
+  left: 50%;
+  margin-left: -50%;
+  position: absolute;
+  text-align: center;
+  width: 100%;
+  z-index: 101 !important;
+  padding: 0.4em 0 0.2em;
+}
+.TextArea-fullscreen .actions input, .CodeMirror-fullscreen .actions input {
+  /*margin: 1px !important;*/
+}
+.TextArea-fullscreen .cm-remove, .CodeMirror-fullscreen .cm-remove {
+  display: none;
+  right: 22px;
+  float: none !important;
+}
+.translation_message {
+  overflow-x: hidden;
+  padding: 0.5em;
+  white-space: nowrap;
+}
+.translation_message h2 {
+  margin: 0.2em 0;
+  font-size: 1.6em;
+}
+#diff_outer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  opacity: 1;
+  background: #0dcaf0;
+  height: 100% !important;
+}
+#diff_history {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0 0.1em;
+}
+#autosave_preview {
+  z-index: 110;
+}
+#autosave_preview_grippy {
+  z-index: 3;
+}
+.wiki .namespace {
+  margin: 1px;
+  padding: 1px;
+  border-radius: 5px;
+  max-width: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: bottom;
+}
+.wiki .namespace.first {
+  max-width: 130px;
+}
+.wiki .namespace.last {
+  max-width: 130px;
+}
+#tikihelp {
+  height: 100%;
+}
+.help_fullscreen_icon {
+  margin-right: 8px;
+}
+.help_close_icon {
+  margin-right: 20px;
+}
+.site_report a {
+  padding: 0 5px;
+  font-size: smaller;
+}
+.plugin-desc {
+  padding: 5px;
+}
+.wikitext .plugin_gauge, .wikitext .plugin_gauge-bar {
+  border: none;
+}
+h1.pagetitle > a {
+  padding-left: 0;
+  padding-right: 0;
+}
+#cachedpage {
+  float: right;
+  font-size: small;
+}
+body.tiki_wiki #comments {
+  padding: 1em;
+}
+.codelisting {
+  overflow: auto;
+  max-width: 990px;
+}
+.codelisting .CodeMirror-code {
+  font-family: monospace;
+}
+.codelisting .CodeMirror-scroll {
+  width: auto !important;
+  /* do not show the disabled partially shown right side scrollbar in code listings */
+}
+.codelisting .CodeMirror-vscrollbar {
+  display: none !important;
+  /* we do not need to display vertical scrollbars in code listings - workaround for the "wrongly computed height with scrollbar" bug in CodeMirror */
+}
+.wpfade-hidden {
+  background: url("../../../img/toggle-expand-dark.png") no-repeat;
+  margin-left: -19px;
+  padding-left: 19px;
+}
+.wpfade-shown {
+  background: url("../../../img/toggle-collapse-dark.png") no-repeat;
+  margin-left: -19px;
+  padding-left: 19px;
+}
+.wpfade-span-plain {
+  cursor: pointer;
+}
+.wpfade-span-icon {
+  cursor: pointer;
+  margin-left: 19px;
+}
+.wpfade-div-icon {
+  display: none;
+  margin-left: 19px;
+}
+.wikitext .fancylist {
+  margin: 0.5em 0;
+  padding: 0;
+}
+.wikitext .fancylist li {
+  font-size: 2em;
+  font-style: italic;
+  line-height: 27px;
+  list-style-position: inside;
+  margin-left: 10px;
+  padding: 6px 0 7px 15px;
+}
+.wikitext .fancylist li p {
+  display: inline;
+  font-size: 50%;
+  font-style: normal;
+  margin-left: 12px;
+}
+[class].wikitext .fancylist li p {
+  margin-left: -3px;
+}
+.quoteheader {
+  height: 35px;
+}
+.quoteheader .fa {
+  font-size: 34px;
+  color: #aaaaaa;
+}
+.quotebody {
+  margin-left: 35px;
+  padding-left: 10px;
+  font-style: italic;
+}
+.wikitext .rbox-data ul {
+  list-style-type: disc;
+  margin-left: 15px;
+  padding-left: 15px;
+}
+.mandatory_star {
+  font-weight: bold;
+}
+.trackerplugindesc {
+  font-style: italic;
+}
+.charCount {
+  font-style: italic;
+}
+.imgbox {
+  padding: 5px;
+}
+.thumbcaption {
+  font-size: 90%;
+  padding: 2px;
+}
+.ic_caption {
+  opacity: 0.75;
+  width: 100%;
+  padding: 5px 10px;
+}
+.wp-sign {
+  display: none;
+  overflow: hidden;
+  position: absolute;
+  z-index: 1;
+  background-repeat: no-repeat;
+  padding: 0.3em;
+  vertical-align: bottom;
+  -webkit-box-shadow: 1px 1px 2px 2px rgba(200, 200, 200, 0.5);
+  box-shadow: 1px 1px 2px 2px rgba(200, 200, 200, 0.5);
+  border-radius: 2px;
+}
+.toc {
+  padding-left: 2em;
+  margin-bottom: 4px;
+}
+.toc * {
+  list-style: none;
+  border: none;
+}
+.diff td {
+  white-space: normal !important;
+}
+.table-responsive > .table > tbody > tr > td.text-left {
+  white-space: normal;
+}
+.diffinldel {
+  text-decoration: line-through;
+}
+.ui-tabs .ui-tabs-nav li a {
+  padding: 0.3em 0.8em 0.1em;
+}
+/* Structures drill-down menu */
+div.drillshow {
+  padding: 3px;
+}
+.titlebar {
+  border-bottom: 2px solid;
+}
+.wp-annotation {
+  position: relative;
+}
+.wp-annotation .editor {
+  display: none;
+  width: 400px;
+  position: absolute;
+}
+.wp-annotation .annotation {
+  border: dashed 1px rgba(255, 255, 255, 0.5);
+  background: rgba(255, 200, 40, 0.1);
+  position: absolute;
+  cursor: pointer;
+}
+.wp-annotation .annotation.selected {
+  border: dashed 1px rgba(69, 255, 97, 0.68);
+  background: rgba(85, 255, 68, 0.25);
+}
+.table-responsive.enlarge {
+  display: inline-table;
+  margin-right: 50px;
+  padding: 20px 10px 15px;
+  border: 1px solid var(--bs-border-color);
+  background-color: #fff;
+  overflow: visible;
+}
+/* plugin list gui */
+.plugin-list-editor > ul {
+  padding: 0;
+}
+.plugin-list-editor li.plugin {
+  list-style: none;
+  border: 1px solid var(--bs-border-color-translucent);
+  border-radius: 0.375rem;
+}
+.plugin-list-editor li.plugin .params {
+  padding: 0.5rem 0.5rem 0;
+}
+.plugin-list-editor li.plugin .card-header {
+  padding: 0.25rem 1.5rem;
+}
+.plugin-list-editor > .btn-toolbar {
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+.plugin-list-editor li.plugin .name {
+  font-weight: bold;
+}
+.plugin-list-editor li.plugin .params .dropdown-toggle {
+  font-size: 9px;
+}
+/* heading anchor links */
+.heading-link {
+  padding-left: 0.25em;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out 0.1s;
+  -webkit-transition: opacity 0.2s ease-in-out 0.1s;
+  -moz-transition: opacity 0.2s ease-in-out 0.1s;
+}
+.heading-link .icon {
+  font-size: 70%;
+}
+.heading-link .fa, .heading-link .fas, .heading-link .far, .heading-link .fal, .heading-link .fad, .heading-link .fab {
+  display: inline;
+}
+h1:hover .heading-link, h2:hover .heading-link, h3:hover .heading-link, h4:hover .heading-link, h5:hover .heading-link, h6:hover .heading-link {
+  opacity: 1;
+}
+.vSplitBar {
+  background: rgba(170, 170, 170, 0.2) url("../../../vendor_bundled/vendor/robicch/jquery-gantt/res/ganttSplitterGrip.png") no-repeat center center !important;
+}
+.milestone {
+  background: url("../../../vendor_bundled/vendor/robicch/jquery-gantt/res/milestone.png") no-repeat !important;
+}
+.layout.extDep {
+  background-image: url("../../../vendor_bundled/vendor/robicch/jquery-gantt/res/hasExternalDeps.png") !important;
+}
+.isParent.collapsed .exp-controller {
+  background-image: url("../../../vendor_bundled/vendor/robicch/jquery-gantt/res/toggle-expand.png") !important;
+}
+.isParent .exp-controller {
+  background-image: url("../../../vendor_bundled/vendor/robicch/jquery-gantt/res/toggle_collapse.png") !important;
+}
+.pagetitle a + .icon-lock {
+  margin-left: 0.7rem;
+  font-size: 60%;
+  opacity: 0.2;
+}
+#all-toc.hidden.sticky-top {
+  height: 80vh !important;
+}
+.multilike .horizontal {
+  display: inline-block;
+  height: 38px;
+}
+.multilike .vertical {
+  display: block;
+  height: auto;
+}
+.multilike .vertical .mini-counts, .multilike .vertical .label-text {
+  width: 50px;
+}
+.multilike .likes, .multilike .points {
+  min-width: 38px;
+  margin: 0 3px 0 0;
+  font-size: 0.9em;
+  color: #777777;
+  padding: 5px 5px 6px 5px;
+  text-align: center;
+}
+.multilike .likes .mini-counts, .multilike .points .mini-counts {
+  font-size: 1.4em;
+  font-weight: 300;
+  color: #777777;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.multilike .rate {
+  font-size: 0.9em;
+  color: #555555;
+  padding-left: 10px;
+  vertical-align: super;
+}
+.multilike .rate div {
+  padding: 5px 0 0 0;
+}
+.multilike .rate div .title {
+  font-weight: 300;
+}
+.multilike .rate div a {
+  margin-right: 10px;
+}
+.multilike .rate div .count {
+  font-size: 0.8em;
+}
+#tiki-installer {
+  background-color: #48497A;
+  /* re-style buttons to be link links */
+}
+#tiki-installer .btn-link {
+  border: none;
+  display: inline;
+  text-align: left;
+  -webkit-appearance: none;
+}
+#tiki-installer .btn-link:not([disable]):hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+#tiki-installer .sidebar {
+  margin: 1.5em 1.5em 0 0;
+  padding-bottom: 2em;
+}
+#tiki-installer .sidebar > img {
+  display: block;
+  margin: auto;
+}
+#tiki-installer .installer-content {
+  background-color: white;
+  min-height: 100vh;
+  padding-top: 5em;
+  padding-bottom: 5em;
+}
+#tiki-installer .floating-links {
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+}
+#tiki-installer .menus {
+  margin-top: 3rem;
+}
+#tiki-installer .menus .menu {
+  color: white;
+  margin-top: 1em;
+}
+#tiki-installer ol.nav {
+  list-style-type: decimal;
+  list-style-position: outside;
+  margin-left: 2em;
+}
+#tiki-installer .nav {
+  margin-left: 1em;
+}
+#tiki-installer .nav .nav-item {
+  color: white;
+  line-height: 2em;
+}
+#tiki-installer .nav .nav-item .nav-link {
+  color: white;
+  padding: 0;
+  background-color: transparent;
+}
+#tiki-installer .nav .nav-item.active {
+  color: white;
+}
+#tiki-installer .nav .nav-item.active .nav-link {
+  color: white;
+  font-weight: bold;
+}
+#tiki-installer .install-step8 .enter-tiki .btn {
+  white-space: normal;
+}
+@media (max-width: 575.98px) {
+  #tiki-installer .install-body {
+    margin-left: 0 !important;
+    margin-right: 0;
+  }
+}
+#tiki-admin_oauthserver input[name="id"][value=""] ~ .mb-3-client_id, #tiki-admin_oauthserver input[name="id"][value=""] ~ .mb-3-client_secret {
+  display: none;
+}
+/* Smartmenus quick fix */
+.navbar-nav.sm-vertical {
+  display: block;
+  /* flex-grow: 1; */
+}
+.col2 .navbar-light.bg-light, .col2 .navbar-dark.bg-dark, .col3 .navbar-light.bg-light, .col3 .navbar-dark.bg-dark {
+  background: none !important;
+}
+.navbar-nav.sm-vertical:not(.sm-collapsible) a:not(.dropdown-item) .sub-arrow {
+  transform: rotate(-90deg);
+  /* position: absolute;
+    top: 55%;
+    margin-top: -5px;
+    bottom: auto;
+    left: auto;
+    margin-left: 0;
+    right: 10px; */
+}
+/* Smartmenus navbars (Megamenu static) */
+.mega-menu-static {
+  position: relative;
+}
+.mega-menu-static .navbar-nav .nav-item, .nav-item.dropdown.static {
+  position: static;
+}
+.mega-menu-static .navbar-nav .mega-menu {
+  width: 98vw !important;
+}
+.tiki .navbar-nav .dropdown-menu.mega-menu {
+  position: absolute;
+  left: 0 !important;
+  margin-left: 0 !important;
+}
+.tiki .dropdown.static .navbar-nav .dropdown-menu.mega-menu {
+  width: 98vw !important;
+}
+/* Megamenu when vertical */
+.mega-menu-static .navbar-nav.sm-vertical .mega-menu {
+  margin-top: 0 !important;
+  top: 0 !important;
+}
+.mega-menu-static .mega-menu--inner-container, .mega-menu-static .mega-menu--item-container {
+  height: 100%;
+}
+.mega-menu-static .navbar-nav .mega-menu--item-container {
+  flex-wrap: wrap;
+}
+/* Megamenus */
+.navbar-nav .mega-menu {
+  max-width: none !important;
+  padding: 0;
+}
+.navbar-nav .mega-menu--inner-container {
+  display: flex;
+  justify-content: space-between;
+}
+.navbar-nav .mega-menu--item-container {
+  padding: 1.5rem 1rem 0 2rem;
+  display: flex;
+  flex-grow: 1;
+}
+.mega-menu--item-container > .mega-menu--item {
+  padding: 0 10px;
+  flex-grow: 1;
+}
+.mega-menu--item-container .mega-menu--item-level-1 {
+  margin-bottom: 1.5rem;
+}
+.mega-menu--item-container .mega-menu--item-level-1 > li > a {
+  font-weight: bold;
+}
+.mega-menu a:hover, .mega-menu--item-container .mega-menu--item-level-1 > li > a:hover {
+  text-decoration: none;
+}
+.mega-menu ul {
+  list-style-type: none;
+  padding-inline-start: 0;
+}
+.mega-menu-image {
+  position: relative;
+  margin-left: auto;
+  width: 200px;
+}
+.mega-menu-image img {
+  object-fit: cover;
+  height: 100%;
+  width: 100%;
+}
+.mega-menu-image img:before {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: lightgrey;
+  background: #f1f1f1;
+  padding: 10px;
+  content: "";
+  font-family: "Font Awesome 5 Free";
+  /* font-weight: 900; */
+  font-size: 3rem;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}
+/* End of file */
+
