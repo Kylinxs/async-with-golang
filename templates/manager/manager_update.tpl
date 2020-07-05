@@ -1,0 +1,1 @@
+{include file='manager/manager_setup.tpl'}

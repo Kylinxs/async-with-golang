@@ -41,4 +41,11 @@ class Multilingual_Aligner_MockMTWrapper extends Multilingual_Aligner_SentenceAl
             $target_array[$i] = trim($target_array[$i]);
             //  $target_array[$i]=utf8_decode($target_array[$i]);
         }
-        for ($i = 0, $cs_a = count(
+        for ($i = 0, $cs_a = count($source_array); $i < $cs_a; $i++) {
+            $source_array[$i] = trim($source_array[$i]);
+        }
+        for ($i = 0, $cs_a = count($source_array); $i < $cs_a; $i++) {
+            $this->addSentencePair($source_array[$i], $source_lng, $target_array[$i], $target_lng);
+        }
+    }
+}
