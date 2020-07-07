@@ -1,0 +1,145 @@
+<?php
+
+// (c) Copyright by authors of the Tiki Wiki CMS Groupware Project
+//
+// All Rights Reserved. See copyright.txt for details and a complete list of authors.
+// Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
+// $Id$
+
+function wikiplugin_pivottable_info()
+{
+    return [
+        'name' => tr('Pivot table'),
+        'description' => tr('Create and display data in pivot table for reporting'),
+        'prefs' => ['wikiplugin_pivottable'],
+        'body' => tra('Leave one space in the box below to allow easier editing of current values with the plugin popup helper later on'),
+        'validate' => 'all',
+        'format' => 'html',
+        'iconname' => 'table',
+        'introduced' => '16.1',
+        'params' => [
+            'data' => [
+                'name' => tr('Data source'),
+                'description' => tr("For example 'tracker:1' or 'activitystream'"),
+                'required' => true,
+                'default' => 0,
+                'filter' => 'text',
+                'profile_reference' => 'tracker',
+                'separator' => ':',
+                'profile_reference_extra_values' => ['activitystream' => 'Activity Stream'],
+            ],
+            'overridePermissions' => [
+                'name' => tra('Override item permissions'),
+                'description' => tra('Return all tracker items ignoring permissions to view the corresponding items.'),
+                'since' => '18.1',
+                'required' => false,
+                'filter' => 'alpha',
+                'default' => 'n',
+                'options' => [
+                    ['text' => '', 'value' => ''],
+                    ['text' => tra('Yes'), 'value' => 'y'],
+                    ['text' => tra('No'), 'value' => 'n']
+                ]
+            ],
+            'width' => [
+                'required' => false,
+                'name' => tra('Width'),
+                'description' => tr('Width of charts. You have to only put the value (Unit: px). For instance, use <code>500</code> for 500 pixels.'),
+                'since' => '',
+                'filter' => 'word',
+                'default' => '100%',
+            ],
+            'height' => [
+                'required' => false,
+                'name' => tra('Height'),
+                'description' => tr('Height of charts. You have to only put the value (Unit: px). For instance, use <code>500</code> for 500 pixels.'),
+                'since' => '',
+                'filter' => 'word',
+                'default' => '400px',
+            ],
+            'rows' => [
+                'required' => false,
+                'name' => tra('Pivot table Rows'),
+                'description' => tr('Which field or fields to use as table rows. Leaving blank will remove grouping by table rows. ') . ' ' . tr('Use permanentNames in case of tracker fields.') . ' ' . tr('Separated by colon (:) if more than one.'),
+                'since' => '',
+                'filter' => 'text',
+                'default' => '',
+                'profile_reference' => 'tracker_field',
+                'separator' => ':',
+            ],
+            'cols' => [
+                'required' => false,
+                'name' => tra('Pivot table Columns'),
+                'description' => tr('Which field or fields to use as table columns. Leaving blank will use the first available field.') . ' ' . tr('Use permanentNames in case of tracker fields.') . ' ' . tr('Separated by colon (:) if more than one.'),
+                'since' => '',
+                'filter' => 'text',
+                'default' => '',
+                'profile_reference' => 'tracker_field',
+                'separator' => ':',
+            ],
+            'colOrder' => [
+                'required' => false,
+                'name' => 'Column sort order',
+                'description' => tr('The order in which column data is provided to the renderer, must be one of "key_a_to_z", "value_a_to_z", "value_z_to_a", ordering by value orders by column total.'),
+                'since' => '',
+                'filter' => 'text',
+                'default' => '',
+            ],
+            'rowOrder' => [
+                'required' => false,
+                'name' => 'Row sort order',
+                'description' => tr('The order in which row data is provided to the renderer, must be one of "key_a_to_z", "value_a_to_z", "value_z_to_a", ordering by value orders by row total.'),
+                'since' => '',
+                'filter' => 'text',
+                'default' => '',
+            ],
+            'heatmapDomain' => [
+                'required' => false,
+                'name' => tra('Values used to decide what heatmapColors to use.'),
+                'description' => tr(''),
+                'since' => '17',
+                'filter' => 'text',
+                'default' => '',
+                'separator' => ':',
+            ],
+            'heatmapColors' => [
+                'required' => false,
+                'name' => tra('Color for each heatmapDomain value.'),
+                'description' => tr(''),
+                'since' => '17',
+                'filter' => 'text',
+                'default' => '',
+                'separator' => ':',
+            ],
+            'rendererName' => [
+                'name' => tr('Renderer Name'),
+                'description' => tr('Display format of data'),
+                'since' => '',
+                'required' => false,
+                'filter' => 'text',
+                'default' => 'Table',
+                'options' => [
+                    ['text' => 'Table', 'value' => 'Table'],
+                    ['text' => tra('Table Barchart'), 'value' => 'Table Barchart'],
+                    ['text' => tra('Heatmap'), 'value' => 'Heatmap'],
+                    ['text' => tra('Row Heatmap'), 'value' => 'Row Heatmap'],
+                    ['text' => tra('Col Heatmap'), 'value' => 'Col Heatmap'],
+                    ['text' => tra('Line Chart'), 'value' => 'Line Chart'],
+                    ['text' => tra('Bar Chart'), 'value' => 'Bar Chart'],
+                    ['text' => tra('Overlay Bar Chart'), 'value' => 'Overlay Bar Chart'],
+                    ['text' => tra('Stacked Bar Chart'), 'value' => 'Stacked Bar Chart'],
+                    ['text' => tra('Relative Bar Chart'), 'value' => 'Relative Bar Chart'],
+                    ['text' => tra('Boxplot Chart'), 'value' => 'Boxplot Chart'],
+                    ['text' => tra('Horizontal Boxplot Chart'), 'value' => 'Horizontal Boxplot Chart'],
+                    ['text' => tra('Area Chart'), 'value' => 'Area Chart'],
+                    ['text' => tra('Histogram'), 'value' => 'Histogram'],
+                    ['text' => tra('Density Histogram'), 'value' => 'Density Histogram'],
+                    ['text' => tra('Percent Histogram'), 'value' => 'Percent Histogram'],
+                    ['text' => tra('Probability Histogram'), 'value' => 'Probability Histogram'],
+                    ['text' => tra('Density Histogram Horizontal'), 'value' => 'Density Histogram Horizontal'],
+                    ['text' => tra('Percent Histogram Horizontal'), 'value' => 'Percent Histogram Horizontal'],
+                    ['text' => tra('Probability Histogram Horizontal'), 'value' => 'Probability Histogram Horizontal'],
+                    ['text' => tra('Horizontal Histogram'), 'value' => 'Horizontal Histogram'],
+                    ['text' => tra('Histogram2D'), 'value' => 'Histogram2D'],
+                    ['text' => tra('Density Histogram2D'), 'value' => 'Density Histogram2D'],
+                    ['text' => tra('Percent Histogram2D'), 'value' => 'Percent Histogram2D'

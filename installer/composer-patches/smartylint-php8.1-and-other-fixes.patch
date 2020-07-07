@@ -1,0 +1,56 @@
+commit b2163c24c9e313991d481d7002dbfa0be9f56065
+Author: SoftStart Code <code@softstart.io>
+Date:   Mon Dec 12 00:31:38 2022 +0000
+
+    Multiple FIX, mostly PHP8.1 related, but also some functional issues in Tokenizer
+
+diff --git a/SmartyLint.php b/SmartyLint.php
+index 8908d28..0e7e12a 100644
+--- a/SmartyLint.php
++++ b/SmartyLint.php
+@@ -352,7 +352,9 @@ class SmartyLint {
+ 
+         // Ensure this option is enabled or else line endings will not always
+         // be detected properly for files created on a Mac with the /r line ending.
+-        ini_set('auto_detect_line_endings', true);
++        if (\PHP_VERSION_ID < 80100) {
++            ini_set('auto_detect_line_endings', true);
++        }
+ 
+         $this->setTokenListeners($rules);
+         $this->populateRules($rules);
+diff --git a/SmartyLint/File.php b/SmartyLint/File.php
+index 019797c..023982d 100644
+--- a/SmartyLint/File.php
++++ b/SmartyLint/File.php
+@@ -652,7 +652,7 @@ class SmartyLint_File {
+     public static function tokenizeString(
+         $string,
+         $tokenizer,
+-        $eolChar='\n',
++        $eolChar,
+         $leftD,
+         $rightD,
+         $autoLiteral
+diff --git a/SmartyLint/Tokenizer/Smarty.php b/SmartyLint/Tokenizer/Smarty.php
+index 564960a..075e3a0 100644
+--- a/SmartyLint/Tokenizer/Smarty.php
++++ b/SmartyLint/Tokenizer/Smarty.php
+@@ -151,7 +151,7 @@ class SmartyLint_Tokenizer_Smarty {
+ 
+                         case '<':
+                             $k = isset($data[($j + 1)]) ? $data[($j + 1)] : null;
+-                            $l = isset($data[($k + 1)]) ? $data[($k + 1)] : null;
++                            $l = isset($data[($j + 2)]) ? $data[($j + 2)] : null;
+                             $multi = false;
+                             if ($next === '!' && $k === $l && $l === '-') {
+                                 // HTML comment found. Keep adding to content until it ends.
+@@ -173,7 +173,7 @@ class SmartyLint_Tokenizer_Smarty {
+                                     $k = isset($data[($i + 2)]) ?: $data[($i + 2)];
+                                 }
+                                 $content .= $char . $next . $k;
+-                                $i = $iPointer;
++                                //$i = $iPointer;
+                                 $token['content'] = $content;
+                                 if ($multi) {
+                                     $token['multi'] = true;

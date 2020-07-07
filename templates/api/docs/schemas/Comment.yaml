@@ -1,0 +1,95 @@
+
+---
+type: object
+properties:
+  threadId:
+    type: integer
+  object:
+    type: integer
+  objectType:
+    type: string
+  parentId:
+    type: intege
+  userName:
+    type: string
+  commentDate:
+    type: integer
+  hits:
+    type: integer
+  type:
+    $ref: schemas-TikiBoolean.yaml
+  points:
+    type: float
+  votes:
+    type: integer
+  average:
+    type: float
+  title:
+    type: string
+  data:
+    type: string
+  email:
+    type: string
+  website:
+    type: string
+  user_ip:
+    type: string
+  summary:
+    type: string
+  smiley:
+    type: string
+  message_id:
+    type: string
+  in_reply_to:
+    type: string
+  comment_rating:
+    type: integer
+  archived:
+    $ref: schemas-TikiBoolean.yaml
+  approved:
+    $ref: schemas-TikiBoolean.yaml
+  locked:
+    $ref: schemas-TikiBoolean.yaml
+  grandFather:
+    type: integer
+  isEmpty:
+    $ref: schemas-TikiBoolean.yaml
+  version:
+    type: integer
+  diffInfo:
+    type: array
+    items:
+      type: string
+  parsed:
+    type: string
+  user_posts:
+    type: integer
+  user_level:
+    type: integer
+  user_email:
+    type: string
+  attachments:
+    type: array
+  is_reported:
+    type: integer
+  user_online:
+    $ref: schemas-TikiBoolean.yaml
+  user_exists:
+    type: integer
+  can_edit:
+    type: boolean
+  replies_info:
+    type: object
+    properties:
+      replies:
+        type: array
+        items:
+          $ref: schemas-Comment.yaml
+      numReplies:
+        type: integer
+      totalReplies:
+        type: integer
+  replies_flat:
+    type: array
+    items:
+      $ref: schemas-Comment.yaml
