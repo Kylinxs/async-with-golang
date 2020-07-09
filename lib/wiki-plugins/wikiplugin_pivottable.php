@@ -562,4 +562,460 @@ function wikiplugin_pivottable($data, $params)
                 if (! isset($arguments['field'])) {
                     return WikiParser_PluginOutput::userError(tr('Attributesort wiki modifier should specify a field.'));
                 }
-                if (! isset($arguments['order'
+                if (! isset($arguments['order'])) {
+                    return WikiParser_PluginOutput::userError(tr('Attributesort wiki modifier should specify an order.'));
+                }
+                $field = wikiplugin_pivottable_field_from_definitions($arguments['field'], $definitions);
+                if (empty($field)) {
+                    $field = $arguments['field'];
+                } else {
+                    $field = $field['name'];
+                }
+                $attributesOrder[$field] = str_getcsv($arguments['order']);
+            }
+        }
+
+        if ($columnsListed) {
+            $data .= '{display name="object_id"}{display name="object_type"}';
+            $plugin = new Search_Formatter_Plugin_ArrayTemplate($data);
+            $usedFields = array_keys($plugin->getFields());
+            foreach ($fields as $key => $field) {
+                if (
+                    ! in_array('tracker_field_' . $field['permName'], $usedFields)
+                    && ! in_array($field['permName'], $usedFields)
+                ) {
+                    unset($fields[$key]);
+                }
+            }
+            $fields = array_values($fields);
+            $plugin->setFieldPermNames($fields);
+        } else {
+            $plugin = new Search_Formatter_Plugin_ArrayTemplate(implode("", array_map(
+                function ($f) {
+                    if (in_array($f['permName'], ['object_id', 'object_type', 'creation_date', 'modification_date', 'tracker_status'])) {
+                        return '{display name="' . $f['permName'] . '" default=" "}';
+                    } elseif ($f['type'] == 'e') {
+                        return '{display name="tracker_field_' . $f['permName'] . '" format="categorylist" singleList="y" separator=" "}';
+                    } else {
+                        return '{display name="tracker_field_' . $f['permName'] . '" default=" "}';
+                    }
+                },
+                $fields
+            )));
+            $plugin->setFieldPermNames($fields);
+        }
+    }
+
+    if ($dataType === "activitystream") {
+        $unifiedsearchlib = TikiLib::lib('unifiedsearch');
+        $query = new Search_Query();
+        $unifiedsearchlib->initQuery($query);
+        $query->filterType('activity');
+
+        if ($params['overridePermissions'] === 'y') {
+            $unifiedsearchlib->initQueryBase($query);
+            $unifiedsearchlib->initQueryPresentation($query);
+        } else {
+            $unifiedsearchlib->initQuery($query);
+        }
+
+        $matches = WikiParser_PluginMatcher::match($data);
+
+        $builder = new Search_Query_WikiBuilder($query);
+        $builder->enableAggregate();
+        $builder->apply($matches);
+
+        $query->setOrder('modification_date_desc');
+
+        if (! $index = $unifiedsearchlib->getIndex()) {
+            throw new Services_Exception_NotAvailable(tr('Activity stream currently unavailable.'));
+        }
+
+        $result = [];
+        foreach ($query->scroll($index) as $row) {
+            $result[] = $row;
+        }
+        $result = Search_ResultSet::create($result);
+        $result->setId('wppivottable-' . $id);
+
+        $paginationArguments = $builder->getPaginationArguments();
+
+        $resultBuilder = new Search_ResultSet_WikiBuilder($result);
+        $resultBuilder->setPaginationArguments($paginationArguments);
+        $resultBuilder->apply($matches);
+
+        $fields = [];
+        $fields[] = [
+            'name' => 'object',
+            'permName' => 'object',
+            'type' => 't'
+        ];
+
+        $fields[] = [
+            'name' => 'object_id',
+            'permName' => 'object_id',
+            'type' => 't'
+        ];
+
+        $fields[] = [
+            'name' => 'object_type',
+            'permName' => 'object_type',
+            'type' => 't'
+        ];
+
+        $fields[] = [
+            'name' => 'modification_date',
+            'permName' => 'modification_date',
+            'type' => 'f'
+        ];
+
+        $fields[] = [
+            'name' => 'user',
+            'permName' => 'user',
+            'type' => 't'
+        ];
+
+        $fields[] = [
+            'name' => 'event_type',
+            'permName' => 'event_type',
+            'type' => 't'
+        ];
+
+        $fields[] = [
+            'name' => 'type',
+            'permName' => 'type',
+            'type' => 't'
+        ];
+
+        try {
+            $plugin = new Search_Formatter_Plugin_ArrayTemplate(implode("", array_map(
+                function ($f) {
+                    $activityArray = [
+                        'object',
+                        'object_id',
+                        'object_type',
+                        'modification_date',
+                        'user',
+                        'event_type',
+                        'type'
+                    ];
+                    if (in_array($f['permName'], $activityArray)) {
+                        return '{display name="' . $f['permName'] . '" default=" "}';
+                    }
+                },
+                $fields
+            )));
+            $plugin->setFieldPermNames($fields);
+        } catch (SmartyException $e) {
+            throw new Services_Exception_NotAvailable($e->getMessage());
+        }
+    }
+
+    $builder = new Search_Formatter_Builder();
+    $builder->setId('wppivottable-' . $id);
+    $builder->setCount($result->count());
+    $builder->apply($matches);
+    $builder->setFormatterPlugin($plugin);
+
+    $formatter = $builder->getFormatter();
+    $entries = $formatter->getPopulatedList($result, false);
+    $entries = $plugin->renderEntries($entries);
+
+    $pivotData = [];
+    foreach ($entries as $entry) {
+        $row = [];
+        foreach ($entry as $fieldName => $value) {
+            if ($entry['object_type'] != 'activity' && $field = wikiplugin_pivottable_field_from_definitions($fieldName, $definitions)) {
+                // Actual data values
+                if ($translate) {
+                    $row[$field['name']] = tra($value);
+                } else {
+                    $row[$field['name']] = $value;
+                }
+            } else {
+                // predefined fields (created date, lastmod, etc.)
+                $row[$fieldName] = $value;
+            }
+        }
+        $pivotData[] = $row;
+    }
+
+    foreach ($splittedAttributes as $arguments) {
+        $field = wikiplugin_pivottable_field_from_definitions($arguments['field'], $definitions);
+        if (empty($field)) {
+            continue;
+        } else {
+            $field = $field['name'];
+        }
+        $separator = str_replace("~nl~", "\n", $arguments['separator']);
+        $key = 0;
+        while ($key < count($pivotData)) {
+            $row = $pivotData[$key];
+            if (! isset($row[$field])) {
+                $key++;
+                continue;
+            }
+            $splitted = explode($separator, $row[$field]);
+            if (isset($arguments['replace_fields'], $arguments['value_separator'])) {
+                if (count($splitted) == 1 && empty($splitted[0])) {
+                    $key++;
+                    continue;
+                }
+                $replacement = [];
+                foreach ($splitted as $split_value) {
+                    $replaced_row = $row;
+                    $values = explode($arguments['value_separator'], $split_value);
+                    foreach (preg_split('/\s*,\s*/', $arguments['replace_fields']) as $replacement_key => $replacement_field) {
+                        $real_field = wikiplugin_pivottable_field_from_definitions($replacement_field, $definitions);
+                        if (! empty($real_field)) {
+                            $replacement_field = $real_field['name'];
+                        }
+                        if (isset($replaced_row[$replacement_field])) {
+                            $replaced_row[$replacement_field] = $values[$replacement_key];
+                        }
+                    }
+                    $replacement[] = $replaced_row;
+                }
+            } else {
+                if (count($splitted) == 1) {
+                    $key++;
+                    continue;
+                }
+                $replacement = array_map(function ($value) use ($row, $field) {
+                    return array_merge($row, [$field => ltrim($value)]);
+                }, $splitted);
+            }
+            array_splice($pivotData, $key, 1, $replacement);
+            $key += count($replacement);
+        }
+    }
+
+    //translating permName to field name for columns and rows
+    $cols = [];
+    if (! empty($params['cols'])) {
+        foreach ($params['cols'] as $colName) {
+            if ($params['data'][0] !== 'activitystream' && $field = wikiplugin_pivottable_field_from_definitions(trim($colName), $definitions)) {
+                $cols[] = $field['name'];
+            } else {
+                $cols[] = $colName;
+            }
+        }
+    } elseif (! empty($fields) && empty($params['rows'])) {
+        $cols[] = $fields[0]['name'];
+    }
+
+    $rows = [];
+    if (! empty($params['rows'])) {
+        foreach ($params['rows'] as $rowName) {
+            if ($params['data'][0] !== 'activitystream' && $field = wikiplugin_pivottable_field_from_definitions(trim($rowName), $definitions)) {
+                $rows[] = $field['name'];
+            } else {
+                $rows[] = $rowName;
+            }
+        }
+    }
+
+    $vals = [];
+    if (! empty($params['vals'])) {
+        foreach ($params['vals'] as $valName) {
+            if ($params['data'][0] !== 'activitystream' && $field = wikiplugin_pivottable_field_from_definitions(trim($valName), $definitions)) {
+                $vals[] = $field['name'];
+            } else {
+                $vals[] = $valName;
+            }
+        }
+    }
+
+    $inclusions = ! empty($params['inclusions']) ? $params['inclusions'] : '{}';
+
+    // parsing array to hold permNames mapped with field names for save button
+    // and list of date fields for custom sorting
+    $fieldsArr = [];
+    $dateFields = [];
+    foreach ($fields as $field) {
+        $field = wikiplugin_pivottable_field_from_definitions($field['permName'], $definitions, $field);
+        $fieldsArr[$field['name']] = $field['permName'];
+        if ($field['type'] == 'f') {
+            $dateFields[] = $field['name'];
+        }
+    }
+
+    $smarty->loadPlugin('smarty_function_object_link');
+
+    if (! isset($params['aggregateDetails'])) {
+        if (isset($fields[2])) {
+            $params['aggregateDetails'][] = $fields[2]['permName'];
+        } elseif (isset($fields[0])) {
+            $params['aggregateDetails'][] = $fields[0]['permName'];
+        }
+    }
+
+    if (! empty($params['aggregateDetails']) && ! empty($params['aggregateDetails'][0])) {
+        $aggregateDetails = [];
+        foreach ($params['aggregateDetails'] as $fieldName) {
+            if ($params['data'][0] != 'activitystream' && $field = wikiplugin_pivottable_field_from_definitions(trim($fieldName), $definitions)) {
+                $aggregateDetails[] = $field['name'];
+            } else {
+                $aggregateDetails[] = trim($fieldName);
+            }
+        }
+        foreach ($pivotData as &$row) {
+            $arr = array_map(function ($field) use ($row) {
+                return $row[$field] ?? '';
+            }, $aggregateDetails);
+            if (! empty($params['aggregateDetailsFormat'])) {
+                $title = tra($params['aggregateDetailsFormat'], '', false, $arr);
+            } else {
+                $title = implode(' ', $arr);
+            }
+            $pivotLinkParams = [
+                'type' => $row['object_type'],
+                'id' => $row['object_id'],
+                'title' => $title,
+            ];
+            if ($row['object_type'] === 'activity') {
+                $pivotLinkParams = [
+                    'type' => $row['type'],
+                    'id' => $row['object'],
+                    'title' => $row['type'],
+                ];
+            }
+            $row['pivotLink'] = smarty_function_object_link($pivotLinkParams, $smarty->getEmptyInternalTemplate());
+        }
+    } else {
+        $params['aggregateDetails'] = [];
+    }
+
+    $highlight = [];
+    if (! empty($params['highlightMine']) && $params['highlightMine'] === 'y' && $params['data'][0] !== 'activitystream') {
+        $ownerFields = [];
+        foreach ($definitions as $definition) {
+            foreach ($definition->getItemOwnerFields() as $fieldId) {
+                $ownerFields[] = $definition->getField($fieldId);
+            }
+        }
+        foreach ($pivotData as $item) {
+            foreach ($ownerFields as $ownerField) {
+                $itemUsers = TikiLib::lib('trk')->parse_user_field(@$item[$ownerField['name']]);
+                if (in_array($user, $itemUsers)) {
+                    $highlight[] = ['item' => $item];
+                    break;
+                }
+            }
+        }
+    }
+    if (! empty($params['highlightGroup']) && $params['highlightGroup'] === 'y') {
+        $groupField = null;
+        foreach ($fields as $field) {
+            if ($field['type'] == 'g') {
+                $groupField = $field;
+                break;
+            }
+        }
+        if ($groupField) {
+            $myGroups = TikiLib::lib('tiki')->get_user_groups($user);
+            foreach ($pivotData as $item) {
+                $group = @$item[$groupField['name']];
+                if (in_array($group, $myGroups)) {
+                    $highlight[] = ['item' => $item, 'group' => $group];
+                }
+            }
+            $groupColors = [];
+            if ($prefs['feature_conditional_formatting'] === 'y') {
+                $groupsInfo = TikiLib::lib('user')->get_group_info($myGroups);
+                foreach ($groupsInfo as $groupInfo) {
+                    $groupColors[$groupInfo['groupName']] = $groupInfo['groupColor'];
+                }
+            }
+            if (! empty($params['highlightGroupColors'])) {
+                $index = 0;
+                foreach ($myGroups as $group) {
+                    if (empty($params['highlightGroupColors'][$index])) {
+                        break;
+                    }
+                    $groupColors[$group] = $params['highlightGroupColors'][$index];
+                    $index++;
+                }
+            }
+            if ($groupColors) {
+                foreach ($highlight as &$row) {
+                    if (! empty($row['group'])) {
+                        $group = $row['group'];
+                        if ($group && ! empty($groupColors[$group])) {
+                            $row['color'] = $groupColors[$group];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //checking if user can see edit button
+    if (! empty($wikiplugin_included_page)) {
+        $sourcepage = $wikiplugin_included_page;
+    } else {
+        $sourcepage = $page;
+    }
+    //checking if user has edit permissions on the wiki page using the current permission library to obey global/categ/object perms
+    $objectperms = Perms::get([ 'type' => 'wiki page', 'object' => $sourcepage ]);
+    if ($objectperms->edit) {
+        $showControls = true;
+    } else {
+        $showControls = false;
+    }
+
+    $out = str_replace(['~np~', '~/np~'], '', $formatter->renderFilters());
+
+    $smarty->assign('pivottable', [
+        'id' => 'pivottable' . $id,
+        'trows' => $rows,
+        'tcolumns' => $cols,
+        'dataSource' => $dataType == 'activitystream' ? $dataType : $dataType . ':' . implode(',', $trackerIds),
+        'data' => $pivotData,
+        'derivedAttributes' => $derivedAttributes,
+        'rendererName' => $rendererName,
+        'aggregatorName' => $aggregatorName,
+        'vals' => $vals,
+        'width' => $width,
+        'height' => $height,
+        'heatmapParams' => $heatmapParams,
+        'showControls' => $showControls,
+        'page' => $sourcepage,
+        'fieldsArr' => $fieldsArr,
+        'dateFields' => $dateFields,
+        'inclusions' => $inclusions,
+        'colOrder' => $params['colOrder'] ?? 'key_a_to_z',
+        'rowOrder' => $params['rowOrder'] ?? 'key_a_to_z',
+        'menuLimit' => empty($params['menuLimit']) ? null : $params['menuLimit'],
+        'aggregateDetails' => implode(':', $params['aggregateDetails']),
+        'aggregateDetailsFormat' => $params['aggregateDetailsFormat'] ?? null,
+        'aggregateDetailsCallback' => $params['aggregateDetailsCallback'] ?? null,
+        'attributesOrder' => $attributesOrder,
+        'highlight' => $highlight,
+        'highlightMine' => empty($params['highlightMine']) ? null : $params['highlightMine'],
+        'highlightGroup' => empty($params['highlightGroup']) ? null : $params['highlightGroup'],
+        'xAxisLabel' => empty($params['xAxisLabel']) ? null : $params['xAxisLabel'],
+        'yAxisLabel' => empty($params['yAxisLabel']) ? null : $params['yAxisLabel'],
+        'chartTitle' => empty($params['chartTitle']) ? null : $params['chartTitle'],
+        'chartHoverBar' => empty($params['chartHoverBar']) ? null : $params['chartHoverBar'],
+        'translate' => empty($params['translate']) ? null : $params['translate'],
+        'index' => $id
+    ]);
+
+    $out .= $smarty->fetch('wiki-plugins/wikiplugin_pivottable.tpl');
+
+    return $out;
+}
+
+function wikiplugin_pivottable_field_from_definitions($permName, $definitions, $default = null)
+{
+    foreach ($definitions as $definition) {
+        if ($field = $definition->getFieldFromPermName(str_replace('tracker_field_', '', $permName))) {
+            if (count($definitions) > 1) {
+                $field['name'] = $definition->getConfiguration('name') . ' - ' . $field['name'];
+            }
+            return $field;
+        }
+    }
+    return $default;
+}
