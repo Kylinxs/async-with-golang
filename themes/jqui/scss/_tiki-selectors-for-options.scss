@@ -1,0 +1,136 @@
+// $Id$
+// This file is for additional LESS rules beyond what are in variables.scss.
+// Image path example:
+
+// body {
+//    background-image: url('#{$imagePath}bg.jpg');
+// }
+//
+// If Glyphicons should be rendered in a color other than the Bootstrap default or the theme default, uncomment and specify the color.
+// .glyphicon {color: $gray-lighter;}
+
+body {
+    color: $body-color;
+}
+
+// Links
+
+a,
+.btn-link {
+    color: $link-color;
+
+    &:hover,
+    &:focus {
+        color: $link-hover-color;
+    }
+
+    //  &:focus {
+    //    .tab-focus();
+    //  }
+}
+
+
+#col2 .panel,
+#col3 .panel,
+#bottom_modules .panel {
+    a,
+    a:visited {
+        color: $side-column-link-color;
+    }
+}
+
+#col2 .panel-heading,
+#col3 .panel-heading,
+#bottom_modules .panel-heading {
+//    background: $side-column-panel-heading-background; // #e1d518 url('#{$imagePath}siteheader.png') no-repeat -1000px -200px;
+//    border-bottom: none;
+}
+
+.form-control,
+select,
+input[type="text"],
+input[type="password"],
+input[type="file"],
+input[type="email"],
+input[type="file"],
+input[type="search"],
+input[type="number"],
+input#login-pass,
+textarea,
+.adminoptionbox option {
+//    background-color: $form-control-background; //#f8f9d4;
+//    border-color: $form-control-border-colors; // #F5FB86 #FBFBEE #FBFBEE #F5FB86;
+}
+
+
+#footer {
+//    background: $footer-background;
+//    color: $footer-color; // #696969;
+}
+
+// $navbar-default-link-background: #bfbd23;
+//.navbar-nav .open .dropdown-menu,
+//.navbar-nav .open .dropdown-menu li,
+//.navbar-default .navbar-nav > li > a {
+//    background: $navbar-default-navbar-nav-li-a-background; // #cdbe23;
+//}
+
+//.navbar-default .navbar-nav li a:hover {
+//    background: $navbar-default-navbar-nav-li-a-hover-background;
+//}
+
+.postbody-title {
+//    background: $postbody-title-background; //url('#{$imagePath}siteheader.png') no-repeat -480px -200px;
+}
+
+.btn,
+.btn-default,
+input[type="reset"],
+input[type="submit"],
+.button input {
+//    background: $button-background-gradient;
+    text-transform: $button-text-transform;
+}
+
+.btn.btn-link,
+input[type="submit"].btn-link {
+    background: none;
+}
+
+.btn:hover,
+.btn-default:hover,
+input[type="reset"]:hover,
+input[type="submit"]:hover,
+.button input:hover {
+    background: $button-hover-background-gradient;
+}
+
+.btn-link:hover { background: none; }
+
+//.topbar,
+//.topbar .navbar-nav > li,
+//.topbar .nav > li {
+//    background: $topbar_bg; //  $navbar-default-bg;
+//    color: $topbar_color; //  $navbar-default-color;
+//    > a {
+///        color: $topbar_link_color; // $navbar-default-link-color;
+        //    background: $navbar-default-link-bg;
+//        padding-top: $topbar_link_padding_top; //  $navbar-padding-y;
+//        padding-bottom: $topbar_link_padding_bottom; // $navbar-padding-y;
+//    }
+//    > a:hover,
+//    > a:focus {
+//        color: $topbar_link_hover_color; //  $navbar-default-link-hover-color;
+//    }
+//}
+
+
+/*.navbar-nav > li > a {
+  padding-top: none;
+  padding-bottom: none;}
+
+.navbar-nav > li > a {
+  padding-bottom: 0;
+  padding-top: 0;
+}*/
+
