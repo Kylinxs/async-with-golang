@@ -15,4 +15,5 @@
             {/if}
         {/foreach}
     {/if}
-    <input type="hidden" name="rating_prev[{$rating_type|escape}][{$rating_id|escape}]" value="{$current_rating
+    <input type="hidden" name="rating_prev[{$rating_type|escape}][{$rating_id|escape}]" value="{$current_rating|escape}">
+</span>

@@ -1,0 +1,38 @@
+---
+post:
+  description: Detach translations
+  parameters:
+    - name: type
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: source
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: target
+      in: query
+      required: true
+      schema:
+        type: string
+  responses:
+    '200':
+      description: detach translation response
+      content:
+        application/json:
+          schema:
+            type: object
+    '400':
+      description: bad request
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml

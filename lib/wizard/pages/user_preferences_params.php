@@ -1,0 +1,215 @@
+<?php
+
+// (c) Copyright by authors of the Tiki Wiki CMS Groupware Project
+//
+// All Rights Reserved. See copyright.txt for details and a complete list of authors.
+// Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
+// $Id$
+
+require_once('lib/wizard/wizard.php');
+$userprefslib = TikiLib::lib('userprefs');
+
+/**
+ * Set up the wysiwyg editor, including inline editing
+ */
+class UserWizardPreferencesParams extends Wizard
+{
+    public function pageTitle()
+    {
+        return tra('User Preferences:') . ' ' . tra('Settings');
+    }
+
+    public function isEditable()
+    {
+        return true;
+    }
+
+    public function isVisible()
+    {
+        global  $prefs;
+        return $prefs['feature_userPreferences'] === 'y';
+    }
+
+    public function onSetupPage($homepageUrl)
+    {
+        global  $user, $prefs, $tiki_p_messages;
+        $userlib = TikiLib::lib('user');
+        $tikilib = TikiLib::lib('tiki');
+        $smarty = TikiLib::lib('smarty');
+
+        // Run the parent first
+        parent::onSetupPage($homepageUrl);
+
+        $showPage = false;
+
+        // Show if option is selected
+        if ($prefs['feature_userPreferences'] === 'y') {
+            $showPage = true;
+        }
+
+        if (! $showPage) {
+            return false;
+        }
+
+        $userwatch = $user;
+
+        $smarty->assign('userwatch', $userwatch);
+        $smarty->assign('show_mouseover_user_info', isset($prefs['show_mouseover_user_info']) ? $prefs['show_mouseover_user_info'] : $prefs['feature_community_mouseover']);
+
+        $mailCharsets = ['utf-8', 'iso-8859-1'];
+        $smarty->assign_by_ref('mailCharsets', $mailCharsets);
+
+        $mytiki_pages = $tikilib->get_user_preference($userwatch, 'mytiki_pages', 'y');
+        $smarty->assign('mytiki_pages', $mytiki_pages);
+        $mytiki_blogs = $tikilib->get_user_preference($userwatch, 'mytiki_blogs', 'y');
+        $smarty->assign('mytiki_blogs', $mytiki_blogs);
+        $mytiki_items = $tikilib->get_user_preference($userwatch, 'mytiki_items', 'y');
+        $smarty->assign('mytiki_items', $mytiki_items);
+        $mytiki_msgs = $tikilib->get_user_preference($userwatch, 'mytiki_msgs', 'y');
+        $smarty->assign('mytiki_msgs', $mytiki_msgs);
+        $mytiki_tasks = $tikilib->get_user_preference($userwatch, 'mytiki_tasks', 'y');
+        $smarty->assign('mytiki_tasks', $mytiki_tasks);
+        $mylevel = $tikilib->get_user_preference($userwatch, 'mylevel', '1');
+        $smarty->assign('mylevel', $mylevel);
+        $allowMsgs = $tikilib->get_user_preference($userwatch, 'allowMsgs', 'y');
+        $smarty->assign('allowMsgs', $allowMsgs);
+        $minPrio = $tikilib->get_user_preference($userwatch, 'minPrio', 3);
+        $smarty->assign('minPrio', $minPrio);
+        $theme = $tikilib->get_user_preference($userwatch, 'theme', '');
+        $smarty->assign('theme', $theme);
+        $language = $tikilib->get_user_preference($userwatch, 'language', $prefs['language']);
+        $smarty->assign('language', $language);
+
+
+        $email_isPublic = $tikilib->get_user_preference($userwatch, 'email is public', 'n');
+        if (isset($user_preferences[$userwatch]['email is public'])) {
+            $user_preferences[$userwatch]['email_isPublic'] = $user_preferences[$userwatch]['email is public'];
+            $email_isPublic = $user_preferences[$userwatch]['email is public'];
+        }
+        $smarty->assign('email_isPublic', $email_isPublic);
+
+        $mailCharset = $tikilib->get_user_preference($userwatch, 'mailCharset', $prefs['default_mail_charset']);
+        $smarty->assign('mailCharset', $mailCharset);
+        $userbreadCrumb = $tikilib->get_user_preference($userwatch, 'userbreadCrumb', $prefs['site_userbreadCrumb']);
+        $smarty->assign('userbreadCrumb', $userbreadCrumb);
+        $display_12hr_clock = $tikilib->get_user_preference($userwatch, 'display_12hr_clock', 'n');
+        $smarty->assign('display_12hr_clock', $display_12hr_clock);
+        $userinfo = $userlib->get_user_info($userwatch);
+        $smarty->assign_by_ref('userinfo', $userinfo);
+        $llist = [];
+        $llist = $tikilib->list_styles();
+        $smarty->assign_by_ref('styles', $llist);
+        $languages = [];
+        $langLib = TikiLib::lib('language');
+        $languages = $langLib->list_languages();
+        $smarty->assign_by_ref('languages', $languages);
+        $user_pages = $tikilib->get_user_pages($userwatch, -1);
+        $smarty->assign_by_ref('user_pages', $user_pages);
+        $bloglib = TikiLib::lib('blog');
+        $user_blogs = $bloglib->list_user_blogs($userwatch, false);
+        $smarty->assign_by_ref('user_blogs', $user_blogs);
+        $user_items = TikiLib::lib('trk')->get_user_items($userwatch);
+        $smarty->assign_by_ref('user_items', $user_items);
+        $scramblingMethods = ["n", "strtr", "unicode", "x", 'y']; // email_isPublic utilizes 'n'
+        $smarty->assign_by_ref('scramblingMethods', $scramblingMethods);
+        $scramblingEmails = [
+                tra("no"),
+                TikiMail::scrambleEmail($userinfo['email'], 'strtr'),
+                TikiMail::scrambleEmail($userinfo['email'], 'unicode') . "-" . tra("unicode"),
+                TikiMail::scrambleEmail($userinfo['email'], 'x'), $userinfo['email'],
+            ];
+        $smarty->assign_by_ref('scramblingEmails', $scramblingEmails);
+        $mailCharsets = ['utf-8', 'iso-8859-1'];
+        $smarty->assign_by_ref('mailCharsets', $mailCharsets);
+        $smarty->assign_by_ref('user_prefs', $user_preferences[$userwatch]);
+        $tikilib->get_user_preference($userwatch, 'diff_versions', 'n');
+        $usertrackerId = false;
+        $useritemId = false;
+        if ($prefs['userTracker'] == 'y') {
+            $re = $userlib->get_usertracker($userinfo["userId"]);
+            if (isset($re['usersTrackerId']) and $re['usersTrackerId']) {
+                $trklib = TikiLib::lib('trk');
+                $info = $trklib->get_item_id($re['usersTrackerId'], $trklib->get_field_id($re['usersTrackerId'], 'Login'), $userwatch);
+                $usertrackerId = $re['usersTrackerId'];
+                $useritemId = $info;
+            }
+        }
+        $smarty->assign('usertrackerId', $usertrackerId);
+        $smarty->assign('useritemId', $useritemId);
+        //// Custom fields
+        //foreach ($customfields as $custpref => $prefvalue) {
+            //$customfields[$custpref]['value'] = $tikilib->get_user_preference($userwatch, $customfields[$custpref]['prefName'], $customfields[$custpref]['value']);
+            //$smarty->assign($customfields[$custpref]['prefName'], $customfields[$custpref]['value']);
+        //}
+        if ($prefs['feature_messages'] == 'y' && $tiki_p_messages == 'y') {
+            $unread = $tikilib->user_unread_messages($userwatch);
+            $smarty->assign('unread', $unread);
+        }
+        $smarty->assign('timezones', TikiDate::getTimeZoneList());
+
+        // Time zone data for the user
+        if ($prefs['users_prefs_display_timezone'] == 'Site') {
+            $smarty->assign('warning_site_timezone_set', 'y');
+        }
+
+        if (isset($prefs['display_timezone'])) {
+            $smarty->assign('display_timezone', $prefs['display_timezone']);
+        }
+        $smarty->assign('userPageExists', 'n');
+        if ($prefs['feature_wiki'] == 'y' and $prefs['feature_wiki_userpage'] == 'y') {
+            if ($tikilib->page_exists($prefs['feature_wiki_userpage_prefix'] . $user)) {
+                $smarty->assign('userPageExists', 'y');
+            }
+        }
+        return true;
+    }
+
+    public function getTemplate()
+    {
+        $wizardTemplate = 'wizard/user_preferences_params.tpl';
+        return $wizardTemplate;
+    }
+
+    public function onContinue($homepageUrl)
+    {
+        global $tikilib, $user, $prefs, $tiki_p_admin, $tikidomain;
+
+        $userwatch = $user;
+        $headerlib = TikiLib::lib('header');
+
+        // Run the parent first
+        parent::onContinue($homepageUrl);
+
+        // setting preferences
+        if ($prefs['change_theme'] == 'y' && empty($group_style)) {
+            if (isset($_REQUEST["mystyle"])) {
+                if ($user == $userwatch) {
+                    $t = $tikidomain ? $tikidomain . '/' : '';
+                    if ($_REQUEST["mystyle"] == "") {
+                        //If mystyle is empty --> user has selected "Site Default" theme
+                        $sitestyle = $tikilib->getOne("select `value` from `tiki_preferences` where `name`=?", 'style');
+                        $headerlib->replace_cssfile('styles/' . $t . $prefs['style'], 'styles/' . $t . $sitestyle, 51);
+                    } else {
+                        $headerlib->replace_cssfile('styles/' . $t . $prefs['style'], 'styles/' . $t . $_REQUEST['mystyle'], 51);
+                    }
+                }
+                if ($_REQUEST["mystyle"] == "") {
+                    $tikilib->set_user_preference($userwatch, 'theme', "");
+                } else {
+                    $tikilib->set_user_preference($userwatch, 'theme', $_REQUEST["mystyle"]);
+                }
+            }
+        }
+        if (isset($_REQUEST["userbreadCrumb"])) {
+            $tikilib->set_user_preference($userwatch, 'userbreadCrumb', $_REQUEST["userbreadCrumb"]);
+        }
+        $langLib = TikiLib::lib('language');
+        if (isset($_REQUEST["language"]) && $langLib->is_valid_language($_REQUEST['language'])) {
+            if ($tiki_p_admin || $prefs['change_language'] == 'y') {
+                $tikilib->set_user_preference($userwatch, 'language', $_REQUEST["language"]);
+            }
+            if ($userwatch == $user) {
+                include('lang/' . $_REQUEST["language"] . '/language.php');
+            }
+        } else {
+            $tikilib->set_user_preference($userwatch

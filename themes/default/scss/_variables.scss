@@ -1,0 +1,14 @@
+
+// - - - - - - - Bootstrap variables (override values in vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss - - - - - - //
+
+$link-decoration: none !default;
+$lead-font-weight: inherit;
+
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/variables";
+
+
+
+// - - - - - - - - - -  - - - - - - Other variables, if any - - - - - - - - - - - - - - - - - //
+
+$tiki-module-h3-card-title-font-size: $h5-font-size;
+$btn-primary-border: $primary;
