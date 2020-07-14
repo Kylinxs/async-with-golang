@@ -212,4 +212,121 @@ class UserWizardPreferencesParams extends Wizard
                 include('lang/' . $_REQUEST["language"] . '/language.php');
             }
         } else {
-            $tikilib->set_user_preference($userwatch
+            $tikilib->set_user_preference($userwatch, 'language', '');
+        }
+        if (isset($_REQUEST['read_language'])) {
+            $list = [];
+            $tok = strtok($_REQUEST['read_language'], ' ');
+            while (false !== $tok) {
+                $list[] = $tok;
+                $tok = strtok(' ');
+            }
+            $list = array_unique($list);
+            $langLib = TikiLib::lib('language');
+            $list = array_filter($list, [$langLib, 'is_valid_language']);
+            $list = implode(' ', $list);
+            $tikilib->set_user_preference($userwatch, 'read_language', $list);
+        }
+        if (isset($_REQUEST['display_timezone'])) {
+            $tikilib->set_user_preference($userwatch, 'display_timezone', $_REQUEST['display_timezone']);
+        }
+
+        if (isset($_REQUEST['display_12hr_clock']) && $_REQUEST['display_12hr_clock'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'display_12hr_clock', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'display_12hr_clock', 'n');
+        }
+        if (isset($_REQUEST['diff_versions']) && $_REQUEST['diff_versions'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'diff_versions', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'diff_versions', 'n');
+        }
+        if ($prefs['feature_community_mouseover'] == 'y') {
+            if (isset($_REQUEST['show_mouseover_user_info']) && $_REQUEST['show_mouseover_user_info'] == 'on') {
+                $tikilib->set_user_preference($userwatch, 'show_mouseover_user_info', 'y');
+            } else {
+                $tikilib->set_user_preference($userwatch, 'show_mouseover_user_info', 'n');
+            }
+        }
+        $email_isPublic = isset($_REQUEST['email_isPublic']) ? $_REQUEST['email_isPublic'] : 'n';
+        $tikilib->set_user_preference($userwatch, 'email is public', $email_isPublic);
+        $tikilib->set_user_preference($userwatch, 'mailCharset', $_REQUEST['mailCharset']);
+        //// Custom fields
+        //foreach ($customfields as $custpref => $prefvalue) {
+            //if (isset($_REQUEST[$customfields[$custpref]['prefName']])) $tikilib->set_user_preference($userwatch, $customfields[$custpref]['prefName'], $_REQUEST[$customfields[$custpref]['prefName']]);
+        //}
+
+        if (isset($_REQUEST['location'])) {
+            if ($coords = TikiLib::lib('geo')->parse_coordinates($_REQUEST['location'])) {
+                $tikilib->set_user_preference($userwatch, 'lat', $coords['lat']);
+                $tikilib->set_user_preference($userwatch, 'lon', $coords['lon']);
+                if (isset($coords['zoom'])) {
+                    $tikilib->set_user_preference($userwatch, 'zoom', $coords['zoom']);
+                }
+            }
+        }
+
+        //// Custom fields
+        //foreach ($customfields as $custpref => $prefvalue) {
+            //// print $customfields[$custpref]['prefName'];
+            //// print $_REQUEST[$customfields[$custpref]['prefName']];
+            //$tikilib->set_user_preference($userwatch, $customfields[$custpref]['prefName'], $_REQUEST[$customfields[$custpref]['prefName']]);
+        //}
+        if (isset($_REQUEST['minPrio'])) {
+            $tikilib->set_user_preference($userwatch, 'minPrio', $_REQUEST['minPrio']);
+        }
+        if ($prefs['allowmsg_is_optional'] == 'y') {
+            if (isset($_REQUEST['allowMsgs']) && $_REQUEST['allowMsgs'] == 'on') {
+                $tikilib->set_user_preference($userwatch, 'allowMsgs', 'y');
+            } else {
+                $tikilib->set_user_preference($userwatch, 'allowMsgs', 'n');
+            }
+        }
+        if (isset($_REQUEST['mytiki_pages']) && $_REQUEST['mytiki_pages'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_pages', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_pages', 'n');
+        }
+        if (isset($_REQUEST['mytiki_blogs']) && $_REQUEST['mytiki_blogs'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_blogs', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_blogs', 'n');
+        }
+        if (isset($_REQUEST['mytiki_msgs']) && $_REQUEST['mytiki_msgs'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_msgs', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_msgs', 'n');
+        }
+        if (isset($_REQUEST['mytiki_tasks']) && $_REQUEST['mytiki_tasks'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_tasks', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_tasks', 'n');
+        }
+        if (isset($_REQUEST['mytiki_forum_topics']) && $_REQUEST['mytiki_forum_topics'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_forum_topics', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_forum_topics', 'n');
+        }
+        if (isset($_REQUEST['mytiki_forum_replies']) && $_REQUEST['mytiki_forum_replies'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_forum_replies', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_forum_replies', 'n');
+        }
+        if (isset($_REQUEST['mytiki_items']) && $_REQUEST['mytiki_items'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_items', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_items', 'n');
+        }
+        if (isset($_REQUEST['mytiki_articles']) && $_REQUEST['mytiki_articles'] == 'on') {
+            $tikilib->set_user_preference($userwatch, 'mytiki_articles', 'y');
+        } else {
+            $tikilib->set_user_preference($userwatch, 'mytiki_articles', 'n');
+        }
+        if (isset($_REQUEST['tasks_maxRecords'])) {
+            $tikilib->set_user_preference($userwatch, 'tasks_maxRecords', $_REQUEST['tasks_maxRecords']);
+        }
+        if ($prefs['feature_intertiki'] == 'y' && ! empty($prefs['feature_intertiki_mymaster']) && $prefs['feature_intertiki_import_preferences'] == 'y') { //send to the master
+            TikiLib::lib('user')->interSendUserInfo($prefs['interlist'][$prefs['feature_intertiki_mymaster']], $userwatch);
+        }
+    }
+}
