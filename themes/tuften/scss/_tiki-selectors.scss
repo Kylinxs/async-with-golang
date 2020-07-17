@@ -1,0 +1,14 @@
+// This file is for additional SCSS rules beyond what are in _bootstrap-variables.scss.
+// Image path example:
+$imagePath: "../images/";
+// body {
+//	background-image: url('#{$imagePath}bg.jpg');
+// }
+
+// The headings below that are commented are from Bootstrap variables.scss to help organize relevant Tiki CSS selectors.
+// In the case of CSS selectors that are grouped to share common CSS properties, the category appropriate for most of the selectors is used.
+
+$themeFontPath: "../fonts/";
+
+@font-face {
+	font-
