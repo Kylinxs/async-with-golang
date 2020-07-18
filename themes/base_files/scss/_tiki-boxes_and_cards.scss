@@ -1,0 +1,102 @@
+// $Id$
+// Boxes
+.error .rbox-data .adminoption,
+.error .rbox-data .adminoptionlabel {
+    display: inline;
+}
+
+// Modules
+.modules {
+    position: relative;
+}
+
+h3.card-title {
+    display: block;
+    padding-top: 0;
+    margin: 0;
+}
+
+.moduleflip {
+    display: none;
+    position: absolute;
+    right: .2rem;
+    top: .2rem;
+//    width: 5rem; This has to be an error - This width overlaps the icon and the module text.
+}
+
+.moduleflip > * {
+    padding: 0 .2rem;
+}
+
+.moduleflip > form .close {
+    font-size: 1.3rem;
+}
+
+.flipmodtitle.close {
+    line-height: 0.75;
+}
+
+a.flipmodtitle .icon {
+    font-size: 80%;
+}
+
+.card:hover .moduleflip,
+.card:hover .moduleflip img {
+    display: block;
+}
+
+.card-body {
+    table { width: 100%; }
+    a.linkmenu { display: block; }
+    ol { padding-left: 2rem; }
+}
+
+.module .card-body {
+    &>ol,
+    &>ul {
+        margin-left: -7px;
+        overflow: hidden;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+}
+
+.box-months_links ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.box-months_links ul li {
+    list-style-type: none;
+    padding-left: 0.5em;
+}
+
+.box-months_links ul li li {
+    list-style-type: none;
+    padding-left: 1.3em;
+}
+
+.modcontrols > div > button.btn-link {
+    padding: 0;
+}
+
+// MiniChat
+.box-minichat {
+    width: 100%;
+}
+
+.minichat,
+.minichatdiv,
+.minichatchan {
+    overflow: auto;
+}
+
+#autosave_preview > div {
+    height: 30ex;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+// Preserve legacy module HTML/appearance (after div.card-footer was added to div.module), but allow overriding by theme CSS for styling purposes, etc.
+.module .card-footer { display: none; }
+
