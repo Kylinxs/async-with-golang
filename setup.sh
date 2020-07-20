@@ -633,4 +633,585 @@ composer_core()
             do
                 if [ $N -eq 7 ];
                 then
-                    if [ ${EXITONFAIL} = "y" 
+                    if [ ${EXITONFAIL} = "y" ]; then
+                        exit 1
+                    else
+                        return
+                    fi
+                else
+                    echo "Composer failed, retrying in 5 seconds, for a few times. Hit Ctrl-C to cancel."
+                    sleep 5
+                fi
+                N=$((N+1))
+            done
+        fi
+    fi
+    return
+}
+
+composer()
+{
+    # todo : if exists php;
+    # insert php cli version check here
+    # http://dev.tiki.org/item4721
+    PHP_OPTION="--version"
+    REQUIRED_PHP_VERSION=74 # minimal version PHP 7.4 but no decimal seperator, no floating point data
+    MAX_PHP_VERSION=81      # maximum version PHP 7.4 as we can't support php8.1 yet
+    #${PHPCLI} ${PHP_OPTION}
+    LOCAL_PHP_VERSION=`"${PHPCLI}" ${PHP_OPTION} | ${GREP} ^PHP | ${CUT} -c5,7`
+    #echo ${LOCAL_PHP_VERSION}
+    LIKELY_ALTERNATE_PHP_CLI="php74 php7.4 php7.4-cli" # These have been known to exist on some hosting platforms
+    if [ "${LOCAL_PHP_VERSION}" -lt "${REQUIRED_PHP_VERSION}" ] || [ "${LOCAL_PHP_VERSION}" -gt "${MAX_PHP_VERSION}" ] ; then
+        echo "Wrong PHP version: php${LOCAL_PHP_VERSION}.  A version >= php${REQUIRED_PHP_VERSION} and <= php${MAX_PHP_VERSION} is necessary."
+        echo "Searching for typically named alternative PHP version ..."
+        for phptry in $LIKELY_ALTERNATE_PHP_CLI; do
+            PHPTRY=`which $phptry`
+            #echo "debug: $PHPTRY"
+            if [ -n "${PHPTRY}" ]; then
+                echo "... correct PHP version ${phptry} detected and used"
+                PHPCLI="${PHPTRY}"
+                PHPCLIFOUND="y"
+        composer_core
+                break
+            fi
+        done
+        if [ ! -n "${PHPCLIFOUND}" ]; then
+            echo "... no alternative php version found."
+            echo "Please provide an alternative PHP version with the -p option."
+            echo "Example: sh `basename $0` -p php${REQUIRED_PHP_VERSION}."
+            echo "You can use the command-line command 'php[TAB][TAB]' to find out available versions."
+            exit 1
+        fi
+    else
+        echo "Local PHP version ${LOCAL_PHP_VERSION} >= to required PHP version ${REQUIRED_PHP_VERSION} - good"
+        composer_core
+    fi
+}
+
+http_composer() {
+    "${PHPCLI}" doc/devtools/composer_http_mode.php execute "$OPT_QUIET"
+}
+
+
+# part 4.3 - several command options as fix, open, ...
+
+command_fix() {
+    if [ "$USER" = 'root' ]; then
+        if [ -n "$OPT_AUSER" ]; then
+            AUSER=$OPT_AUSER
+        elif [ -z "$OPT_USE_CURRENT_USER_GROUP" ]; then
+            read -p "User [$AUSER]: " REPLY
+            if [ -n "$REPLY" ]; then
+                AUSER=$REPLY
+            fi
+        fi
+    else
+        if [ -z "$OPT_USE_CURRENT_USER_GROUP" ]; then
+            echo "You are not root or you are on a shared hosting account. You can now:
+
+1- ctrl-c to break now.
+
+or
+
+2- If you press enter to continue, you will probably get some error messages
+but it (the script) will still fix what it can according to the permissions
+of your user. This script will now ask you some questions. If you don't know
+what to answer, just press enter to each question (to use default value)"
+
+            read -p "> Press enter to continue: " WAIT
+            AUSER=$USER
+        fi
+    fi
+
+    if [ -n "$OPT_AGROUP" ]; then
+        AGROUP=$OPT_AGROUP
+    elif [ -z "$OPT_USE_CURRENT_USER_GROUP" ]; then
+        read -p "> Group [$AGROUP]: " REPLY
+        if [ -n "$REPLY" ]; then
+            AGROUP=$REPLY
+        fi
+    fi
+
+    touch db/virtuals.inc
+    if [ -n "$OPT_VIRTUALS" ]; then
+        VIRTUALS=$OPT_VIRTUALS
+    elif [ -n "$OPT_USE_CURRENT_USER_GROUP" ]; then
+        VIRTUALS=$(cat db/virtuals.inc)
+    else
+        read -p "> Multi [$(cat -s db/virtuals.inc | tr '\n' ' ')]: " VIRTUALS
+        [ -z "$VIRTUALS" ] && VIRTUALS=$(cat db/virtuals.inc)
+    fi
+
+    if [ -n "$VIRTUALS" ]; then
+        for vdir in $VIRTUALS; do
+            echo $vdir >> db/virtuals.inc
+            cat db/virtuals.inc | sort | uniq > db/virtuals.inc_new
+            rm -f db/virtuals.inc && mv db/virtuals.inc_new db/virtuals.inc
+        done
+    fi
+
+    # make sure composer files can be created by tiki-admin.php?page=packages
+    echo "Checking non-bundled composer : "
+    if [ ! -f composer.json ]; then
+        echo -n " Creating composer.json..."
+        cp composer.json.dist composer.json
+    else
+        echo -n " Found composer.json..."
+    fi
+    if [ ! -f composer.lock ]; then
+        echo -n " created composer.lock..."
+        echo "{}" > composer.lock
+    else
+        echo -n " found composer.json..."
+    fi
+    echo " done."
+
+    echo "Checking dirs : "
+    for dir in $DIRS; do
+        echo -n "  $dir ... "
+        if [ ! -d $dir ]; then
+            echo -n " Creating directory"
+            mkdir -p $dir
+        fi
+        echo " ok."
+        if [ -n "$VIRTUALS" ] && [ $dir != "temp/unified-index" ]; then
+            for vdir in $VIRTUALS; do
+                echo -n "  $dir/$vdir ... "
+                if [ ! -d "$dir/$vdir" ]; then
+                    echo -n " Creating Directory"
+                    mkdir -p "$dir/$vdir"
+                fi
+                echo " ok."
+            done
+        fi
+    done
+
+    # Check that the USER is in AGROUP
+    USERINAGROUP="no"
+    for grp in `id -Gn $USER`; do
+        if [ "$grp" = "$AGROUP" ]; then
+            USERINAGROUP="yes"
+        fi
+    done
+
+    echo "Fix global perms ..."
+    if [ "$USER" = 'root' ]; then
+        #chown -fR $AUSER:$AGROUP . || echo "Could not change ownership to $AUSER"
+        echo -n "Change user to $AUSER and group to $AGROUP..."
+        chown -fR $AUSER:$AGROUP .
+        echo " done."
+    else
+        if [ -n "$OPT_AUSER" ]; then
+            echo "You are not root. We will not try to change the file owners."
+        fi
+        if [ "$USERINAGROUP" = "yes" ]; then
+            echo -n "Change group to $AGROUP ..."
+            chgrp -Rf $AGROUP .
+            echo " done."
+        else
+            echo "You are not root and you are not in the group $AGROUP. We can't change the group ownership to $AGROUP."
+            echo "Special dirs permissions will be set accordingly."
+        fi
+    fi
+
+#    find . ! -regex '.*^\(devtools\).*' -type f -exec chmod 644 {} \;
+#    echo -n " files perms fixed ..."
+#    find . -type d -exec chmod 755 {} \;
+#    echo " dirs perms fixed ... done"
+
+    echo -n "Fix normal dirs ..."
+    chmod -fR u=rwX,go=rX .
+    echo " done."
+
+    echo -n "Fix special dirs ..."
+    if [ "$USER" = 'root' -o "$USERINAGROUP" = "yes" ]; then
+        chmod -R g+w $DIRS
+        chmod g+w composer.json
+        chmod g+w composer.lock
+    else
+        chmod -fR go+w $DIRS
+        chmod go+w composer.json
+        chmod go+w composer.lock
+    fi
+
+#    chmod 664 robots.txt tiki-install.php
+
+    echo " done."
+
+    if [ -n "$OPT_USE_CURRENT_USER_GROUP" ]; then
+        composer
+    fi
+}
+
+command_nothing() {
+    echo 'Nothing done yet'
+    echo "Try 'sh setup.sh fix' for classic default behaviour or 'sh setup.sh -h' for help."
+}
+
+command_open() {
+    if [ "$USER" = 'root' ]; then
+        if [ -n "$OPT_AUSER" ]; then
+            AUSER=$OPT_AUSER
+        elif [ -z "$OPT_USE_CURRENT_USER_GROUP" ]; then
+            read -p "User [$AUSER]: " REPLY
+            if [ -n "$REPLY" ]; then
+                AUSER=$REPLY
+            fi
+        fi
+        chown -R $AUSER .
+    else
+        echo "You are not root or you are on a shared hosting account. We will not try to change the file owners."
+    fi
+
+    chmod -R a=rwX .
+
+    echo " done"
+
+    if [ -n "$OPT_USE_CURRENT_USER_GROUP" ]; then
+        composer
+    fi
+}
+
+set_group_minus_execute() {
+    ${CHMOD} -R g-x .
+}
+
+set_group_minus_read() {
+    ${CHMOD} -R g-r .
+}
+
+set_group_minus_write() {
+    ${CHMOD} -R g-w .
+}
+
+set_group_plus_execute() {
+    ${CHMOD} -R g+x .
+}
+
+set_group_plus_read() {
+    ${CHMOD} -R g+r .
+}
+
+set_group_plus_write() {
+    ${CHMOD} -R g+w .
+}
+
+set_other_minus_execute() {
+    ${CHMOD} -R o-x .
+}
+
+set_other_minus_read() {
+    ${CHMOD} -R o-r .
+}
+
+set_other_minus_write() {
+    ${CHMOD} -R o-w .
+}
+
+set_other_plus_execute() {
+    ${CHMOD} -R o+x .
+}
+
+set_other_plus_read() {
+    ${CHMOD} -R o+r .
+}
+
+set_other_plus_write() {
+    ${CHMOD} -R o+w .
+}
+
+set_user_minus_write() {
+    ${CHMOD} -R u-w .
+}
+
+set_user_plus_execute() {
+    ${CHMOD} -R u+x .
+}
+
+set_user_plus_read() {
+    ${CHMOD} -R u+r .
+}
+
+set_user_plus_write() {
+    ${CHMOD} -R u+w .
+}
+
+special_dirs_set_permissions_files() {
+    for WRITABLE in $DIRS ; do
+        if [ -d ${WRITABLE} ] ; then
+            if [ ${DEBUG} = '1' ] ; then
+                echo ${DEBUG_PREFIX}
+                echo ${DEBUG_PREFIX} "${FIND} ${WRITABLE} -type f -exec ${CHMOD} ${MODEL_PERMS_WRITE_FILES} {} \;"
+            fi
+            ${FIND} ${WRITABLE} -type f -exec ${CHMOD} ${MODEL_PERMS_WRITE_FILES} {} \;
+        fi
+    done
+}
+
+special_dirs_set_permissions_subdirs() {
+    for WRITABLE in $DIRS ; do
+        if [ -d ${WRITABLE} ] ; then
+            if [ ${DEBUG} = '1' ] ; then
+                echo ${DEBUG_PREFIX}
+                echo ${DEBUG_PREFIX} "${FIND} ${WRITABLE} -type d -exec ${CHMOD} ${MODEL_PERMS_WRITE_SUBDIRS} {} \;"
+            fi
+            ${FIND} ${WRITABLE} -type d -exec ${CHMOD} ${MODEL_PERMS_WRITE_SUBDIRS} {} \;
+        fi
+    done
+}
+
+special_dirs_set_group_minus_write_files() {
+    MODEL_PERMS_WRITE_FILES='g-w'
+    special_dirs_set_permissions_files
+}
+
+special_dirs_set_group_minus_write_subdirs() {
+    MODEL_PERMS_WRITE_SUBDIRS='g-w'
+    special_dirs_set_permissions_subdirs
+}
+
+special_dirs_set_group_minus_write() {
+    #order: 1. files 2. subdirs
+    special_dirs_set_group_minus_write_files
+    special_dirs_set_group_minus_write_subdirs
+}
+
+special_dirs_set_group_plus_write_files() {
+    MODEL_PERMS_WRITE_FILES='g+w'
+    special_dirs_set_permissions_files
+}
+
+special_dirs_set_group_plus_write_subdirs() {
+    MODEL_PERMS_WRITE_SUBDIRS='g+w'
+    special_dirs_set_permissions_subdirs
+}
+
+special_dirs_set_group_plus_write() {
+    #order: 1. subdirs 2. files
+    special_dirs_set_group_plus_write_subdirs
+    special_dirs_set_group_plus_write_files
+}
+
+special_dirs_set_other_minus_write_files() {
+    MODEL_PERMS_WRITE_FILES='o-w'
+    special_dirs_set_permissions_files
+}
+
+special_dirs_set_other_minus_write_subdirs() {
+    MODEL_PERMS_WRITE_SUBDIRS='o-w'
+    special_dirs_set_permissions_subdirs
+}
+
+special_dirs_set_other_minus_write() {
+    #order: 1. files 2. subdirs
+    special_dirs_set_other_minus_write_files
+    special_dirs_set_other_minus_write_subdirs
+}
+
+special_dirs_set_other_plus_write_files() {
+    MODEL_PERMS_WRITE_FILES='o+w'
+    special_dirs_set_permissions_files
+}
+
+special_dirs_set_other_plus_write_subdirs() {
+    MODEL_PERMS_WRITE_SUBDIRS='o+w'
+    special_dirs_set_permissions_subdirs
+}
+
+special_dirs_set_other_plus_write() {
+    #order: 1. subdirs 2. files
+    special_dirs_set_other_plus_write_subdirs
+    special_dirs_set_other_plus_write_files
+}
+
+special_dirs_set_user_minus_write_files() {
+    MODEL_PERMS_WRITE_FILES='u-w'
+    special_dirs_set_permissions_files
+}
+
+special_dirs_set_user_minus_write_subdirs() {
+    MODEL_PERMS_WRITE_SUBDIRS='u-w'
+    special_dirs_set_permissions_subdirs
+}
+
+special_dirs_set_user_minus_write() {
+    #order: 1. files 2. subdirs
+    special_dirs_set_user_minus_write_files
+    special_dirs_set_user_minus_write_subdirs
+}
+
+special_dirs_set_user_plus_write_files() {
+    MODEL_PERMS_WRITE_FILES='u+w'
+    special_dirs_set_permissions_files
+}
+
+special_dirs_set_user_plus_write_subdirs() {
+    MODEL_PERMS_WRITE_SUBDIRS='u+w'
+    special_dirs_set_permissions_subdirs
+}
+
+special_dirs_set_user_plus_write() {
+    #order: 1. subdirs 2. files
+    special_dirs_set_user_plus_write_subdirs
+    special_dirs_set_user_plus_write_files
+}
+
+permission_via_php_check_menu() {
+    echo
+    ${CAT}<<EOF
+ predefined Tiki Permission Check models:
+ ----------------------------------------
+
+ 1 paranoia
+ 2 paranoia-suphp                        w suphp workaround
+ 3 sbox                                  W sbox workaround
+ 4 mixed
+ 5 worry                                 6 moreworry
+ 7 pain                                  8 morepain
+ 9 risky                                 a insane
+
+ More documentation about this: https://doc.tiki.org/Permission+Check
+
+ S clear screen
+
+EOF
+}
+
+tiki_setup_default_menu() {
+    echo
+    ${CAT}<<EOF
+ Tiki setup.sh - your options
+ ============================
+
+Composer: If you are installing via a released Tiki package (zip, tar.gz, tar.bz2, 7z), you can and should skip using Composer. If you are installing
+and upgrading via GIT, you need to run Composer after 'git clone' and 'git pull'. More info at https://doc.tiki.org/Composer
+  
+ c run composer (log output on screen, not all warnings) and exit (recommended to be done first)
+ L run composer (log output to logfile) and exit (recommended to be done first)
+ V run composer (verbose log output on screen) and exit (recommended to be done first)
+ H make composer download packages over HTTP and return here
+
+For all Tiki instances (via GIT or via a released package):
+
+ f fix file & directory permissions (classic default)          o open file and directory permissions (classic option)
+ S clear screen
+
+ q quit                                  x exit
+
+ m display more directory permissions commands recommended for advanced users only.
+   More documentation about this: https://doc.tiki.org/Permission+Check
+
+EOF
+}
+
+tiki_setup_default() {
+    dummy=foo
+    #WHAT='f' # old default
+    WHAT=${DEFAULT_WHAT} # composer is recommended in case of an svn checkout
+    while true
+    do
+        if [ ${COMMAND} != "more-TPC-options" ] ; then
+            tiki_setup_default_menu
+        else
+            permission_via_php_check_menu
+            COMMAND="nothing"
+        fi
+        echo -n "Your choice [${WHAT}]? "
+        read INPUT
+        if [ -z ${INPUT} ] ; then
+            DUMMY=foo
+        else
+            OLDWHAT=${WHAT}
+            WHAT=${INPUT}
+        fi
+        case ${WHAT} in
+            0)    WHAT=${DEFAULT_WHAT} ; COMMAND="php" ; permission_via_php_check ;;
+            1)    WHAT=${DEFAULT_WHAT} ; COMMAND="paranoia" ; permission_via_php_check ;;
+            2)    WHAT=${DEFAULT_WHAT} ; COMMAND="paranoia-suphp" ; permission_via_php_check ;;
+            3)    WHAT=${DEFAULT_WHAT} ; COMMAND="sbox" ; permission_via_php_check ;;
+            4)    WHAT=${DEFAULT_WHAT} ; COMMAND="mixed" ; permission_via_php_check ;;
+            5)    WHAT=${DEFAULT_WHAT} ; COMMAND="worry" ; permission_via_php_check ;;
+            6)    WHAT=${DEFAULT_WHAT} ; COMMAND="moreworry" ; permission_via_php_check ;;
+            7)    WHAT=${DEFAULT_WHAT} ; COMMAND="pain" ; permission_via_php_check ;;
+            8)    WHAT=${DEFAULT_WHAT} ; COMMAND="morepain" ; permission_via_php_check ;;
+            9)    WHAT=${DEFAULT_WHAT} ; COMMAND="risky" ; permission_via_php_check ;;
+            a)    WHAT=${DEFAULT_WHAT} ; COMMAND="insane" ; permission_via_php_check ;;
+            w)    WHAT=${DEFAULT_WHAT} ; COMMAND="suphpworkaround" ; set_permission_data_workaround_suphp ;;
+            W)    WHAT=${DEFAULT_WHAT} ; COMMAND="sboxworkaround" ; set_permission_data_workaround_sbox ;;
+            S)    WHAT=${OLDWHAT} ; clear ;;
+            f)    WHAT=$WHAT_NEXT_AFTER_f ; command_fix ;;
+            o)    WHAT=${DEFAULT_WHAT} ; command_open ;;
+            c)    WHAT=$WHAT_NEXT_AFTER_c ; LOGCOMPOSERFLAG="0" ; composer ;;
+            C)    WHAT=$WHAT_NEXT_AFTER_c ; LOGCOMPOSERFLAG="0" ; composer ;;
+            L)    WHAT=$WHAT_NEXT_AFTER_c ; LOGCOMPOSERFLAG="1" ; composer ;;
+            V)    WHAT=$WHAT_NEXT_AFTER_c ; LOGCOMPOSERFLAG="2" ; composer ;;
+            H)    WHAT=${DEFAULT_WHAT} ; http_composer ;;
+            m)    WHAT=${OLDWHAT} ; COMMAND="more-TPC-options" ;;
+            q)    echo ""; exit ;;
+            Q)    echo ""; exit ;;
+            x)    echo ""; exit ;;
+            X)    echo ""; exit ;;
+            *)    WHAT='x'; echo 'no such command' ;;
+        esac
+    done
+}
+
+# part 5 - main program
+# ---------------------
+
+case ${COMMAND} in
+    # free defined
+    # default is used if no parameter at command line is given
+    default)        tiki_setup_default ;;
+    fix)            command_fix ;;
+    menu)            tiki_setup_default ;;
+    nothing)        command_nothing ;;
+    open)            command_open ;;
+    # Tiki Permission Check (via PHP)
+    insane)            permission_via_php_check ;;
+    mixed)            permission_via_php_check ;;
+    morepain)        permission_via_php_check ;;
+    moreworry)        permission_via_php_check ;;
+    pain)            permission_via_php_check ;;
+    paranoia)        permission_via_php_check ;;
+    paranoia-suphp)        permission_via_php_check ;;
+    php)            permission_via_php_check ;;
+    risky)            permission_via_php_check ;;
+    sbox)            permission_via_php_check ;;
+    sboxworkaround)        set_permission_data_workaround_sbox ;;
+    suphpworkaround)    set_permission_data_workaround_suphp ;;
+    worry)            permission_via_php_check ;;
+    # composer
+    composer)        composer ;;
+    # plain chmod
+    gmr)            set_group_minus_read ;;
+    gmw)            set_group_minus_write ;;
+    gmx)            set_group_minus_execute ;;
+    gpr)            set_group_plus_read ;;
+    gpw)            set_group_plus_write ;;
+    gpx)            set_group_plus_execute ;;
+    omr)            set_other_minus_read ;;
+    omw)            set_other_minus_write ;;
+    omx)            set_other_minus_execute ;;
+    opr)            set_other_plus_read ;;
+    opw)            set_other_plus_write ;;
+    opx)            set_other_plus_execute ;;
+    umw)            set_user_minus_write ;;
+    upr)            set_user_plus_read ;;
+    upw)            set_user_plus_write ;;
+    upx)            set_user_plus_execute ;;
+    # special chmod
+    sdgmw)            special_dirs_set_group_minus_write ;;
+    sdgpw)            special_dirs_set_group_plus_write ;;
+    sdomw)            special_dirs_set_other_minus_write ;;
+    sdopw)            special_dirs_set_other_plus_write ;;
+    sdumw)            special_dirs_set_user_minus_write ;;
+    sdupw)            special_dirs_set_user_plus_write ;;
+    foo)            echo foo ;;
+    #*)            echo ${HINT_FOR_USER} ;;
+    *)            hint_for_users ;;
+esac
+
+exit 0
+
+# EOF
