@@ -35,4 +35,55 @@ class Search_ContentSource_FileGallerySource implements Search_ContentSource_Int
             'creation_date' => $typeFactory->timestamp($item['created']),
             'modification_date' => $typeFactory->timestamp($item['lastModif']),
             'date' => $typeFactory->timestamp($item['created']),
-            'description' => $typeFactory->plaintext($item[
+            'description' => $typeFactory->plaintext($item['description']),
+            'language' => $typeFactory->identifier('unknown'),
+
+            'gallery_id' => $typeFactory->identifier($item['parentId']),
+
+            'view_permission' => $typeFactory->identifier('tiki_p_view_file_gallery'),
+        ];
+
+        return $data;
+    }
+
+    public function getProvidedFields()
+    {
+        return [
+            'title',
+            'description',
+            'language',
+            'creation_date',
+            'modification_date',
+            'date',
+
+            'gallery_id',
+
+            'view_permission',
+        ];
+    }
+
+    public function getProvidedFieldTypes()
+    {
+        return [
+            'title' => 'sortable',
+            'description' => 'plaintext',
+            'language' => 'identifier',
+            'creation_date' => 'timestamp',
+            'modification_date' => 'timestamp',
+            'date' => 'timestamp',
+
+            'gallery_id' => 'identifier',
+
+            'view_permission' => 'identifier',
+        ];
+    }
+
+    public function getGlobalFields()
+    {
+        return [
+            'title' => true,
+            'description' => true,
+            'date' => true,
+        ];
+    }
+}
