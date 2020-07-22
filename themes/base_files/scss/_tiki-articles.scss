@@ -1,0 +1,25 @@
+// $Id$
+// Articles
+.article {
+    .actions form {
+        display: inline; // To keep language form and actions icons on one line
+    }
+}
+
+.articletrailer {
+    span {
+        display: inline-block;
+        margin: auto;
+        white-space: nowrap;
+    }
+    .wikitopline {
+        float: left;
+    }
+}
+
+.articleheading {
+    .thumbnail {
+        margin-right: 1rem;
+        display: block;
+    }
+}

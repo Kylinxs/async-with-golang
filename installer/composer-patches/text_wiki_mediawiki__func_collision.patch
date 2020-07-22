@@ -1,0 +1,22 @@
+
+diff -urN text_wiki_mediawiki.old/Text/Wiki/Parse/Mediawiki/Emphasis.php text_wiki_mediawiki/Text/Wiki/Parse/Mediawiki/Emphasis.php
+--- text_wiki_mediawiki.old/Text/Wiki/Parse/Mediawiki/Emphasis.php      2017-11-17 19:49:10.165800200 +0000
++++ text_wiki_mediawiki/Text/Wiki/Parse/Mediawiki/Emphasis.php  2017-11-17 19:59:14.706761200 +0000
+@@ -52,7 +52,7 @@
+         $lines = explode("\n", $this->wiki->source);
+         $this->wiki->source = '';
+         foreach ($lines as $line) {
+-            $this->wiki->source .= $this->process($line) . "\n";
++            $this->wiki->source .= $this->process_emphasis($line) . "\n";
+         }
+         $this->wiki->source = substr($this->wiki->source, 0, -1);
+     }
+@@ -70,7 +70,7 @@
+      * @param string $text a line from $this->wiki->source
+      * @return string $output the source line with the wiki syntax replaced by tokens
+      */
+-    function process($text) {
++    function process_emphasis($text) {
+         $arr = preg_split("/(''+)/", $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+         if (count($arr) == 1) {
+             return $text;
