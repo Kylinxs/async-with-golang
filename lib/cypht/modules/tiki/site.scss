@@ -1,0 +1,310 @@
+
+//
+// Tiki cypht
+//
+.groupmail {
+    .from_col { width: 20%; }
+    .action_col { width: 80px; }
+}
+
+html { background-color: transparent; }
+body { min-width: 100%; }
+.account_icon { margin-right: 6px; padding-right: 0; }
+.folder_icon { margin-right: 10px; padding-right: 0; }
+
+.inline-cypht {
+    position: relative;
+    input, option, select { padding: 5px 10px; }
+    .btn-outline-secondary:hover { text-decoration: none; }
+    .src_name { max-height: 100px; }
+    .sys_messages { padding: 15px; }
+    .content_title {
+        overflow: visible; min-height: 50px; max-height: 400px;
+        padding: 25px;
+        padding-bottom: 5px;
+    }
+
+// main menu
+    .folders a, .unread_link { font-weight: normal; }
+    .selected_menu {
+        &, & a { text-decoration: underline; }
+    }
+
+// home
+    .nux_help, .nux_dev_news, .nux_welcome {
+        min-width: 50%; max-width: 100%; min-height: 10px; margin: 20px;
+    }
+
+    .nux_dev_news {
+        table td:last-child { white-space: normal; }
+    }
+
+// servers
+    .quick_add_section { padding-left: 25px; }
+    .nux_step_one, .nux_step_two { padding-left: 0; }
+    .nux_next_button { margin-top: 10px; }
+    .nux_account_name, .nux_username, #service_select { width: 100%; }
+    .server_count { margin-right: 30px; }
+    .configured_server, .add_server { background: transparent; }
+
+    .add_server {
+        width: auto;
+        .txt_fld { width: 100%; }
+        .port_fld { width: 50%; }
+    }
+
+    .settings_subtitle, .server_section {
+        max-height: 100px; height: auto !important; font-weight: bold;
+        img { padding-right: 0; margin-right: 10px; }
+    }
+
+// site settings / profiles
+    .user_settings table { table-layout: auto; }
+    .profile_details th { font-weight: bold; }
+
+    .user_settings, .edit_profile {
+        table th, table td { padding: 10px 15px; height: auto; width: 100%; }
+        table tr { display: flex !important; flex-wrap: wrap; }
+    }
+
+    .user_settings table td:not(.settings_subtitle):nth-child(1),
+    .edit_profile table th {
+        max-width: 40%;
+        flex: 0 0 40%;
+    }
+
+    .user_settings table td:nth-child(2),
+    .edit_profile table td {
+        max-width: 60%;
+        flex: 0 0 60%;
+    }
+
+// compose
+    .compose_server { margin-bottom: 15px; }
+    .compose_attach_button, .compose_sign,
+    .smtp_save, .smtp_reset, .smtp_send {
+        margin-top: 0;
+    }
+
+// search
+    .search_content {
+        .content_title { max-height: 150px; }
+        .search_form form { padding-right: 20px; }
+        #search_terms { margin: 0 3px 7px; }
+    }
+
+    .save_search, .delete_search {
+        img { padding: 5px 0 0 5px; }
+    }
+
+    .advanced_search_form {
+        input[type="radio"], input[type="checkbox"] { margin-right: 5px; }
+        label {    margin-right: 10px; }
+    }
+
+    .other_section {
+        table { width: 100%; white-space: normal; }
+        table tr { display: flex; flex-wrap: wrap; }
+        table th { width: 40%; }
+        table td {
+            max-width: 55%;
+            label {    width: 130px; }
+        }
+        .flags { width: 170px; }
+    }
+
+// message list / text
+    .refresh_list, .list_settings_link { padding:0; margin: 5px 2px 0; }
+    .toggle_recipients { right: 25px; }
+    .msg_date { font-weight: bold; }
+    .msg_parts tr:not(:last-child) { border-bottom: 1px solid #444; }
+    .part_desc, .part_size, .download_link { margin-left: 25px; }
+    .msg_part_icon { padding: 0; margin-left: 5px; }
+    .imap_keyword { margin-top: 4px; }
+    .msg_headers td { padding-right: 35px; }
+    .noselect2 { display: none !important; }
+}
+
+
+
+//
+// Mobile specific
+//
+.mobile {
+    .inline-cypht {
+        padding-top: 50px;
+
+        .content_cell {
+            padding: 20px 0 20px; border: none;
+            display: block !important; min-height: 600px;
+        }
+
+        .content_title {
+            display: flex; align-items: center;
+            padding: 0 10px 0 50px;
+            min-height: 60px; max-height: 500px;
+            line-height: normal;
+            font-size: 115%; font-weight: 500;
+            .list_controls { border: none; background: #fff; }
+        }
+
+        .sys_messages {
+            top: 0; right: 0; width: 100%; min-height: 5px;
+            padding-bottom: 15px; white-space: normal;
+        }
+
+// mobile main menu
+        .folder_toggle {
+            display: block !important; letter-spacing: normal;
+            img { width: 24px; height: 30px; margin: -5px 0 0 5px; }
+        }
+
+// mobile home
+        .nux_welcome ul { padding-left: 20px; }
+        .nux_dev_news table td { display: block; }
+        .nux_dev_news table tr {
+            &:not(:last-child) td:last-child {
+                margin-bottom: 10px; padding-bottom: 10px;
+            }
+            &:last-child td:last-child { border-bottom: none; }
+        }
+
+// mobile servers
+        .nux_empty_combined_view { margin-left: 10px; margin-right: 10px; }
+        .settings_subtitle, .server_section { padding-left: 15px !important; }
+        .add_server { margin-left: 20px; }
+        .server_count { margin-right: 15px; }
+
+// mobile site settings / profiles
+        .user_settings, .edit_profile {
+            input[type=text], input[type=email], select,
+            textarea { width: 100%; text-align: left; }
+        }
+        .edit_profile table { width: 100%; }
+
+// mobile folders
+        .folder_dialog { margin-left: 30px; width: 85%; }
+        #imap_server_folder { width: 100%; }
+
+// mobile search
+        .search_content {
+            padding-top: 0;
+            .content_title { display: block; padding-top: 20px; padding-bottom: 10px; }
+            .search_form {
+                display: block; padding: 0; font-size: 100%;
+                select { width: auto; margin: 5px; }
+                input[type=submit], input[type=button] { font-size: 80%; }
+            }
+            #search_terms { margin: 10px 3px 3px; width: 270px; max-width: 100%; }
+            .message_table { margin-top: 115px;    }
+        }
+
+        .time_section input[type=date] { display: block; margin-bottom: 10px; }
+        .timeandor { text-align: left; }
+        .targets_section, .other_section, .submit_section,
+        .time_section, .source_section, .terms_section {
+            padding-left: 30px;
+        }
+
+// mobile compose
+        .compose_page { padding: 10px; overflow: hidden; }
+        .compose_form { width: 100% !important; padding: 0 !important; }
+        .toggle_recipients { right: 10px !important; }
+        .compose_bcc, .compose_cc, .compose_subject,
+        .compose_to, .compose_body, .compose_server {
+            margin: 5px 0;
+        }
+        .smtp_send { display: block; margin-bottom: 20px; }
+
+// mobile message list
+        .list_settings_link, .refresh_list { width: 20px; height: 20px; }
+        .toggle_link { width: auto !important; }
+        .message_table > tbody >tr > td { padding-right: 10px; }
+        .msg_headers td { padding-right: 10px; }
+        .long_header th { white-space: normal; word-break: normal; }
+        .msg_controls {
+            width: 100%; height: 43px;
+            top: 0; left: 0 !important; right: 0;
+            padding: 20px 0; margin-left: 90px;
+        }
+        .news_cell {
+            padding-bottom: 15px !important;
+            &.checkbox_cell { width: 40px; padding: 14px 10px 10px !important; }
+            .msg_date { padding-top: 0; }
+            .subject {
+                &, & div { padding-bottom: 0px !important; }
+            }
+        }
+        .history_content .news_cell.checkbox_cell { padding: 10px 15px !important; }
+
+// mobile message text
+        .header_links { padding-bottom: 8px; }
+        .msg_text { max-width: 100% !important; word-break: break-word; }
+        .msg_text_inner { width: 100%; padding: 15px !important; }
+        .msg_parts { table-layout: auto; }
+
+// groupmail
+        .groupmail.message_table {
+            > tbody > tr > td { padding: 0 75px 0 15px; border: none; }
+            thead { display: none; }
+            td { width: 100%; }
+            tr {
+                position: relative; display: flex; flex-wrap: wrap;
+                width: 100vw; padding: 0 0 25px;
+            }
+            td.icon, td.action { position: absolute; width: auto; text-align: right; }
+            td.icon { right: 5px; }
+            td.action { right: -60px; }
+        }
+    }
+
+
+// mobile main menu animation
+    .inner_list { margin-bottom: 0; }
+    .src_name {
+        max-height: 100px; margin: 0;
+        padding-top: 10px; padding-bottom: 10px;
+    }
+
+    .folder_cell {
+        position: fixed; width: 300px;
+        top: 60px; left: -310px;
+        overflow: auto; z-index: 1;
+        transition: all 1s ease;
+        transform: translateX(-300px);
+
+        &.slide-in {
+            transition: all 0.5s ease;
+            transform: translateX(300px);
+        }
+
+        .folder_list {
+            display: block !important; width: auto;
+            margin-bottom: 50px; font-size: 100%;
+            li a { padding-top: 0; }
+            .update_message_list, .hide_folders { display: none; }
+        }
+    }
+}
+
+
+
+//
+// removing unnecessary stuff
+//
+.tiki-webmail.mobile {
+    .box-logo, .pagetitle, .pagetitle + .t_navbar { display: none; }
+    .topbar { margin-bottom: 0; }
+    #page-header { display: none; }
+    #topbar_modules { display: none !important; }
+    #row-middle { margin-left: -15px; margin-right: -15px; border: none; }
+    #col1 { padding: 0; border: none; }
+    #col2, #col3 { margin-left: 15px; margin-right: 15px; }
+}
+
+.folder_list .clear_cache {
+    font-size: 80%;
+    padding-top: 10px;
+    float: right;
+    margin-left: 5px;
+}
