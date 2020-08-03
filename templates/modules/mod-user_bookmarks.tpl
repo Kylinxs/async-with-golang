@@ -26,4 +26,12 @@
         </ul>
         <div class="row">
             <div class="col">
-                <form name="bookmarks" action="{$ownurl}" method="post" class="align-items-cent
+                <form name="bookmarks" action="{$ownurl}" method="post" class="align-items-center">
+                    <input class="form-control-sm col-12 mb-2" type="text" name="modb_name" />
+                    <input type="submit" class="btn btn-sm btn-primary mb-2" name="bookmark_mark" value="{tr}Create Bookmark{/tr}" />
+                    <input type="submit" class="btn btn-primary btn-sm" name="bookmark_create_folder" value="{tr}New Folder{/tr}" />
+                </form>
+            </div>
+        </div>
+    {/tikimodule}
+{/if}
