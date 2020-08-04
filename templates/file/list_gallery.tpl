@@ -24,4 +24,15 @@
                         {$row.description|escape}
                     </div>
                     <div class="small">
-                        {tr _0=$row.modification_date|tiki_s
+                        {tr _0=$row.modification_date|tiki_short_datetime}Last modification: %0{/tr}
+                    </div>
+                </div>
+            </li>
+        {foreachelse}
+            <li>
+                {tr}No files found.{/tr}
+            </li>
+        {/foreach}
+    </ul>
+    {pagination_links resultset=$results}{service controller=file action=list_gallery galleryId=$galleryId plain=1 search=$search type=$typeFilter}{/pagination_links}
+{/block}
