@@ -353,3 +353,212 @@ class PaymentLib extends TikiDb_Bridge
             if (! empty($results)) {
                 $data = array_merge($results, $data);
             }
+            $data = json_encode($data);
+            $this->query(
+                'INSERT INTO `tiki_payment_received` ( `paymentRequestId`, `payment_date`, `amount`, `type`, `details`, `userId` )' .
+                ' VALUES( ?, NOW(), ?, ?, ?, ? )',
+                [
+                    $invoice,
+                    $amount,
+                    $type,
+                    $data,
+                    empty($user) ? $info['userId'] : $userlib->get_user_id($user)
+                ]
+            );
+            $this->query(
+                'UPDATE `tiki_payment_requests` SET `amount_paid` = `amount_paid` + ? WHERE `paymentRequestId` = ?',
+                [ $amount, $invoice ]
+            );
+        }
+
+        $tx->commit();
+    }
+
+    public function enter_authorization($invoice, $type, $validForDays, array $data)
+    {
+        global $user;
+        $userlib = TikiLib::lib('user');
+        if ($info = $this->get_payment($invoice)) {
+            if ($info['state'] != 'past') {
+                $results = $this->run_behaviors($info, 'authorize');
+                if ($info['state'] == 'canceled') {
+                    // in the case of canceled payments being paid (e.g. user was delayed at Paypal when cancellation happened)
+                    $this->uncancel_payment($invoice);
+                }
+            }
+            if (! empty($results)) {
+                $data = array_merge($results, $data);
+            }
+            $data = json_encode($data);
+            $this->query(
+                'INSERT INTO `tiki_payment_received` ( `paymentRequestId`, `payment_date`, `amount`, `type`, `details`, `userId`, `status` )' .
+                ' VALUES( ?, NOW(), ?, ?, ?, ?, "auth_pending" )',
+                [
+                    $invoice,
+                    0,
+                    $type,
+                    $data,
+                    empty($user) ? $info['userId'] : $userlib->get_user_id($user)
+                ]
+            );
+            $this->query(
+                'UPDATE `tiki_payment_requests` SET `authorized_until` = DATE_ADD(NOW(), INTERVAL ? DAY) WHERE `paymentRequestId` = ?',
+                [ (int) $validForDays, $invoice ]
+            );
+        }
+    }
+
+    public function capture_payment($paymentId)
+    {
+        if ($info = $this->get_payment($paymentId)) {
+            foreach ($info['payments'] as $received) {
+                if ($received['status'] != 'auth_pending') {
+                    continue;
+                }
+
+                if ($received['amount']) {
+                    // When electing to capture a specific amount, assume that amount is the total to be paid.
+                    $table = $this->table('tiki_payment_requests');
+                    $table->update(['amount' => (float) $received['amount']], ['paymentRequestId' => $paymentId]);
+                }
+
+                if ($gateway = $this->gateway($received['type'])) {
+                    if (is_callable([$gateway, 'capture_payment'])) {
+                        // Result is about request reception success, not actual capture success
+                        $result = $gateway->capture_payment($info, $received);
+
+                        if ($result) {
+                            $this->query('UPDATE `tiki_payment_received` SET `status` = "auth_captured" WHERE `paymentReceivedId` = ?', [$received['paymentReceivedId']]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function register_behavior($invoice, $event, $behavior, array $arguments)
+    {
+        if (! in_array($event, [ 'complete', 'cancel', 'authorize' ])) {
+            return false;
+        }
+
+        if (! $callback = $this->get_behavior($behavior)) {
+            return false;
+        }
+
+        if ($info = $this->get_payment($invoice)) {
+            $actions = $info['actions'];
+
+            $actions[$event][] = [ 'behavior' => $behavior, 'arguments' => $arguments ];
+            $this->query(
+                'UPDATE `tiki_payment_requests` SET `actions` = ? WHERE `paymentRequestId` = ?',
+                [json_encode($actions), $invoice]
+            );
+        } else {
+            return false;
+        }
+    }
+
+    private function run_behaviors($info, $event)
+    {
+        $behaviors = $info['actions'][$event];
+        $results = [];
+
+        foreach ($behaviors as $b) {
+            if ($callback = $this->get_behavior($b['behavior'])) {
+                $results[str_replace('payment_behavior_', '', $callback)] = call_user_func_array($callback, $b['arguments']);
+            }
+        }
+        return $results;
+    }
+
+    private function get_behavior($name)
+    {
+        $file = __DIR__ . "/behavior/$name.php";
+        $function = 'payment_behavior_' . $name;
+        if (is_readable($file)) {
+            require_once $file;
+            if (is_callable($function)) {
+                return $function;
+            }
+        }
+    }
+
+    public function gateway($name)
+    {
+        if (isset($this->gateways[$name])) {
+            return $this->gateways[$name];
+        }
+
+        switch ($name) {
+            case 'israelpost':
+                require_once 'lib/payment/israelpostlib.php';
+                return $this->gateways[$name] = new IsraelPostLib($this);
+        }
+    }
+
+    private function addFilterSort(array $filter, $sort, array &$bindvars)
+    {
+        $ret = '';
+        if (! empty($filter)) {
+            foreach ($filter as $field => $value) {
+                if (isset($this->fieldmap[$field])) {
+                    if ($field === 'payer') {
+                        $field = 'details';
+                    }
+                    $table = $this->setTable($field);
+                    $col = $this->setField($field);
+                    $ret .= " AND " . $table . '.`' . $col . '`';
+                    if ($field == 'description' || $field == 'detail' || $field == 'details') {
+                        $ret .= ' LIKE ?';
+                        $bindvars[] = "%$value%";
+                    } elseif (in_array($field, ['payment_date', 'request_date'])) {
+                        if (preg_match('/([<>=]*) \'?([^\']*)\' AND ([^ ]*) ([<>=]*) \'?([^\']*)/i', $value, $matches)) {
+                            // quoted date range?
+                            if ($matches[3] === $table . '.`' . $col . '`') {
+                                $ret .= " {$matches[1]} ? AND {$matches[3]} {$matches[4]} ?";
+                                $bindvars[] = $matches[2];
+                                $bindvars[] = $matches[5];
+                            }
+                        } elseif (preg_match('/([<>=]*) \'([^\']*)/', $value, $matches)) {
+                            // single quoted date
+                            $ret .= " {$matches[1]} ? ";
+                            $bindvars[] = $matches[2];
+                        } elseif (preg_match('/BETWEEN FROM_UNIXTIME\(([^\)]*?)\) AND FROM_UNIXTIME\(([^\)]*)\)/i', $value, $matches)) {    // single quoted date
+                            // between date range
+                            $ret .= " BETWEEN FROM_UNIXTIME(?) AND  FROM_UNIXTIME(?)";
+                            $bindvars[] = $matches[1];
+                            $bindvars[] = $matches[2];
+                        } elseif (preg_match('/([<>=]*) FROM_UNIXTIME\(([^\)]*)\)/i', $value, $matches)) {  // single quoted date
+                            $ret .= " {$matches[1]} FROM_UNIXTIME(?) ";
+                            $bindvars[] = $matches[2];
+                        }
+                    } else {
+                        $ret .= ' LIKE ?';
+                        $bindvars[] = "$value%";
+                    }
+                }
+            }
+        }
+        if (! empty($sort)) {
+            if (! is_array($sort)) {
+                $sort = explode(',', $sort);
+            }
+            foreach ($sort as $s) {
+                if (strpos($s, '.') === false) {
+                    $dir = strrchr($s, '_');
+                    $sfield = substr($s, 0, strlen($s) - strlen($dir));
+                    $stable = $this->setTable($sfield);
+                    $scol = $this->setField($sfield);
+                    $newsort[] = $stable . '.' . $scol . $dir;
+                }
+            }
+            if (! empty($newsort)) {
+                $fields = $this->fieldTableArray();
+                $newsort = implode(',', $newsort);
+                $ret .= ' ORDER BY ' . $this->convertSortMode($newsort, $fields);
+            }
+        }
+        return $ret;
+    }
+}
