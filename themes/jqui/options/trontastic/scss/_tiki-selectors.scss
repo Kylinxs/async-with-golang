@@ -1,0 +1,521 @@
+
+/* Jqui theme (jqui.css) Trontastic theme option (trontastic.css)
+    Visit http://themes.tiki.org for more information.*/
+body {
+    background: url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_diagonals-small_50_262626_40x40.png') repeat !important;
+}
+
+.icon.icon-toggle-left,
+.icon.icon-toggle-right {
+    color: $link-color;
+    &:hover {
+        color: $link-hover-color;
+    }
+}
+
+.nav-item.show .nav-link.highlighted {
+    color: $nav-link-hover-color;
+}
+
+.tiki .wiki.external + .icon-link-external,
+.tiki .wiki.external .icon-link-external,
+.editable-inline .icon-edit {
+    color: $link-color;
+    &:hover {
+    color: $link-hover-color;
+    }
+}
+
+// Dropdown-menu
+.dropdown-menu {
+//    color: #fff;
+    background: #000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') 50% top repeat-x;
+//    border: 1px solid #1b1613;
+    border-radius: $border-radius;
+}
+
+.dropdown-header {
+    font-size: 1.1rem;
+    margin: 3px;
+    padding: 6px;
+    border-radius: $border-radius;
+    opacity: 1;
+}
+
+//body {
+//    background: url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_diagonals-small_50_262626_40x40.png') repeat;
+//}
+
+.layout_basic .container,
+//.page-header,
+.header_container .container {
+    background: #c6e99c;
+}
+
+//.page-header a,
+//.header-container a,
+//.page-header a:visited,
+//.header-container a:visited {
+//    color: #222222;
+//}
+
+.layout_social > .container,
+#middle,
+.row-middle {
+    background: #9fda58 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_85_9fda58_500x100.png') repeat-x;
+}
+
+.layout_basic #footer,
+#footer .container {
+    background: #000000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') 50% 50% repeat-x;
+    color: #c6e99c;
+}
+
+#footer a:link,
+#footer a:visited {
+    color: #b8ec79;
+}
+
+#col1,
+#autosave_preview {
+    border: 1px solid #4a4a4a;
+    background: #000000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') 50% top repeat-x;
+    color: #f3fce8;
+    border-radius: $border-radius;
+}
+
+body.fullscreen {
+    background: #000000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') 50% top repeat-x;
+}
+
+//body.fullscreen #col1,
+//body.fullscreen #middle,
+//body.fullscreen .topbar {
+//    background: transparent;
+//    border: none;
+//}
+
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-info,
+.btn-warning,
+.btn-danger,
+.pagination > li > a,
+.pagination > li > span,
+.pager li > a,
+.pager li > span {
+    background: url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_glass_40_0a0a0a_1x400.png') 50% 50% repeat-x;
+    color: #b8ec79;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-success:hover,
+.btn-info:hover,
+.btn-warning:hover,
+.btn-danger:hover {
+    background: url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_glass_60_000000_1x400.png') 50% 50% repeat-x;
+    color: inherit !important;
+}
+
+.btn-primary {
+    color: #b8ec79;
+    border-color: #6f6f6f;
+}
+
+.btn-secondary {
+    color: #c897ec;
+    border-color: #c897ec;
+}
+
+.btn-success {
+    color: #b5dfb5;
+    border-color: #b5dfb5;
+}
+
+.btn-info {
+    color: #c5e9f3;
+    border-color: #c5e9f3;
+}
+
+.btn-warning {
+    color: #f6ce95;
+    border-color: #f6ce95;
+}
+
+.btn-danger {
+    color: #d9534f;
+    border-color: #d9534f;
+}
+
+.btn-link {
+    color: #b8ec79;
+}
+
+.btn-link:hover {
+    color: #a0e64c;
+}
+
+.text-info {
+    color: #c5e9f3 !important;
+}
+
+.top_modules div:not(.card) .btn-link {
+    color: #000000;
+}
+
+a.admbox.off {
+    border: 1px solid #555555;
+    color: #555555;
+}
+
+a.admbox.off:hover {
+    border: 1px solid #555555;
+    color: #b8ec79;
+}
+
+.admbox.btn-primary:hover {
+    background: #222222;
+    color: #ffffff;
+    border-color: #ffffff;
+}
+
+.well {
+    background: #484848;
+    border: #666666;
+}
+
+//pre,
+//.btn,
+//.form-control,
+//.dropdown-menu {
+//    font-size: 15px;
+//}
+//
+//legend {
+//    color: #f3fce8;
+//}
+
+a.list-group-item .list-group-item-heading {
+    color: #ffffff;
+}
+
+.list-group-item {
+    background-color: #222222;
+    border: 1px solid #4a4a4a;
+}
+
+a.list-group-item:hover .list-group-item-heading,
+.list-group-item:hover {
+    color: #222222 !important;
+}
+
+.form-text,
+blockquote, .blockquote,
+.figure-caption {
+    color: $text-muted-readable !important;
+}
+blockquote {
+    border-left: 5px solid #b8ec79;
+}
+
+.blockquote-reverse,
+blockquote.pull-right {
+    border-left: none;
+    border-right: 5px solid #b8ec79;
+}
+
+.breadcrumb {
+    display: inline-block;
+    font-size: 90%;
+    font-style: normal;
+    background: transparent;
+}
+
+//.topbar,
+//.navbar-nav .nav-link,
+//.navbar-nav .nav-link:hover,
+//.navbar-nav .nav-link:focus,
+//.navbar-collapse {
+//    border: 1px solid #222222;
+//    background: #000000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') 50% 50% repeat-x !important;
+//    color: #c6e99c !important;
+//}
+//
+/* Update for Smartmenus */
+.sm-vertical.navbar-nav .nav-link,
+.sm-vertical.navbar-nav .nav-link {
+    background: none !important;
+    border: none;
+}
+
+//.topbar .navbar-dark .navbar-collapse,
+//.tiki .bg-dark {
+//    border: none;
+//}
+//
+//.navbar .navbar-form,
+//.navbar-dark .navbar-collapse,
+//.navbar-dark .navbar-nav > .active > a,
+//.navbar-dark .navbar-nav > .active > a:hover,
+//.navbar-dark .navbar-nav > .active > a:focus {
+//    background: transparent;
+//}
+//
+//.topbar .navbar-dark,
+//.topbar .navbar-dark .navbar-collapse,
+//.topbar .navbar-dark .navbar-form {
+//    border-color: transparent;
+//}
+//
+//.navbar-dark .navbar-nav > .open > a,
+//.navbar-dark .navbar-nav > .open > a:hover,
+//.navbar-dark .navbar-nav > .open > a:focus {
+//    background-color: #222222;
+//    color: #b8ec79;
+//}
+//
+//.navbar-dark .navbar-nav > li > a,
+//.topbar > a,
+//.topbar .navbar-dark .navbar-nav > li > a,
+//.topbar .nav > li > a {
+//    color: #b8ec79;
+//}
+//
+//
+//.topbar .navbar-dark .navbar-nav > li,
+//.topbar .nav > li {
+//    background: none;
+//}
+//
+//.topbar .bg-light,
+//.topbar .bg-dark {
+//    background: transparent !important;
+//}
+
+.card,
+.box,
+.input-group-addon,
+.popover,
+.modal,
+.modal-body {
+    border: 1px solid #4a4a4a;
+    background: #000000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') 50% top repeat-x;
+    color: #f3fce8;
+}
+
+.card-body {
+    background: transparent;
+}
+
+.card-footer,
+.modal-footer {
+    background-color: #222222;
+    border-top: 1px solid #4a4a4a;
+}
+
+.card-header,
+.dropdown-header,
+.popover-header,
+/*th,
+td.heading,
+tr.diffheader,*/
+.popover-title,
+.modal-header {
+    border: 1px solid #000;
+    background: #9fda58 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_85_9fda58_500x100.png') 50% 50% repeat-x;
+    color: #222;
+    font-weight: bold;
+}
+
+//.card-accordian .card-heading h4.card-title a {
+//    color: #222222;
+//}
+//
+//.card-accordian .card-heading h4.card-title a:hover,
+//.card-accordian .card-heading h4.card-title a:focus {
+//    color: #555555;
+//}
+
+.card-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.card-header, h3.box-title/*, th, td.heading, tr.diffheader*/ {
+    border: 1px solid #000;
+    background: #9fda58 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_85_9fda58_500x100.png') 50% 50% repeat-x;
+    color: #222;
+    font-weight: bold;
+}
+
+
+// Accordion
+h4.accordion-header {
+    font-weight: bold;
+}
+
+button.accordion-button {
+    background: url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_glass_40_0a0a0a_1x400.png') 50% 50% repeat-x;
+    font-weight: bold;
+}
+
+.accordion-button[aria-expanded="true"] {
+    background: #4c4c4c;
+    border: 1px solid #696969;
+}
+
+.popover-body .list-group-item {
+    background: transparent;
+    color: #f3fce8;
+}
+
+a.toggle_zone {
+    color: #222;
+}
+
+th,
+td.heading,
+tr.diffheader {
+    border: none;
+}
+
+.post .postbody-title .title a {
+    color: #222222;
+}
+
+.post .postbody {
+    border: 1px solid #4a4a4a;
+    background: #000000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') 50% top repeat-x;
+    color: #ffffff;
+}
+
+.postbody-title {
+    background: #9fda58 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_85_9fda58_500x100.png') 50% 50% repeat-x;
+    color: #222222;
+}
+
+.help-block {
+    color: #8d8d8d;
+}
+
+.jumbotron,
+textarea,
+.form-control,
+.chosen-container-single .chosen-single,
+.chosen-container-active.chosen-with-drop .chosen-single,
+.chosen-container .chosen-drop,
+.chosen-container-multi .chosen-choices .search-choice {
+    background: #c6e99c;
+    color: #000;
+    /* background: #fbf9ee url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_95_f6ecd5_500x100.png') repeat-x 50% 60%;
+     border: 1px solid #fcefa1;
+     color: #363636; */
+}
+
+.alert a,
+.jumbotron a,
+textarea a,
+.form-control a {
+    color: #5da10a;
+}
+
+.alert a:hover,
+.jumbotron a:hover,
+textarea a:hover,
+.form-control a:hover {
+    color: #417107;
+}
+
+.nav-tabs {
+    border: 1px solid $border-radius;
+    background: #9fda58 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_85_9fda58_500x100.png') 50% 50% repeat-x;
+    padding: 10px 6px 0;
+    border-radius: 4px;
+    .nav-link {
+        background: #0a0a0a url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_glass_40_0a0a0a_1x400.png') 50% 50% repeat-x;
+        color: $primary;
+    }
+    .nav-link:hover {
+        color: #96f226;
+        background: #000000 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_glass_60_000000_1x400.png') 50% 50% repeat-x
+    }
+    .nav-link.active {
+        background: #4c4c4c;
+        color: #fff;
+    }
+}
+
+.tab-pane {
+    padding: 1em 1.4em;
+}
+
+.even { // Counter jqui style
+    color: inherit;
+}
+
+.caltable .even,
+.caltable .odd {
+    background: #0A0A0A url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') repeat-x scroll 50% 50%;
+    border: 1px solid #1b1613;
+    color: #b8ec79;
+}
+
+.caltable .even a,
+.caltable .even a:visited,
+.caltable .odd a,
+.caltable .odd a:visited {
+    color: #b8ec79;
+}
+
+.caltable td.calhighlight,
+.caltable td.calhighlight a,
+.caltable td.calhighlight a:visited,
+td.calheadhighlight {
+    background: #9fda58 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_85_9fda58_500x100.png') 50% 50% repeat-x;
+    color: #000000;
+}
+
+td.calheadhighlight,
+td.calheadhighlight a:link,
+td.calheadhighlight a:visited {
+    background: #0a0a0a url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_55_000000_500x100.png') repeat-x scroll 50% 50%;
+    font-weight: bold;
+    color: #b8ec79;
+}
+
+.caltable .calborder {
+    border: 1px solid #1b1613;
+}
+
+.caltable .calmodfocus {
+    text-decoration: underline;
+}
+
+.blog-postbody-title a {
+    color: #000000;
+}
+
+.adminanchors .card-body {
+    padding: 0;
+    background: transparent !important;
+}
+
+
+.progress-bar {
+    border: 1px solid #000000;
+    background: #9fda58 url('../../../../../vendor_bundled/vendor/components/jqueryui/themes/trontastic/images/ui-bg_gloss-wave_85_9fda58_500x100.png') 50% 50% repeat-x;
+    color: #222222;
+    font-weight: bold;
+}
+
+// Code
+code, pre.codelisting {
+    background: #f8f8f8;
+    color: #111111;
+}
+
+.card-accordian > .card-header h4.card-title a {
+    color: #000;
+}
