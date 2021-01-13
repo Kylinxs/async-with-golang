@@ -89,4 +89,122 @@ class TikiFilter
             case 'lang':
                 // Test Return ""
                 // may return a blank string
-                // Allows values for languages (such as 'en') available 
+                // Allows values for languages (such as 'en') available on the site
+                return new TikiFilter_Lang();
+            case 'imgsize':
+                // may return a blank string
+                // Allows digits optionally followed by a space and/or certain size units
+                return new TikiFilter_PregFilter(
+                    '/^(\p{N}+)\p{Zs}?(%|cm|em|ex|in|mm|pc|pt|px|vh|vw|vmin)?$/u',
+                    '$1$2'
+                );
+            case 'relativeurl':
+                // Test Return ""
+                // may return blank string on error
+                // If formatted as a absolute url, will return the relative portion, also applies striptags
+                return new TikiFilter_RelativeURL();
+
+            /** Digit Filters (no Alpha or HTML) String Return Type **/
+            case 'digits':
+                // Test Return "4"
+                // Multilingual digits. May return characters like ½ or 四 (Japanese for 4)
+                // Removes everything except digits eg. ' 12345 to 67890' returns '1234567890', while '-5' returns '5'
+                return new Digits();
+            case 'intscolons':
+                // Test Return "::4"
+                // Removes everything except digits and colons, e.g., for colon-separated ID numbers. No negatives or decimals
+                // Only characters matched, not patterns - eg 'x75::xx44:' will return '75::44:'
+                return new PregReplace('/[^0-9:]/', '');
+            case 'intscommas':
+                // Test Return ",4"
+                // Removes everything except digits and commas, e.g., for comma-separated ID numbers.  No negatives or decimals
+                // Only characters matched, not patterns - eg 'x75,,xx44,' will return '75,,44,'
+                return new PregReplace('/[^0-9,]/', '');
+            case 'intspipes':
+                // Test Return "|4"
+                // Removes everything except digits and pipes, e.g., for pipe-separated ID numbers. No negatives or decimals
+                // Only characters matched, not patterns - eg 'x75||xx44|' will return '75||44|'
+                return new PregReplace('/[^0-9|]/', '');
+
+            /** Alpha Filters (no Digits or HTML) String Return Type **/
+            case 'alpha':
+                // Test Return "ghΔδコンonclickbscript"
+                // Removes all but alphabetic characters. Unicode support.
+                return new TikiFilter_Alpha();
+            case 'alphaspace':
+                // Test Return " ghΔ δコン onclickbscript "
+                // Removes all but alphabetic characters and spaces
+                return new TikiFilter_Alpha(true);
+
+                /** Digits & Alpha (no HTML) String Return Type **/
+            case 'word':
+                // Test Return: "g4h_onclickbscript"
+                // Strips everything but digit and alpha and underscore characters. Strips Unicode.
+                return new PregReplace('/\W+/', '');
+            case 'wordspace':
+                // Test Return " g4h_ onclickbscript "
+                // Words and spaces only (no trimming)
+                return new PregReplace('/[^\s\w]+/', '');
+            case 'alnum':
+                // Test Return "g4hΔδコンonclickbscript"
+                // Only alphabetic characters and digits. All other characters are suppressed. Unicode support.
+                return new TikiFilter_Alnum();
+            case 'alnumdash':
+                // Test Return "g4hΔδ_コンonclickbscript"
+                // Removes everything except alphabetic characters, digits, dashes and underscores. Could be used for
+                // class names, sortmode values, etc.
+                return new TikiFilter_Alnum('_-');
+            case 'alnumspace':
+                // Test Return " g4hΔ δコン onclickbscript "
+                // Only alphabetic characters, digits and spaces. All other characters are suppressed. Unicode support
+                return new TikiFilter_Alnum('\s');
+            case 'username':
+            case 'groupname':
+            case 'pagename':
+            case 'topicname':
+            case 'themename':
+            case 'email':
+            case 'url':
+            case 'text':
+            case 'date':
+            case 'time':
+            case 'datetime':
+            case 'striptags':
+            case 'string':
+            case 'password':
+                // Test Return " :/g.,:|4h&#Δ δ_🍘コン onclick "
+                // Strips XML and HTML tags
+                return new StripTags();
+
+            /** HTML Permitted, String Return Type **/
+            case 'purifier':
+            case 'html':
+                // Test Return " :/g.,:|4hΔ δ_🍘コン onclick<b></b>"
+                // Strips non-valid HTML and potentially malicious HTML
+                return new TikiFilter_HtmlPurifier('temp/cache');
+            case 'xss':
+                // Test Return " :/g.,:|4h&#Δ δ_🍘コン on<x>click<b><sc<x>ript> "
+                // Leave everything except for potentially malicious HTML
+                return new TikiFilter_PreventXss();
+
+            /** Potentially unsafe filters (XSS permitted) **/
+            case 'wikicontent':
+                // Test Return " :/g.,:|4h&#Δ δ_🍘コン on<x>click<b><sc<x>ript> "
+                // Will not filter anything inside a wiki plugin, so "{DIV()}<script>{DIV}" will return identically.
+                // When not inside a wiki plugin will apply XSS filtering.
+                return new TikiFilter_WikiContent();
+            case 'none':
+                // Test Return " :/g.,:|4h&#Δ δ_🍘コン onclick<b><script> "
+                // Dummy filter to keep value unchanged
+                return new TikiFilter_None();
+            case 'rawhtml_unsafe':
+                // Test Return " :/g.,:|4h&#Δ δ_🍘コン onclick<b><script> "
+                // Exotic filter which will remove the '<x>', for values previously "neutered" by the PreventXss filter
+                return new TikiFilter_RawUnsafe();
+
+            default:
+                trigger_error('Filter not found: ' . $filter, E_USER_WARNING);
+                return new TikiFilter_PreventXss();
+        }
+    }
+}

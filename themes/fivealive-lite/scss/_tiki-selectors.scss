@@ -1,0 +1,341 @@
+
+// $Id$
+// This file is for additional LESS rules beyond what are in variables.scss.
+// Image path example:
+// body {
+//    background-image: url('#{$imagePath}bg.jpg');
+// }
+
+$imagePath: "../images/";
+
+.layout_social .topbar-wrapper {
+    max-width: 100%;
+    width: 100%;
+}
+
+.layout_social .topbar_modules {
+    & > *,
+    #quickadmin .dropdown-toggle {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}
+
+// Special links in "More" button of page-bar
+.dropdown-menu > .btn-link:not(.text-danger) {
+    color: #fff;
+}
+
+.dropdown-item.btn-link.text-danger {
+    background: lighten($danger, 40%) !important; //lighten($danger, 70%);
+    border-radius: 0 !important;
+    &:hover {
+        background: lighten($danger, 30%) !important;
+    }
+}
+//.dropdown-item.text-danger {
+//  color: #fec0bd !important;
+//}
+//
+//.middle_outer {
+//    box-shadow: inset 0 3px /*24px*/ 0 0 #28a7de;
+//    border-top: 2px solid #ffffff;
+//}
+//.fullscreen .middle_outer {
+//    box-shadow: inset 0 3px 0 0 #28a7de;
+//    border-top: none;
+//}
+//
+//.navbar {
+//    min-height: 24px;
+//}
+
+body.tiki.navbar-padding,
+.layout_social_modules {
+    padding-top: $tiki-navbar-fixed-height;
+    h1.sitetitle {
+        line-height: normal;
+    }
+}
+body.fullscreen.tiki.navbar-padding {
+    padding-top: 0;
+}
+
+// Topbar and background appearance May 3
+//.layout_social.fixed_width .topbar {
+//    width: 100vw;
+//    position: absolute;
+//    left: 0;
+//    .topbar_modules {
+//        display: flex !important;
+//        justify-content: center !important;
+//    }
+//}
+
+.layout_social .topbar_modules .sitetitle,
+.layout_social_modules .topbar_modules .sitetitle {
+    font-size: 1.8rem;
+    line-height: $tiki-navbar-fixed-height;
+}
+
+//#top_modules,
+.layout_fixed_top_modules .top_modules,
+.navbar-fixed-top {
+    height: $tiki-navbar-fixed-height;
+    //  overflow: hidden;
+    .sitelogo img {
+        width: auto !important;
+        margin-right: 1.5em;
+    }
+    .sitetitle {
+        //    display: inline-block;
+        font-size: 2em;
+        //    height: 54px;
+        //    line-height: 54px;
+        margin: 0 0 0 1rem;
+        //    font-size: 24px;
+        //    margin-top: 15px;
+        float: left;
+        // a {
+        //    color: #ffffff;
+        //}
+        a:hover {
+            text-decoration: none;
+        }
+    }
+    .sitesubtitle {
+        float: left;
+        font-size: 1.5em;
+        margin: 0 0 0 1.5em;
+        line-height: $tiki-navbar-fixed-height;
+        height: $tiki-navbar-fixed-height;
+        color: #ffffff;
+    }
+}
+
+//.topbar_container,
+//.layout_basic .topbar {
+//    background: $topbar_container-bg ;
+//}
+
+header.header {
+    .sitetitle,
+    .sitesubtitle {
+        color: $header-color;
+        text-shadow: none;
+    }
+}
+
+//.layout_basic .topbar,
+//.layout_basic.tiki .row.topbar,
+.layout_fixed_top_modules .navbar-fixed-top .navbar {
+    margin-bottom: 0;
+}
+
+
+.topbar .navbar-nav > li > a,
+.topbar .navbar > li > a {
+//    padding-top: 4px;
+//    padding-bottom: 4px;
+    line-height: 1;
+}
+
+
+//.topbar {
+//    margin-bottom: 2rem;
+//}
+
+
+////*.layout_classic {*/
+///  .top_modules.bg-dark,
+///  .top_modules.bg-light,
+///  .topbar_modules,
+///  .topbar.bg-dark,
+///  .topbar.bg-light { background: $topbar-bg; }
+////*}*/
+
+///*.layout_social {
+//    #top_modules.bg-dark,
+//    #top_modules.bg-light,
+//    #topbar_modules,
+//    #topbar.bg-dark,
+//    #topbar.bg-light,
+//    .topbar .bg-dark,
+//    .topbar .bg-light { background: $topbar-bg !important; }
+//}
+//
+//.layout_basic {
+//    #top_modules.bg-dark,
+//    #top_modules.bg-light,
+//    #topbar_modules,
+//    #topbar.bg-dark,
+//    #topbar.bg-light,
+//    .topbar .bg-dark,
+//    .topbar .bg-light { background: $topbar-bg !important; }
+//}*/
+
+.col2 .card,
+.col3 .card {
+    border: $side-column-border; // none;
+}
+
+.col2 .card-header,
+.col3 .card-header {
+    background: $side-column-card-header-bg; // #e1d518 url('#{$imagePath}siteheader.png') no-repeat -1000px -200px;
+    border-width: $side-column-card-header-border-width;
+    border-style: solid;
+    border-color: $side-column-card-header-border-color;
+}
+
+.col2 .card-header,
+.col3 .card-header {
+    color: $side-column-card-header-color;
+}
+
+#fullscreenbutton a {
+  color: #000000;
+}
+
+.page-header {
+    margin-top: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+}
+
+// Little gap (line) between the topbar and top
+.layout_basic .topbar {
+    margin-top: 1px;
+}
+
+// When it displays as inline-block for some reason there is some little padding on the bottom of the element which needs to be removed
+.layout_basic .topbar > div {
+    margin-bottom: -3px !important;
+}
+
+//.sitelogo img {max-height: 34px; width: auto; margin-bottom: 1em;}
+
+.form-control,
+select,
+input[type="text"],
+input[type="password"],
+input[type="file"],
+input[type="email"],
+input[type="file"],
+input[type="search"],
+input[type="number"],
+input#login-pass,
+textarea,
+.adminoptionbox option {
+    background-color: $form-control-bg; //#f8f9d4;
+    border-color: $form-control-border-colors; // #F5FB86 #FBFBEE #FBFBEE #F5FB86;
+}
+
+.navbar-collapse {
+    border: none;
+}
+
+
+.topbar {
+//    .nav > li > a {
+//        padding-bottom: 2px;
+//        padding-top: 2px;
+//    }
+    .form-control,
+    .btn,
+    label {
+ //       font-size: 12px;
+ //       height: 20px;
+        padding-top: 1px;
+        padding-bottom: 1px;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    .mb-3 {
+        margin-bottom: 0;
+    }
+}
+
+.dropdown-menu {
+  background-color: $dropdown-bg; //#005064;
+  border: 1px solid $dropdown-border-color; // rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item a,
+.dropdown-item .btn.btn-link {
+  color: $dropdown-link-color;
+  &:hover,
+  &:focus {
+    color: $dropdown-link-hover-color;
+  }
+  &:active,
+  &.active {
+    color: $dropdown-link-active-color;
+  }
+  &.disabled,
+  &:disabled {
+    color: $dropdown-link-disabled-color;
+  }
+  .dropdown-header {
+    color: $dropdown-header-color;
+  }
+  .dropdown-divider {
+    background: $dropdown-divider-bg;
+  }
+}
+
+.postbody-title {
+    background: $postbody-title-bg; //url('#{$imagePath}siteheader.png') no-repeat -480px -200px;
+}
+
+.siteloginbar_poppedup li > a,
+.siteloginbar_poppedup label {
+    color: $navbar-dark-color;
+}
+
+.popover {
+    color: $body-color;
+}
+
+label a:hover { text-decoration: none; }
+
+//.bg-dark {
+//  background-color: $bg-dark !important;
+//}
+
+.nav-tabs .nav-item {
+  margin-right: 1px;
+}
+
+#footer {
+  background: #000000;
+  color: $footer-color; // #696969;
+  padding: 1px 0 2px 0;
+}
+
+.footer {
+  border-top: 1px solid $footer-border-color; //#ebdc14;
+  border-bottom: 1px solid $footer-border-color; // #ebdc14;
+}
+
+.footer_liner {
+    .card,
+    .card-header {
+        border: none;
+    }
+
+    h3.card-header {
+        color: #ffffff;
+        border-bottom: 1px dotted $footer-border-color;
+    }
+
+    //#ebdc14;
+    legend,
+    a,
+    a:visited {
+        color: $footer-link-color;
+    }
+
+    // #a9a9a9;
+}
