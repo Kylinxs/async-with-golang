@@ -696,4 +696,118 @@ try {
     // Preserve unfiltered values accessible through JIT filtering
     $jitPost = new JitFilter($_POST);
     $jitGet = new JitFilter($_GET);
-    $jitRequest = new Ji
+    $jitRequest = new JitFilter($_REQUEST);
+    $jitCookie = new JitFilter($_COOKIE);
+    $jitPost->setDefaultFilter('xss');
+    $jitGet->setDefaultFilter('xss');
+    $jitRequest->setDefaultFilter('xss');
+    $jitCookie->setDefaultFilter('xss');
+    // Apply configured filters to all other input
+    if (! isset($inputConfiguration)) {
+        $inputConfiguration = [];
+    }
+
+    array_unshift(
+        $inputConfiguration,
+        [
+            'staticKeyFilters'          => [
+                'menu'                        => 'striptags',
+                'cat_categorize'              => 'alpha',
+                'mobile_mode'                 => 'alpha',
+                'categ'                       => 'striptags',
+                'preview'                     => 'text',
+                'rbox'                        => 'text',
+                'ticket'                      => 'alnumdash',
+                'confirmForm'                 => 'alpha',
+                //cookie
+                $prefs['cookie_consent_name'] => 'alnum',
+                'javascript_enabled'          => 'alnum',
+                'local_tz'                    => 'text',
+                'local_tzoffset'              => 'int',
+                'PHPSESSID'                   => 'alnum',
+                'PHPSESSIDCV'                 => 'striptags',
+                'tabs'                        => 'striptags',
+                'XDEBUG_SESSION'              => 'digits'
+            ],
+            'staticKeyFiltersForArrays' => [
+                'cat_managed'    => 'digits',
+                'cat_categories' => 'digits',
+            ],
+        ]
+    );
+
+    $inputFilter = DeclFilter::fromConfiguration($inputConfiguration, ['catchAllFilter']);
+    if ((isset($prefs['tiki_allow_trust_input']) && $prefs['tiki_allow_trust_input'] !== 'y') || $tiki_p_trust_input != 'y') {
+        $inputFilter->addCatchAllFilter('xss');
+    }
+    $cookieFilter = DeclFilter::fromConfiguration($inputConfiguration, ['catchAllFilter']);
+    $cookieFilter->addCatchAllFilter('striptags');
+
+    $_GET = $inputFilter->filter($_GET);
+    $_POST = $inputFilter->filter($_POST);
+    $_COOKIE = $cookieFilter->filter($_COOKIE);
+} catch (Exception $e) {
+    // Ignore
+}
+
+// Rebuild request with filtered values
+$_REQUEST = array_merge($_GET, $_POST);
+if (( isset($prefs['tiki_allow_trust_input']) && $prefs['tiki_allow_trust_input'] !== 'y' ) || $tiki_p_trust_input != 'y') {
+    $varcheck_vars = ['_COOKIE', '_GET', '_POST', '_ENV', '_SERVER'];
+    $varcheck_errors = '';
+    foreach ($varcheck_vars as $var) {
+        if (! isset($$var)) {
+            continue;
+        }
+        if (($tmp = varcheck($$var, $var)) != '') {
+            if ($varcheck_errors != '') {
+                $varcheck_errors .= '<br />';
+            }
+            $varcheck_errors .= $tmp;
+        }
+    }
+    unset($tmp);
+}
+
+if (count($_FILES)) {
+    $mimelib = TikiLib::lib('mime');
+
+    foreach ($_FILES as $key => & $upload_file_info) {
+        if (is_array($upload_file_info['tmp_name'])) {
+            foreach ($upload_file_info['tmp_name'] as $k => $tmp_name) {
+                if ($tmp_name) {
+                    $type = $mimelib->from_path($upload_file_info['name'][$k], $tmp_name);
+                    $upload_file_info['type'][$k] = $type;
+                }
+            }
+        } elseif ($upload_file_info['tmp_name']) {
+            $type = $mimelib->from_path($upload_file_info['name'], $upload_file_info['tmp_name']);
+            $upload_file_info['type'] = $type;
+        }
+    }
+}
+
+// deal with old request globals (e.g. used by Smarty)
+$GLOBALS['HTTP_GET_VARS'] = & $_GET;
+$GLOBALS['HTTP_POST_VARS'] = & $_POST;
+$GLOBALS['HTTP_COOKIE_VARS'] = & $_COOKIE;
+unset($GLOBALS['HTTP_ENV_VARS']);
+unset($GLOBALS['HTTP_SERVER_VARS']);
+unset($GLOBALS['HTTP_SESSION_VARS']);
+unset($GLOBALS['HTTP_POST_FILES']);
+// --------------------------------------------------------------
+if (isset($_REQUEST['highlight']) || (isset($prefs['feature_referer_highlight']) && $prefs['feature_referer_highlight'] == 'y')) {
+    $smarty->loadFilter('output', 'highlight');
+}
+if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding("UTF-8");
+}
+// --------------------------------------------------------------
+// Fix IIS servers not setting what they should set (ay ay IIS, ay ay)
+if (! isset($_SERVER['QUERY_STRING'])) {
+    $_SERVER['QUERY_STRING'] = '';
+}
+
+
+
+$smarty->assign("tikidomain", $tikidomain);
