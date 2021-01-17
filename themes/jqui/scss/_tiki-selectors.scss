@@ -1,0 +1,133 @@
+
+// $Id$
+// This file is for additional LESS rules beyond what are in variables.scss.
+
+.topbar {
+    border-radius: $border-radius;
+//    border: 1px solid #aaaaaa;
+}
+
+.topbar {
+    .nav > li > a {
+        border-right: 1px solid #aaaaaa;
+        font-weight: bold;
+    }
+
+    .nav > li:first-of-type > a {
+        border-left: none;
+    }
+}
+
+//.topbar,
+//.navbar-dark .navbar-nav .nav-link,
+//.navbar-dark .navbar-nav .nav-link:hover,
+//.navbar-dark .navbar-nav .nav-link:focus,
+//.navbar-dark .navbar-form,
+.card-header,
+//.navbar-dark .navbar-collapse,
+//.navbar-dark .navbar-brand,
+.tiki .bg-dark:not(.navbar-dark) {
+  background-image: linear-gradient(to bottom, #e3e3e3 0%, #cccccc 100%);
+}
+
+//.navbar-dark .navbar-brand {
+//  color: $primary;
+//}
+
+.topbar .nav-link {
+//  border-right: 1px solid #aaaaaa;
+  font-weight: bold;
+}
+
+.topbar .nav-link:first-of-type {
+  border-left: none;
+}
+
+//.nav-link {
+//  padding: 0.7rem 1rem;
+//}
+
+.card.postbody,
+.card.postbody .card-header {
+  border: 1px solid #999;
+}
+
+.card-header {
+  margin: 3px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.card-title {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.card-body h4 { font-size: 1rem; }
+
+.card.postbody .card-footer {
+  background-color: rgba(0, 0, 0, .03);
+  border-top: 1px solid #999;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-info,
+.btn-warning,
+.btn-danger {
+    background: #f2f2f2;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #f2f2f2), color-stop(46%, #f2f2f2), color-stop(50%, #e6e6e6), color-stop(50%, #eeeeee), color-stop(100%, #eeeeee));
+    background: -webkit-linear-gradient(top, #f2f2f2 0%, #f2f2f2 46%, #e6e6e6 50%, #eeeeee 50%, #eeeeee 100%);
+    background: -o-linear-gradient(top, #f2f2f2 0%, #f2f2f2 46%, #e6e6e6 50%, #eeeeee 50%, #eeeeee 100%);
+    background: linear-gradient(to bottom, #f2f2f2 0%, #f2f2f2 46%, #e6e6e6 50%, #eeeeee 50%, #eeeeee 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f2f2f2', endColorstr='#eeeeee', GradientType=0);
+  color: #333;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-success:hover,
+.btn-info:hover,
+.btn-warning:hover,
+.btn-danger:hover {
+    background: #eeeeee;
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eeeeee), color-stop(50%,#eeeeee), color-stop(50%,#e6e6e6), color-stop(54%,#f2f2f2), color-stop(100%,#f2f2f2));
+    background: -webkit-linear-gradient(top,  #eeeeee 0%,#eeeeee 50%,#e6e6e6 50%,#f2f2f2 54%,#f2f2f2 100%);
+    background: -o-linear-gradient(top,  #eeeeee 0%,#eeeeee 50%,#e6e6e6 50%,#f2f2f2 54%,#f2f2f2 100%);
+    background: linear-gradient(to bottom,  #eeeeee 0%,#eeeeee 50%,#e6e6e6 50%,#f2f2f2 54%,#f2f2f2 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#f2f2f2',GradientType=0 );
+  color: #333;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-success:disabled,
+.btn-info:disabled,
+.btn-warning:disabled,
+.btn-danger:disabled,
+.btn-primary.disabled,
+.btn-secondary.disabled,
+.btn-success.disabled,
+.btn-info.disabled,
+.btn-warning.disabled,
+.btn-danger.disabled { color: lighten(#333, 10%);}
+
+.show > .btn-primary.dropdown-toggle {
+  color: #333333;
+}
+
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-info,
+.btn-outline-warning,
+.btn-outline-danger {
+  background: transparent;
+}
+
+// So form submit buttons with icons and text used in popover actions can look just like links
+.popover button.btn-link.link-list,
+.popover button.btn-link.link-list .icon {
+    font-size: $popover-font-size;
+}
