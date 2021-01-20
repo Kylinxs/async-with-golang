@@ -239,4 +239,185 @@ class Tracker_Field_Dropdown extends Tracker_Field_Abstract implements Tracker_F
             $value = substr($value, 0, $pos);
         }
 
-        // Check if option is
+        // Check if option is contains quotes, ex: "apple, banana, orange"
+        if (preg_match('/^(").*\1$/', $value)) {
+            $value = substr($value, 1, strlen($value) - 2);
+        }
+
+        return $value;
+    }
+
+    private function getLabelPortion($value)
+    {
+        if (false !== $pos = strpos($value, '=')) {
+            $value = substr($value, $pos + 1);
+        }
+
+        if (preg_match('/^(").*\1$/', $value)) {
+            $value = substr($value, 1, strlen($value) - 2);
+        }
+
+        return $value;
+    }
+
+    public function getDocumentPart(Search_Type_Factory_Interface $typeFactory)
+    {
+        $value = $this->getValue();
+        $label = $this->getValueLabel($value);
+        $baseKey = $this->getBaseKey();
+
+        return [
+            $baseKey => $typeFactory->identifier($value),
+            "{$baseKey}_text" => $typeFactory->sortable($label),
+        ];
+    }
+
+    public function getProvidedFields()
+    {
+        $baseKey = $this->getBaseKey();
+        return [$baseKey, $baseKey . '_text'];
+    }
+
+    public function getProvidedFieldTypes()
+    {
+        $baseKey = $this->getBaseKey();
+        return [
+            $baseKey => 'identifier',
+            $baseKey . '_text' => 'sortable'
+        ];
+    }
+
+    public function getGlobalFields()
+    {
+        $baseKey = $this->getBaseKey();
+        return ["{$baseKey}_text" => true];
+    }
+
+    public function getFacets()
+    {
+        $baseKey = $this->getBaseKey();
+        return [
+            Search_Query_Facet_Term::fromField($baseKey)
+                ->setLabel($this->getConfiguration('name'))
+                ->setRenderMap($this->getPossibleItemValues())
+        ];
+    }
+
+    public function getTabularSchema()
+    {
+        $schema = new Tracker\Tabular\Schema($this->getTrackerDefinition());
+
+        $permName = $this->getConfiguration('permName');
+        $name = $this->getConfiguration('name');
+
+        $possibilities = $this->getPossibleItemValues();
+        $invert = array_flip($possibilities);
+        $withOther = ($this->getConfiguration('type') === 'D');
+
+        $schema->addNew($permName, 'code')
+            ->setLabel($name)
+            ->setRenderTransform(function ($value) {
+                return $value;
+            })
+            ->setParseIntoTransform(function (&$info, $value) use ($permName) {
+                $info['fields'][$permName] = $value;
+            })
+            ;
+
+        $schema->addNew($permName, 'text')
+            ->setLabel($name)
+            ->addIncompatibility($permName, 'code')
+            ->addQuerySource('text', "tracker_field_{$permName}_text")
+            ->setRenderTransform(function ($value, $extra) use ($possibilities, $withOther) {
+                if (isset($possibilities[$value])) {
+                    return $possibilities[$value];
+                } elseif ($withOther) {
+                    return $value;
+                } else {
+                    return '';  // TODO something better?
+                }
+            })
+            ->setParseIntoTransform(function (&$info, $value) use ($permName, $invert, $withOther) {
+                if (isset($invert[$value])) {
+                    $info['fields'][$permName] = $invert[$value];
+                } elseif ($withOther) {
+                    $info['fields'][$permName] = $value;
+                }
+            })
+            ;
+
+        return $schema;
+    }
+
+    public function getFilterCollection()
+    {
+        $filters = new Tracker\Filter\Collection($this->getTrackerDefinition());
+        $permName = $this->getConfiguration('permName');
+        $name = $this->getConfiguration('name');
+        $baseKey = $this->getBaseKey();
+
+        $possibilities = $this->getPossibleItemValues();
+        if ($this->getConfiguration('type') == 'D') {
+            // TODO: make these and the ones in wikiplugin_trackerFilter_get_filters actually return accessible items
+            // i.e. if I am not able to see an item, I should not see its value in the filter as well (WYSIWYCA problem)
+            $all = TikiLib::lib('trk')->list_tracker_field_values($this->getTrackerDefinition()->getConfiguration('trackerId'), $this->getFieldId());
+            foreach ($all as $val) {
+                if (! isset($possibilities[$val])) {
+                    $possibilities[$val] = $val;
+                }
+            }
+        }
+        $possibilities['-Blank (no data)-'] = tr('-Blank (no data)-');
+
+        $filters->addNew($permName, 'dropdown')
+            ->setLabel($name)
+            ->setControl(new Tracker\Filter\Control\DropDown("tf_{$permName}_dd", $possibilities))
+            ->setApplyCondition(function ($control, Search_Query $query) use ($baseKey) {
+                $value = $control->getValue();
+
+                if ($value === '-Blank (no data)-') {
+                    $query->filterIdentifier('', $baseKey . '_text');
+                } elseif ($value) {
+                    $query->filterIdentifier($value, $baseKey);
+                }
+            });
+
+        $filters->addNew($permName, 'multiselect')
+            ->setLabel($name)
+            ->setControl(new Tracker\Filter\Control\MultiSelect("tf_{$permName}_ms", $possibilities))
+            ->setApplyCondition(function ($control, Search_Query $query) use ($permName, $baseKey) {
+                $values = $control->getValues();
+
+                if (! empty($values)) {
+                    $sub = $query->getSubQuery("ms_$permName");
+                    foreach ($values as $v) {
+                        if ($v === '-Blank (no data)-') {
+                            $sub->filterIdentifier('', $baseKey . '_text');
+                        } elseif ($v) {
+                            $sub->filterIdentifier((string) $v, $baseKey);
+                        }
+                    }
+                }
+            });
+
+        return $filters;
+    }
+
+    public function isValid()
+    {
+        if ($this->getConfiguration('type') !== 'D') {
+            $value = $this->getValue($this->getDefaultValue());
+            $allValues = $value === '' ? [] : explode(',', $value);
+
+            if (! empty($allValues)) {
+                foreach ($allValues as $val) {
+                    if (! in_array($val, array_keys($this->getPossibleItemValues()))) {
+                        return tr('Value not available in options');
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+}
