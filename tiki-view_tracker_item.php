@@ -511,4 +511,437 @@ if (isset($_REQUEST["save"]) || isset($_REQUEST["save_return"]) || isset($_REQUE
             }
         }
         if (isset($_REQUEST['save_return']) && isset($_REQUEST['from'])) {
-            $fromUrl = filter_out_sefurl('tiki-index.php?page=' . u
+            $fromUrl = filter_out_sefurl('tiki-index.php?page=' . urlencode($_REQUEST['from']));
+            header("Location: {$fromUrl}");
+            exit;
+        }
+
+        if (isset($_REQUEST['save_and_comment'])) {
+            $version = $trklib->last_log_version($itemId);
+            $smarty->assign('version', $version);
+
+            $modalUrl = TikiLib::lib('service')->getUrl([
+                'controller' => 'comment',
+                'action' => 'post',
+                'type' => 'trackeritem',
+                'objectId' => $itemId,
+                'parentId' => 0,
+                'version' => $version,
+                'return_url' => '',
+                'title' => tr('Comment for edit #%0', $version),
+                ]);
+
+            $headerlib->add_jq_onready('$.openModal({ remote:"' . $modalUrl . '"});');
+        }
+    }
+}
+// remove image from an image field
+if (isset($_REQUEST["removeImage"])) {
+    $img_field = [
+        'data' => []
+    ];
+    $img_field['data'][] = [
+        'fieldId' => $_REQUEST["fieldId"],
+        'type' => 'i',
+        'name' => $_REQUEST["fieldName"],
+        'value' => 'blank'
+    ];
+    $trklib->replace_item($trackerId, $itemId, $img_field);
+    $_REQUEST['show'] = "mod";
+}
+// ************* return to list ***************************
+if (isset($_REQUEST["returntracker"]) || isset($_REQUEST["save_return"])) {
+    require_once('lib/smarty_tiki/block.self_link.php');
+    header(
+        'Location: ' . smarty_block_self_link(
+            [
+                '_script' => 'tiki-view_tracker.php',
+                '_tag' => 'n',
+                '_urlencode' => 'n',
+                'itemId' => 'NULL',
+                'trackerId' => $trackerId
+            ],
+            '',
+            $smarty
+        )
+    );
+    die;
+}
+// ********************************************************
+$info = $trklib->get_tracker_item($itemId);
+$itemObject = Tracker_Item::fromInfo($info);
+if (! isset($info['trackerId'])) {
+    $info['trackerId'] = $trackerId;
+}
+if (! $itemObject->canView()) {
+    $smarty->assign('errortype', 403);
+    $smarty->assign('msg', tra('Permission denied'));
+    header('HTTP/1.0 403 Forbidden');
+    $smarty->display('error.tpl');
+    die;
+}
+
+$fieldFactory = $definition->getFieldFactory();
+
+foreach ($fieldDefinitions as $i => $current_field) {
+    $current_field_ins = null;
+    $fid = $current_field['fieldId'];
+
+    $handler = $fieldFactory->getHandler($current_field, $info);
+
+    $fieldIsVisible = $itemObject->canViewField($fid);
+    $fieldIsEditable = $itemObject->canModifyField($fid);
+
+    if ($fieldIsVisible || $fieldIsEditable) {
+        $current_field_ins = $current_field;
+
+        if ($handler) {
+            $insert_values = $handler->getFieldData();
+
+            if ($insert_values) {
+                $current_field_ins = array_merge($current_field_ins, $insert_values);
+            }
+        }
+    }
+
+    if (! empty($current_field_ins)) {
+        if ($fieldIsVisible) {
+            $fields['data'][$i] = $current_field_ins;
+        }
+        if ($fieldIsEditable) {
+            $ins_fields['data'][$i] = $current_field_ins;
+        }
+    }
+}
+$smarty->assign('tracker_item_main_value', $trklib->get_isMain_value($trackerId, $itemId));
+
+//restore types values if there is an error
+if (isset($error)) {
+    foreach ($ins_fields["data"] as $i => $current_field) {
+        if (isset($error["data"][$i]["value"])) {
+            $ins_fields["data"][$i]["value"] = $error["data"][$i]["value"];
+        }
+    }
+}
+
+$authorfield = $definition->getAuthorField();
+if ($authorfield) {
+    $tracker_info['authorindiv'] = $trklib->get_item_value($trackerId, $itemId, $authorfield);
+}
+
+// Pull realname for user.
+$info["createdByReal"] = $tikilib->get_user_preference($info["createdBy"], 'realName', '');
+$info["lastModifByReal"] = $tikilib->get_user_preference($info["lastModifBy"], 'realName', '');
+
+if ($tracker_info['doNotShowEmptyField'] == 'y') {
+    $trackerlib = TikiLib::lib('trk');
+    $fields['data'] = $trackerlib->mark_fields_as_empty($fields['data']);
+}
+
+$smarty->assign('trackerId', $trackerId);
+$smarty->assign('tracker_info', $tracker_info);
+$smarty->assign_by_ref('info', $info);
+$smarty->assign_by_ref('fields', $fields["data"]);
+$smarty->assign_by_ref('ins_fields', $ins_fields["data"]);
+if ($prefs['feature_user_watches'] == 'y' and $tiki_p_watch_trackers == 'y') {
+    if ($user and isset($_REQUEST['watch'])) {
+        check_ticket('view-trackers-items');
+        if ($_REQUEST['watch'] == 'add') {
+            $tikilib->add_user_watch($user, 'tracker_item_modified', $itemId, 'tracker ' . $trackerId, $tracker_info['name'], "tiki-view_tracker_item.php?trackerId=" . $trackerId . "&amp;itemId=" . $itemId);
+        } else {
+            $remove_watch_tracker_type = 'tracker ' . $trackerId;
+            $tikilib->remove_user_watch($user, 'tracker_item_modified', $itemId, $remove_watch_tracker_type);
+        }
+    }
+    $smarty->assign('user_watching_tracker', 'n');
+    $it = $tikilib->user_watches($user, 'tracker_item_modified', $itemId, 'tracker ' . $trackerId);
+    if ($user and $tikilib->user_watches($user, 'tracker_item_modified', $itemId, 'tracker ' . $trackerId)) {
+        $smarty->assign('user_watching_tracker', 'y');
+    }
+    // Check, if the user is watching this trackers' item by a category.
+    if ($prefs['feature_categories'] == 'y') {
+        $watching_categories_temp = $categlib->get_watching_categories($trackerId, 'tracker', $user);
+        $smarty->assign('category_watched', 'n');
+        if (count($watching_categories_temp) > 0) {
+            $smarty->assign('category_watched', 'y');
+            $watching_categories = [];
+            foreach ($watching_categories_temp as $wct) {
+                $watching_categories[] = [
+                    "categId" => $wct,
+                    "name" => $categlib->get_category_name($wct)
+                ];
+            }
+            $smarty->assign('watching_categories', $watching_categories);
+        }
+    }
+}
+
+if ($tracker_info['useComments'] == 'y') {
+    $comCount = $trklib->get_item_nb_comments($itemId);
+    $smarty->assign("comCount", $comCount);
+    $smarty->assign("canViewCommentsAsItemOwner", $itemObject->canViewComments());
+
+    $saveAndComment = $definition->getConfiguration('saveAndComment');
+    if ($saveAndComment !== 'n') {
+        if (! $itemObject->canPostComments()) {
+            $saveAndComment = 'n';
+        }
+    }
+    $smarty->assign("saveAndComment", $saveAndComment);
+}
+
+if ($tracker_info["useAttachments"] == 'y') {
+    if (isset($_REQUEST["removeattach"])) {
+        $_REQUEST["show"] = "att";
+    }
+    if (isset($_REQUEST["editattach"])) {
+        $att = $trklib->get_item_attachment($_REQUEST["editattach"]);
+        $smarty->assign("attach_comment", $att['comment']);
+        $smarty->assign("attach_version", $att['version']);
+        $smarty->assign("attach_longdesc", $att['longdesc']);
+        $smarty->assign("attach_file", $att["filename"]);
+        $smarty->assign("attId", $att["attId"]);
+        $_REQUEST["show"] = "att";
+    }
+    if (isset($_REQUEST['attach']) && $tiki_p_attach_trackers == 'y' && isset($_FILES['userfile1'])) {
+        // Process an attachment here
+        if (is_uploaded_file($_FILES['userfile1']['tmp_name'])) {
+            $fp = fopen($_FILES['userfile1']['tmp_name'], "rb");
+            $data = '';
+            $fhash = '';
+            if ($prefs['t_use_db'] == 'n') {
+                $fhash = md5($_FILES['userfile1']['name'] . $tikilib->now);
+                $fw = fopen($prefs['t_use_dir'] . $fhash, "wb");
+                if (! $fw) {
+                    $smarty->assign('msg', tra('Cannot write to this file:') . $fhash);
+                    $smarty->display("error.tpl");
+                    die;
+                }
+            }
+            while (! feof($fp)) {
+                if ($prefs['t_use_db'] == 'n') {
+                    $data = fread($fp, 8192 * 16);
+                    fwrite($fw, $data);
+                } else {
+                    $data .= fread($fp, 8192 * 16);
+                }
+            }
+            fclose($fp);
+            if ($prefs['t_use_db'] == 'n') {
+                fclose($fw);
+                $data = '';
+            }
+            try {
+                if ($prefs['t_use_db'] == 'n') {
+                    $filegallib->assertUploadedFileIsSafe($prefs['t_use_dir'] . $fhash, $_FILES['userfile1']['name']);
+                } else {
+                    $filegallib->assertUploadedContentIsSafe($data, $_FILES['userfile1']['name']);
+                }
+            } catch (Exception $e) {
+                $smarty->assign('msg', $_FILES['userfile1']['name'] . ': ' . $e->getMessage());
+                $smarty->display("error.tpl");
+                die;
+            }
+            $size = $_FILES['userfile1']['size'];
+            $name = $_FILES['userfile1']['name'];
+            $type = $_FILES['userfile1']['type'];
+        } else {
+            $smarty->assign('msg', $_FILES['userfile1']['name'] . ': ' . tra('Upload was not successful') . ': ' . $tikilib->uploaded_file_error($_FILES['userfile1']['error']));
+            $smarty->display("error.tpl");
+            die;
+        }
+        $trklib->replace_item_attachment($_REQUEST["attId"], $name, $type, $size, $data, $_REQUEST["attach_comment"], $user, $fhash, $_REQUEST["attach_version"], $_REQUEST["attach_longdesc"], $trackerId, $itemId, $tracker_info);
+        $_REQUEST["attId"] = 0;
+        $_REQUEST['show'] = "att";
+    }
+    // If anything below here is changed, please change lib/wiki-plugins/wikiplugin_attach.php as well.
+    $attextra = 'n';
+    if (strstr($tracker_info["orderAttachments"], '|')) {
+        $attextra = 'y';
+    }
+    $attfields = explode(',', strtok($tracker_info["orderAttachments"], '|'));
+    $atts = $trklib->list_item_attachments($itemId, 0, -1, 'comment_asc', '');
+    $smarty->assign('atts', $atts["data"]);
+    $smarty->assign('attCount', $atts["cant"]);
+    $smarty->assign('attfields', $attfields);
+    $smarty->assign('attextra', $attextra);
+}
+if (isset($_REQUEST['moveto']) && empty($_REQUEST['moveto'])) {
+    $trackers = $trklib->list_trackers();
+    $smarty->assign_by_ref('trackers', $trackers['data']);
+    $_REQUEST['show'] = 'mod';
+}
+if (isset($_REQUEST['show'])) {
+    if ($_REQUEST['show'] == 'view') {
+        $cookietab = 1;
+        // for legacy edit mode after saving
+        setCookieSection('tabs_view_tracker_item', '', 'tabs');
+    } elseif ($tracker_info["useComments"] == 'y' and $_REQUEST['show'] == 'com') {
+        $cookietab = 2;
+    } elseif ($_REQUEST['show'] == "mod") {
+        $cookietab = 2;
+        if ($tracker_info["useAttachments"] == 'y') {
+            $cookietab++;
+        }
+        if ($tracker_info["useComments"] == 'y' && $tiki_p_tracker_view_comments == 'y') {
+            $cookietab++;
+        }
+    } elseif ($_REQUEST['show'] == "att") {
+        $cookietab = 2;
+        if ($tracker_info["useComments"] == 'y' && $tiki_p_tracker_view_comments == 'y') {
+            $cookietab = 3;
+        }
+    }
+}
+if (isset($_REQUEST['from'])) {
+    $from = $_REQUEST['from'];
+} else {
+    $from = false;
+}
+$smarty->assign('from', $from);
+if (isset($_REQUEST['status'])) {
+    $smarty->assign_by_ref('status', $_REQUEST['status']);
+}
+include_once('tiki-section_options.php');
+
+ask_ticket('view-trackers-items');
+if ($prefs['feature_actionlog'] == 'y') {
+    $logslib = TikiLib::lib('logs');
+    $logslib->add_action('Viewed', $itemId, 'trackeritem');
+}
+
+// Generate validation js
+if ($prefs['feature_jquery'] == 'y' && $prefs['feature_jquery_validation'] == 'y') {
+    $validatorslib = TikiLib::lib('validators');
+    $validationjs = $validatorslib->generateTrackerValidateJS($fields['data']);
+    $smarty->assign('validationjs', $validationjs);
+}
+
+if ($itemObject->canRemove()) {
+    $smarty->assign('editTitle', tr('Edit/Delete'));
+} else {
+    $smarty->assign('editTitle', tr('Edit'));
+}
+if (! empty($path)) {
+    $smarty->assign('formAction', $path);
+}
+$smarty->assign('pdf_export', ($prefs['print_pdf_from_url'] != 'none') ? 'y' : 'n');
+$smarty->assign('canView', $itemObject->canView());
+$smarty->assign('canModify', $itemObject->canModify());
+$smarty->assign('canRemove', $itemObject->canRemove());
+$smarty->assign('conflictoverride', ! empty($_REQUEST['conflictoverride']));
+
+if ($itemObject->canModify() && $prefs['tracker_legacy_insert'] == 'y' && $prefs['feature_warn_on_edit'] == 'y' && empty($_REQUEST['conflictoverride'])) {
+    $otherUser = TikiLib::lib('service')->internal(
+        'semaphore',
+        'get_user',
+        [
+            'object_id' => $itemId,
+            'object_type' => 'trackeritem',
+            'check' => 1,
+        ]
+    );
+    if ($otherUser && $otherUser !== $user) {
+        $smarty->loadPlugin('smarty_modifier_username');
+        $msg = tr("This tracker item is being edited by user %0. Please check with the user before editing, otherwise conflicts will occur and data might be lost.", smarty_modifier_username($otherUser));
+        $msg .= '<br /><br /><a href="' . filter_out_sefurl('tiki-view_tracker_item.php?itemId=' . $itemId . '&conflictoverride=y') . '">' . tra('Override lock and carry on with edit') . '</a>';
+        $smarty->assign('msg', $msg);
+        $smarty->assign('errortitle', tra('Item is currently being edited'));
+        $smarty->display("error.tpl");
+        die;
+    }
+    TikiLib::lib('service')->internal('semaphore', 'set', ['object_id' => $itemId, 'object_type' => 'trackeritem']);
+}
+
+// Add view/edit template. Override an optional template defined in the tracker by a template passed via request
+// Note: Override is only allowed if a default template was set already in the tracker.
+
+// View
+$viewItemPretty = [
+        'override' => false,
+        'value' => isset($tracker_info['viewItemPretty']) ? $tracker_info['viewItemPretty'] : "",
+        'type' => 'wiki'
+];
+if (! empty($tracker_info['viewItemPretty'])) {
+    if (isset($_REQUEST['vi_tpl'])) {
+        $viewItemPretty['override'] = true;
+        $viewItemPretty['value'] = $_REQUEST['vi_tpl'];
+    }
+    // Need to check wether this is a wiki: or tpl: template, bc the smarty template needs to take care of this
+    if (strpos(strtolower($viewItemPretty['value']), 'wiki:') === false) {
+        $viewItemPretty['type'] = 'tpl';
+    }
+}
+$smarty->assign('viewItemPretty', $viewItemPretty);
+
+// Edit
+$editItemPretty = [
+    'override' => false,
+    'value' => isset($tracker_info['editItemPretty']) ? $tracker_info['editItemPretty'] : '',
+    'type' => 'wiki'
+];
+if (! empty($tracker_info['editItemPretty'])) {
+    if (isset($_REQUEST['ei_tpl'])) {
+        $editItemPretty['override'] = true;
+        $editItemPretty['value'] = $_REQUEST['ei_tpl'];
+    }
+    if (strpos(strtolower($editItemPretty['value']), 'wiki:') === false) {
+        $editItemPretty['type'] = 'tpl';
+    }
+}
+$smarty->assign('editItemPretty', $editItemPretty);
+
+// add referer url to setup the back button in tpl
+// check wether we have been called from a different page than ourselfs to save a link to the referer for a back buttom.
+// this can be a wikipage with the trackerlist item and and view item temlate set using vi_tpl=wiki:mytemplate
+// if we do anything on the current page (i.e. adding a comment) we need to keep that saved link.
+$referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+$temp = strtolower($referer);
+if (strpos($temp, 'vi_tpl=') || strpos($temp, 'ei_tpl=')) {
+    $referer = $_SESSION['item_tpl_referer'];
+} else {
+    $_SESSION['item_tpl_referer'] = $referer;
+}
+unset($temp);
+$smarty->assign('referer', $referer);
+
+// Display the template
+$smarty->assign('mid', 'tiki-view_tracker_item.tpl');
+
+try {
+    if (isset($_REQUEST['print'])) {
+        $smarty->assign('print_page', 'y');
+        $smarty->display('tiki-print.tpl');
+    } elseif (isset($_REQUEST['pdf'])) {
+        $smarty->assign('print_page', 'y');
+        $trackerData = $smarty->fetch('tiki-print.tpl');
+        //getting comments associated with tracker item
+        $broker = TikiLib::lib('service')->getBroker();
+        $comments = $broker->internalRender("comment", "list", $jitRequest = new JitFilter(["controller" => "comment","action" => "list","type" => "trackeritem","objectId" => $itemId]));
+        require_once 'lib/pdflib.php';
+        $generator = new PdfGenerator();
+        if (! empty($generator->error)) {
+            Feedback::error($generator->error);
+            $access->redirect($page);
+        } else {
+            $pdf = $generator->getPdf('tiki-print.php', ['page' => $tracker_info['name']], str_ireplace("</dl>", "</dl><h3>Comments</h3>" . $comments . "<br />", $trackerData));
+            $length = strlen($pdf);
+            header('Cache-Control: private, must-revalidate');
+            header('Pragma: private');
+            header("Content-Description: File Transfer");
+            header('Content-disposition: attachment; filename="' . TikiLib::lib('tiki')->remove_non_word_characters_and_accents($trklib->get_isMain_value($trackerId, $itemId)) . '.pdf"');
+            header("Content-Type: application/pdf");
+            header("Content-Transfer-Encoding: binary");
+            header('Content-Length: ' . $length);
+            echo $pdf;
+        }
+         //end of pdf
+    } else {
+        $smarty->display('tiki.tpl');
+    }
+} catch (SmartyException $e) {
+    $message = tr('The requested element cannot be displayed. One of the view/edit templates is missing or has errors: %0', $e->getMessage());
+    trigger_error($e->getMessage(), E_USER_ERROR);
+    $smarty->loadPlugin('smarty_modifier_sefurl');
+    $access->redirect(smarty_modifier_sefurl($info['trackerId'], 'tracker'), $message, 302, 'error');
+}
