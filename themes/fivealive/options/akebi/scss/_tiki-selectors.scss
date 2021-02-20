@@ -1,0 +1,54 @@
+// Formerly _button_color_variables.scss, this file evolved with variables moving to the variables file
+// and CSS selectors remaining.
+
+// - - - - - - - - - -  - - - - - - Other CSS, if any - - - - - - - - - - - - - - - - - //
+
+.header_outer,
+.layout_basic #top_modules,
+.postbody-title,
+.tiki > .navbar.fixed-top.bg-dark,
+.bg-dark {
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#0a8794+0,169fb6+53,18a4bc+72,19a5bd+100 */
+    background: #0a8794 !important; /* Old browsers */
+    background: linear-gradient(to right,  #0a8794 0%,#169fb6 53%,#18a4bc 72%,#19a5bd 100%) !important; /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+
+// CSS is used because Bootstrap partials aren't available for theme variables, etc.
+
+.text-danger {
+    color: #D63D00 !important;
+}
+.text-dark {
+    color: $dark !important;
+}
+
+.bg-dark {
+    background-color: $dark !important;
+}
+
+.btn-dark {
+    color: #fff;
+    background-color: $dark; // This isn't working.
+    border-color: $dark;
+}
+.breadcrumb-item.active {
+    color: $text-muted !important;
+}
+
+.valid-feedback,
+.valid-tooltip { color: #288040; }
+
+.was-validated .form-check-input:invalid ~ .form-check-label, .form-check-input.is-invalid ~ .form-check-label,
+.invalid-feedback,
+.invalid-tooltip { color: #B45918 !important; }
+
+.bg-danger,
+.bg-warning {
+    .card-title {
+        color: #fff;
+    }
+}
+
+.badge.bg-danger {
+    color: #fff;
+}

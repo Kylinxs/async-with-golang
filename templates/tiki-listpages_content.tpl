@@ -365,4 +365,144 @@
                                 {strip}
                                     {if $listpages[changes].perms.tiki_p_edit eq 'y'}
                                         <action>
-                                            <a href="tiki-editpage.ph
+                                            <a href="tiki-editpage.php?page={$listpages[changes].pageName|escape:"url"}">
+                                                {icon name='edit' _menu_text='y' _menu_icon='y' alt="{tr}Edit{/tr}"}
+                                            </a>
+                                        </action>
+                                        <action>
+                                            <a href="tiki-copypage.php?page={$listpages[changes].pageName|escape:"url"}&amp;version=last">
+                                                {icon name='copy' _menu_text='y' _menu_icon='y' alt="{tr}Copy{/tr}"}
+                                            </a>
+                                        </action>
+                                    {/if}
+                                    {if $prefs.feature_history eq 'y' and $listpages[changes].perms.tiki_p_wiki_view_history eq 'y'}
+                                        <action>
+                                            <a href="tiki-pagehistory.php?page={$listpages[changes].pageName|escape:"url"}">
+                                                {icon name='history' _menu_text='y' _menu_icon='y' alt="{tr}History{/tr}"}
+                                            </a>
+                                        </action>
+                                    {/if}
+
+                                    {if $listpages[changes].perms.tiki_p_assign_perm_wiki_page eq 'y'}
+                                        <action>
+                                            {permission_link mode=text type="wiki page" permType=wiki id=$listpages[changes].pageName}
+                                        </action>
+                                    {/if}
+
+                                    {if $listpages[changes].perms.tiki_p_remove eq 'y'}
+                                        <action>
+                                            <a href="{bootstrap_modal controller=wiki action=remove_pages checked=$listpages[changes].pageName version=last}">
+                                                {icon name='remove' _menu_text='y' _menu_icon='y' alt="{tr}Remove{/tr}"}
+                                            </a>
+                                        </action>
+                                    {/if}
+                                {/strip}
+                            {/actions}
+                        </td>
+                    {/if}
+                </tr>
+            {sectionelse}
+                {$find_htmlescaped = $find|escape}
+                {$initial_htmlescaped = $initial|escape}
+                {if $exact_match ne 'n'}{$intro = "{tr}No page:{/tr}"}{else}{$intro = "{tr}No pages found with:{/tr}"}{/if}
+                {if $find ne '' && $aliases_were_found == 'y'}
+                    {norecords _colspan=$cntcol _text="$intro &quot;$find_htmlescaped&quot;. <br/>However, some page aliases fitting the query were found (see Aliases section above)."}
+                {elseif $find ne '' && $initial ne '' && $aliases_were_found == 'y'}
+                    {norecords _colspan=$cntcol _text="$intro &quot;$find_htmlescaped&quot;and starting with &quot; $initial_htmlescaped &quote;. <br/>However, some page aliases fitting the query were found (see Aliases section above)."}
+                {elseif $find ne '' && $initial ne ''}
+                    {norecords _colspan=$cntcol _text="$intro &quot;$find_htmlescaped&quot; and starting with &quot; $initial_htmlescaped &quot;."}
+                {elseif $find ne ''}
+                    {norecords _colspan=$cntcol _text="$intro &quot;$find_htmlescaped&quot;."}
+                {else}
+                    {norecords _colspan=$cntcol _text="{tr}No pages found.{/tr}"}
+                {/if}
+
+            {/section}
+        </tbody>
+    </table>
+</div>
+{if isset($ts.enabled) }
+    <script>
+        // Otherwise, All pages are displayed, whatever was searched for
+        var myfilter='{$find|escape:javascript}';
+    </script>
+    {jq}
+        if (myfilter) {
+            var pageNameColumn = $('#pagename').data('column');
+            $('input[data-column=' + pageNameColumn + ']').val(myfilter);
+
+            var currentFilter = [];
+            for(i = 0; i < $('#listpages1 th:last').data('column'); i++) {
+                var value = i == pageNameColumn ? myfilter : '';
+                currentFilter.push(value);
+            }
+
+            $('#listpages1').data('lastSearch', currentFilter);
+        }
+    {/jq}
+{/if}
+{if !$ts.ajax}
+    {if $checkboxes_on eq 'y' && count($listpages) > 0} {* what happens to the checked items? *}
+        <div class="input-group col-sm-8 mb-3">
+            <select name="action" class="form-select" id="submit_mult">
+                <option value="no_action" selected="selected">
+                    {tr}Select action to perform with checked{/tr}...
+                </option>
+                {if $tiki_p_remove eq 'y'}
+                    <option value="remove_pages" >{tr}Remove{/tr}</option>
+                {/if}
+
+                {if $prefs.feature_wiki_multiprint eq 'y'}
+                    <option value="print_pages" >{tr}Print{/tr}</option>
+
+                        {if $prefs.print_pdf_from_url neq 'none'}
+                        <option value="export_pdf" >{tr}Download PDF{/tr}</option>
+                    {/if}
+                {/if}
+
+                {if $prefs.feature_wiki_usrlock eq 'y' and ($tiki_p_lock eq 'y' or $tiki_p_admin_wiki eq 'y')}
+                    <option value="lock_pages" >{tr}Lock{/tr}</option>
+                    <option value="unlock_pages" >{tr}Unlock{/tr}</option>
+                {/if}
+                {if $tiki_p_admin eq 'y'}
+                    <option value="zip">{tr}Download zipped file{/tr}</option>
+                {/if}
+                {if $tiki_p_admin eq 'y'}
+                    <option value="title">{tr}Add page name as page header{/tr}</option>
+                {/if}
+
+                {* add here e.g. <option value="categorize" >{tr}categorize{/tr}</option> *}
+            </select>
+                <button
+                    type="submit"
+                    form="checkboxes_on"
+                    formaction="{bootstrap_modal controller=wiki version=all}"
+                    class="btn btn-primary"
+                    onclick="confirmPopup()"
+                >
+                    {tr}OK{/tr}
+                </button>
+        </div>
+    {/if}
+
+    {if $find and $tiki_p_edit eq 'y' and $pagefound eq 'n' and $alias_found eq 'n'}
+        {capture assign='find_htmlescaped'}{$find|escape}{/capture}
+        {capture assign='find_urlescaped'}{$find|escape:'url'}{/capture}
+        <div class="t_navbar">
+            {button _text="{tr}Create Page:{/tr} $find_htmlescaped" href="tiki-editpage.php?page=$find_urlescaped&lang=$find_lang&templateId=$template_id&template_name=$template_name&categId=$create_page_with_categId" class="btn btn-primary" _title="{tr}Create{/tr}"}
+        </div>
+    {/if}
+
+    {if $checkboxes_on eq 'y'}
+        </form>
+    {/if}
+
+    {if !isset($ts.enabled) or !$ts.enabled}
+        {if $pluginlistpages eq 'y' and $pagination eq 'y'}
+            {pagination_links cant=$cant step=$maxRecords offset=$offset offset_arg=$offset_arg clean=$clean}{/pagination_links}
+        {elseif $pluginlistpages eq 'y' and $pagination neq 'y'}
+        {else}
+            {pagination_links cant=$cant step=$maxRecords offset=$offset clean=$clean}{/pagination_links}
+        {/if}
+    {/if}
+{/if}
