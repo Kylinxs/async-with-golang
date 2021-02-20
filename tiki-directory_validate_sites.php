@@ -37,4 +37,26 @@ if (! isset($_REQUEST["sort_mode"])) {
 } else {
     $sort_mode = $_REQUEST["sort_mode"];
 }
-if (! isset($_REQUES
+if (! isset($_REQUEST["offset"])) {
+    $offset = 0;
+} else {
+    $offset = $_REQUEST["offset"];
+}
+if (isset($_REQUEST["find"])) {
+    $find = $_REQUEST["find"];
+} else {
+    $find = '';
+}
+$smarty->assign_by_ref('offset', $offset);
+$smarty->assign_by_ref('sort_mode', $sort_mode);
+$smarty->assign('find', $find);
+$items = $dirlib->dir_list_invalid_sites($offset, $maxRecords, $sort_mode, $find);
+$smarty->assign_by_ref('cant_pages', $items["cant"]);
+$smarty->assign_by_ref('items', $items["data"]);
+// This page should be displayed with Directory section options
+$section = 'directory';
+include_once('tiki-section_options.php');
+ask_ticket('dir-validate');
+// Display the template
+$smarty->assign('mid', 'tiki-directory_validate_sites.tpl');
+$smarty->display("tiki.tpl");
