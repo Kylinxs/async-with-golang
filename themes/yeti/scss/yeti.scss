@@ -1,0 +1,62 @@
+
+/* Bootswatch theme adapted by the Tiki Community for Tiki Wiki CMS Groupware */
+/* Original Bootswatch information:
+ * bootswatch v5.2.0
+ * Homepage: http://bootswatch.com
+ * Copyright 2012-2022 Thomas Park
+ * Licensed under MIT
+ * Based on Bootstrap
+ *
+ * Adapted by the Tiki Community for Tiki Wiki CMS Groupware
+*/
+
+@import "../../base_files/scss/_tiki-bootstrap_functions";
+
+@import "variables";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/bootstrap.scss";
+@import "../../base_files/scss/_tiki-variables.scss"; // Values/definitions for Tiki variables (outside of Bootstrap variables) such as _tiki-selectors.scss.
+@import "../../../vendor_bundled/vendor/thomaspark/bootswatch/dist/yeti/bootswatch";
+//@import "../../base_files/scss/_tiki-bootstrap_layout_and_components";
+@import "css-variables"; // Needs to be loaded after default variables to override them
+
+@import "../../base_files/scss/_tiki-selectors.scss";
+@import "../../base_files/scss/_tiki-pagetop_colors.scss"; // Import if needed to specify top and topbar zone colors in more detail
+@import "../../base_files/scss/_external-scripts.scss";
+@import "../../base_files/scss/_select2-tiki_colors.scss";
+
+// Additional for Tiki
+// Fix bad contrast
+.dropdown-item.text-danger {
+    background: #fff;
+    border-radius: 0;
+    &:hover {
+        color: #fff !important;
+    }
+}
+
+// Update for Smartmenus
+.navbar-dark.bg-dark .dropdown-menu.mega-menu a,
+.dropdown-item {
+    color: $navbar-dark-color;
+}
+
+.navbar-dark.bg-dark .dropdown-menu.mega-menu a:hover,
+.navbar-dark.bg-dark .dropdown-menu.mega-menu a:hover:focus  {
+    background-color: darken($gray-800, 5%);
+    color: #fff;
+}
+
+// Increase navbar height to reinstate Bootswatch style
+.topbar_modules > * {
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+}
+
+.topbar_modules {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+
+.navbar {
+    --bs-navbar-color: #{$link-color};
+}
