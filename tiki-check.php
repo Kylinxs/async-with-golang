@@ -1349,4 +1349,521 @@ if ($s) {
     $php_properties['intl'] = array(
         'fitness' => tra('good'),
         'setting' => 'Loaded',
-        'message' => tra("The intl extension is required for Tiki 15 and n
+        'message' => tra("The intl extension is required for Tiki 15 and newer.")
+    );
+} else {
+    $php_properties['intl'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => 'Not available',
+        'message' => tra("intl extension is preferred for Tiki 15 and newer. Because is not available, the filters for text will not be able to detect the language and will use a generic range of characters as letters.")
+    );
+}
+
+// GD
+$s = extension_loaded('gd');
+if ($s && function_exists('gd_info')) {
+    $gd_info = gd_info();
+    $im = $ft = null;
+    if (function_exists('imagecreate')) {
+        $im = @imagecreate(110, 20);
+    }
+    if (function_exists('imageftbbox')) {
+        $ft = @imageftbbox(12, 0, $font, 'test');
+    }
+    if ($im && $ft) {
+        $php_properties['gd'] = array(
+            'fitness' => tra('good'),
+            'setting' => $gd_info['GD Version'],
+            'message' => tra('The GD extension is needed for manipulation of images and for CAPTCHA images.')
+        );
+        imagedestroy($im);
+    } elseif ($im) {
+        $php_properties['gd'] = array(
+                'fitness' => tra('unsure'),
+                'setting' => $gd_info['GD Version'],
+                'message' => tra('The GD extension is loaded, and Tiki can create images, but the FreeType extension is needed for CAPTCHA text generation.')
+            );
+            imagedestroy($im);
+    } else {
+        $php_properties['gd'] = array(
+            'fitness' => tra('unsure'),
+            'setting' => 'Dysfunctional',
+            'message' => tra('The GD extension is loaded, but Tiki is unable to create images. Please check your GD library configuration.')
+        );
+    }
+} else {
+    $php_properties['gd'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('The GD extension is needed for manipulation of images and for CAPTCHA images.')
+    );
+}
+
+// Image Magick
+$s = class_exists('Imagick');
+if ($s) {
+    $image = new Imagick();
+    $image->newImage(100, 100, new ImagickPixel('red'));
+    if ($image) {
+        $php_properties['Image Magick'] = array(
+            'fitness' => tra('good'),
+            'setting' => 'Available',
+            'message' => tra('ImageMagick is used as a fallback in case GD is not available.')
+        );
+        $image->destroy();
+    } else {
+        $php_properties['Image Magick'] = array(
+            'fitness' => tra('unsure'),
+            'setting' => 'Dysfunctional',
+            'message' => tra('ImageMagick is used as a fallback in case GD is not available.') . tra('ImageMagick is available, but unable to create images. Please check your ImageMagick configuration.')
+            );
+    }
+} else {
+    $php_properties['Image Magick'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not Available',
+        'message' => tra('ImageMagick is used as a fallback in case GD is not available.')
+        );
+}
+
+// mbstring
+$s = extension_loaded('mbstring');
+if ($s) {
+    $func_overload = ini_get('mbstring.func_overload');
+    if ($func_overload == 0 && function_exists('mb_split')) {
+        $php_properties['mbstring'] = array(
+            'fitness' => tra('good'),
+            'setting' => 'Loaded',
+            'message' => tra('mbstring extension is needed for an UTF-8 compatible lower case filter, in the admin search for example.')
+        );
+    } elseif ($func_overload != 0) {
+        $php_properties['mbstring'] = array(
+            'fitness' => tra('unsure'),
+            'setting' => 'Badly configured',
+            'message' => tra('mbstring extension is loaded, but mbstring.func_overload = ' . ' ' . $func_overload . '.' . ' ' . 'Tiki only works with mbstring.func_overload = 0. Please check the php.ini file.')
+        );
+    } else {
+        $php_properties['mbstring'] = array(
+            'fitness' => tra('bad'),
+            'setting' => 'Badly installed',
+            'message' => tra('mbstring extension is loaded, but missing important functions such as mb_split(). Reinstall it with --enable-mbregex or ask your a server administrator to do it.')
+        );
+    }
+} else {
+    $php_properties['mbstring'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('mbstring extension is needed for an UTF-8 compatible lower case filter.')
+    );
+}
+
+// calendar
+$s = extension_loaded('calendar');
+if ($s) {
+    $php_properties['calendar'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('calendar extension is needed by Tiki.')
+    );
+} else {
+    $php_properties['calendar'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('calendar extension is needed by Tiki.') . ' ' . tra('The calendar feature of Tiki will not function without this.')
+    );
+}
+
+// ctype
+$s = extension_loaded('ctype');
+if ($s) {
+    $php_properties['ctype'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('ctype extension is needed by Tiki.')
+    );
+} else {
+    $php_properties['ctype'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('ctype extension is needed by Tiki.')
+    );
+}
+
+// libxml
+$s = extension_loaded('libxml');
+if ($s) {
+    $php_properties['libxml'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension is needed for the dom extension (see below).')
+    );
+} else {
+    $php_properties['libxml'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('This extension is needed for the dom extension (see below).')
+    );
+}
+
+// dom (depends on libxml)
+$s = extension_loaded('dom');
+if ($s) {
+    $php_properties['dom'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension is needed by Tiki')
+    );
+} else {
+    $php_properties['dom'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('This extension is needed by Tiki')
+    );
+}
+
+$s = extension_loaded('ldap');
+if ($s) {
+    $php_properties['LDAP'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension is needed to connect Tiki to an LDAP server. More info at: http://doc.tiki.org/LDAP ')
+    );
+} else {
+    $php_properties['LDAP'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not available',
+        'message' => tra('Tiki will not be able to connect to an LDAP server as the needed PHP extension is missing. More info at: http://doc.tiki.org/LDAP')
+    );
+}
+
+$s = extension_loaded('memcached');
+if ($s) {
+    $php_properties['memcached'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension can be used to speed up Tiki by saving sessions as well as wiki and forum data on a memcached server.')
+    );
+} else {
+    $php_properties['memcached'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not available',
+        'message' => tra('This extension can be used to speed up Tiki by saving sessions as well as wiki and forum data on a memcached server.')
+    );
+}
+
+$s = extension_loaded('redis');
+if ($s) {
+    $php_properties['redis'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension can be used to speed up Tiki by saving wiki and forum data on a redis server.')
+    );
+} else {
+    $php_properties['redis'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not available',
+        'message' => tra('This extension can be used to speed up Tiki by saving wiki and forum data on a redis server.')
+    );
+}
+
+$s = extension_loaded('ssh2');
+if ($s) {
+    $php_properties['SSH2'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension is needed for the show.tiki.org tracker field type, up to Tiki 17.')
+    );
+} else {
+    $php_properties['SSH2'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not available',
+        'message' => tra('This extension is needed for the show.tiki.org tracker field type, up to Tiki 17.')
+    );
+}
+
+$s = extension_loaded('soap');
+if ($s) {
+    $php_properties['soap'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension is used by Tiki for some types of web services.')
+    );
+} else {
+    $php_properties['soap'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not available',
+        'message' => tra('This extension is used by Tiki for some types of web services.')
+    );
+}
+
+$s = extension_loaded('carray');
+if ($s) {
+    $php_properties['carray'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('High-performance scientific computing library for PHP')
+    );
+} else {
+    $php_properties['carray'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not available',
+        'message' => tra('High-performance scientific computing library for PHP')
+    );
+}
+
+$s = extension_loaded('curl');
+if ($s) {
+    $php_properties['curl'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension is required for H5P.')
+    );
+} else {
+    $php_properties['curl'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('This extension is required for H5P.')
+    );
+}
+
+$s = extension_loaded('json');
+if ($s) {
+    $php_properties['json'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra('This extension is required for many features in Tiki.')
+    );
+} else {
+    $php_properties['json'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('This extension is required for many features in Tiki.')
+    );
+}
+
+/*
+*    If TortoiseSVN 1.7 is used, it uses an sqlite database to store the SVN info. sqlite3 extention needed to read svn info.
+*/
+if (is_file('.svn/wc.db')) {
+    // It's an TortoiseSVN 1.7+ installation
+    $s = extension_loaded('sqlite3');
+    if ($s) {
+        $php_properties['sqlite3'] = array(
+            'fitness' => tra('good'),
+            'setting' => 'Loaded',
+            'message' => tra('This extension is used to interpret SVN information for TortoiseSVN 1.7 or higher.')
+            );
+    } else {
+        $php_properties['sqlite3'] = array(
+            'fitness' => tra('unsure'),
+            'setting' => 'Not available',
+            'message' => tra('This extension is used to interpret SVN information for TortoiseSVN 1.7 or higher.')
+            );
+    }
+}
+
+$s = extension_loaded('sodium');
+$msg = tra('This extension is required to encrypt data such as CSRF ticket cookie and user data.') . PHP_EOL;
+$msg .= tra('Enable safe, encrypted storage of data such as passwords. Since Tiki 22, Sodium lib (included in PHP 7.2 core) is used for the User Encryption feature and improves encryption in other features, when available');
+if ($s) {
+    $php_properties['sodium'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => $msg
+    );
+} else {
+    $php_properties['sodium'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => 'Not available',
+        'message' => $msg
+    );
+}
+
+$s = extension_loaded('openssl');
+$msg = tra('Enable safe, encrypted storage of data such as passwords. Tiki 21 and earlier versions, require OpenSSL for the User Encryption feature and improves encryption in other features, when available.');
+if (! $standalone) {
+    $msg .= ' ' . tra('Tiki still uses OpenSSL to decrypt user data encrypted with OpenSSL, when converting that data to Sodium (PHP 7.2+).') . ' ' . tra('Please check the \'User Data Encryption\' section to see if there is user data encrypted with OpenSSL.');
+}
+if ($s) {
+    $php_properties['openssl'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => $msg
+    );
+} else {
+    $php_properties['openssl'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => 'Not available',
+        'message' => $msg
+    );
+}
+
+
+$s = extension_loaded('mcrypt');
+$msg = tra('MCrypt is abandonware and is being phased out. Starting in version 18 up to 21, Tiki uses OpenSSL where it previously used MCrypt, except perhaps via third-party libraries.');
+if (! $standalone) {
+    $msg .= ' ' . tra('Tiki still uses MCrypt to decrypt user data encrypted with MCrypt, when converting that data to OpenSSL.') . ' ' . tra('Please check the \'User Data Encryption\' section to see if there is user data encrypted with MCrypt.');
+}
+if ($s) {
+    $php_properties['mcrypt'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Loaded',
+        'message' => $msg
+    );
+} else {
+    $php_properties['mcrypt'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not available',
+        'message' => $msg
+    );
+}
+
+
+if (! $standalone) {
+    // check Zend captcha will work which depends on \Laminas\Math\Rand
+    $captcha = new Laminas\Captcha\Dumb();
+    $math_random = array(
+        'fitness' => tra('good'),
+        'setting' => 'Available',
+        'message' => tra('Ability to generate random numbers, useful for example for CAPTCHA and other security features.'),
+    );
+    try {
+        $captchaId = $captcha->getId();    // simple test for missing random generator
+    } catch (Exception $e) {
+        $math_random['fitness'] = tra('unsure');
+        $math_random['setting'] = 'Not available';
+    }
+    $php_properties['\Laminas\Math\Rand'] = $math_random;
+}
+
+
+$s = extension_loaded('iconv');
+$msg = tra('This extension is required and used frequently in validation functions invoked within Zend Framework.');
+if ($s) {
+    $php_properties['iconv'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => $msg
+    );
+} else {
+    $php_properties['iconv'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => $msg
+    );
+}
+
+// Check for existence of eval()
+// eval() is a language construct and not a function
+// so function_exists() doesn't work
+$s = eval('return 42;');
+if ($s == 42) {
+    $php_properties['eval()'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Available',
+        'message' => tra('The eval() function is required by the Smarty templating engine.')
+    );
+} else {
+    $php_properties['eval()'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Not available',
+        'message' => tra('The eval() function is required by the Smarty templating engine.') . ' ' . tra('You will get "Please contact support about" messages instead of modules. eval() is most probably disabled via Suhosin.')
+    );
+}
+
+// Zip Archive class
+$s = class_exists('ZipArchive');
+if ($s) {
+    $php_properties['ZipArchive class'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Available',
+        'message' => tra('The ZipArchive class is needed for features such as XML Wiki Import/Export and PluginArchiveBuilder.')
+        );
+} else {
+    $php_properties['ZipArchive class'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => 'Not Available',
+        'message' => tra('The ZipArchive class is needed for features such as XML Wiki Import/Export and PluginArchiveBuilder.')
+        );
+}
+
+// DateTime class
+$s = class_exists('DateTime');
+if ($s) {
+    $php_properties['DateTime class'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Available',
+        'message' => tra('The DateTime class is needed for the WebDAV feature.')
+        );
+} else {
+    $php_properties['DateTime class'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => 'Not Available',
+        'message' => tra('The DateTime class is needed for the WebDAV feature.')
+        );
+}
+
+// Xdebug
+$has_xdebug = function_exists('xdebug_get_code_coverage') && is_array(xdebug_get_code_coverage());
+if ($has_xdebug) {
+    $php_properties['Xdebug'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Loaded',
+        'message' => tra('Xdebug can be very handy for a development server, but it might be better to disable it when on a production server.')
+    );
+} else {
+    $php_properties['Xdebug'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not Available',
+        'message' => tra('Xdebug can be very handy for a development server, but it might be better to disable it when on a production server.')
+    );
+}
+
+// Get MySQL properties and check them
+$mysql_properties = false;
+$mysql_variables = false;
+if ($connection || ! $standalone) {
+    // MySQL version
+    $query = 'SELECT VERSION();';
+    $result = query($query, $connection);
+    $mysql_version = $result[0]['VERSION()'];
+    $isMariaDB = preg_match('/mariadb/i', $mysql_version);
+    $minVersion = $isMariaDB ? '5.5' : '5.7';
+    $s = version_compare($mysql_version, $minVersion, '>=');
+    $mysql_properties['Version'] = array(
+        'fitness' => $s ? tra('good') : tra('bad'),
+        'setting' => $mysql_version,
+        'message' => tra('Tiki requires MariaDB >= 5.5 or MySQL >= 5.7')
+    );
+
+    // max_allowed_packet
+    $query = "SHOW VARIABLES LIKE 'max_allowed_packet'";
+    $result = query($query, $connection);
+    $s = $result[0]['Value'];
+    $max_allowed_packet = $s / 1024 / 1024;
+    if ($s >= 8 * 1024 * 1024) {
+        $mysql_properties['max_allowed_packet'] = array(
+            'fitness' => tra('good'),
+            'setting' => $max_allowed_packet . 'M',
+            'message' => tra('The max_allowed_packet setting is at') . ' ' . $max_allowed_packet . 'M. ' . tra('Quite large files can be uploaded, but keep in mind to set the script timeouts accordingly.') . ' ' . tra('This limits the size of binary files that can be uploaded to Tiki, when storing files in the database. Please see: <a href="http://doc.tiki.org/File-Storage">file storage</a>.')
+        );
+    } else {
+        $mysql_properties['max_allowed_packet'] = array(
+            'fitness' => tra('unsure'),
+            'setting' => $max_allowed_packet . 'M',
+            'message' => tra('The max_allowed_packet setting is at') . ' ' . $max_allowed_packet . 'M. ' . tra('This is not a bad amount, but be sure the level is high enough to accommodate the needs of the site.') . ' ' . tra('This limits the size of binary files that can be uploaded to Tiki, when storing files in the database. Please see: <a href="http://doc.tiki.org/File-Storage">file storage</a>.')
+        );
+    }
+
+    // UTF-8 MB4 test (required for Tiki19+)
+    $query = "SELECT COUNT(*) FROM `information_schema`.`character_sets` WHERE `character_set_name` = 'utf8mb4';";
+    $result = query($query, $connection);
+    if (! empty($result[0]['COUNT(*)'])) {
+        $mysql_properties['utf8mb4'] = array(
+            'fitness' => tra('good'),
+            'setting' => 'available',
+            'message' => tra('Your database supports the utf8mb4 character set required in Tiki19 and above.')
+        );
+    } else {
+        $mysql_properties['utf8mb4'] = array(
+            'fitness' => 
