@@ -939,4 +939,414 @@ if (function_exists('apc_sma_info') && ini_get('apc.enabled')) {
         'message' => tra('xCache is being used as the ByteCode Cache, which increases performance if correctly configured. See Admin->Performance in the Tiki for more details.')
     );
 } elseif (function_exists('opcache_get_configuration') && (ini_get('opcache.enable') == 1 || ini_get('opcache.enable') == '1')) {
-    $message = tra('OPcache is being used as 
+    $message = tra('OPcache is being used as the ByteCode Cache, which increases performance if correctly configured. See Admin->Performance in the Tiki for more details.');
+    $fitness = tra('good');
+    if (! checkOPCacheCompatibility()) {
+        $message = tra('Some PHP versions may exhibit randomly issues with the OpCache leading to the server starting to fail to serve all PHP requests, your PHP version seems to
+         be affected, despite the performance penalty, we would recommend disabling the OpCache if you experience random crashes.');
+        $fitness = tra('unsure');
+    }
+    $php_properties['ByteCode Cache'] = array(
+        'fitness' => $fitness,
+        'setting' => 'OPcache',
+        'message' => $message
+    );
+} elseif (function_exists('wincache_fcache_fileinfo')) {
+    // Determine if version 1 or 2 is used. Version 2 does not support ocache
+
+    if (function_exists('wincache_ocache_fileinfo')) {
+        // Wincache version 1
+        if (ini_get('wincache.ocenabled') == '1') {
+            if (PHP_SAPI == 'cgi-fcgi') {
+                $php_properties['ByteCode Cache'] = array(
+                    'fitness' => tra('good'),
+                    'setting' => 'WinCache',
+                    'message' => tra('WinCache is being used as the ByteCode Cache, which increases performance if correctly configured. See Admin->Performance in the Tiki for more details.')
+                );
+            } else {
+                $php_properties['ByteCode Cache'] = array(
+                    'fitness' => tra('unsure'),
+                    'setting' => 'WinCache',
+                    'message' => tra('WinCache is being used as the ByteCode Cache, but the required CGI/FastCGI server API is apparently not being used.')
+                );
+            }
+        } else {
+            no_cache_found();
+        }
+    } else {
+        // Wincache version 2 or higher
+        if (ini_get('wincache.fcenabled') == '1') {
+            if (PHP_SAPI == 'cgi-fcgi') {
+                $php_properties['ByteCode Cache'] = array(
+                    'fitness' => tra('info'),
+                    'setting' => 'WinCache',
+                    'message' => tra('WinCache version 2 or higher is being used as the FileCache. It does not support a ByteCode Cache.') . ' ' . tra('It is recommended to use Zend opcode cache as the ByteCode Cache.')
+                );
+            } else {
+                $php_properties['ByteCode Cache'] = array(
+                    'fitness' => tra('unsure'),
+                    'setting' => 'WinCache',
+                    'message' => tra('WinCache version 2 or higher is being used as the FileCache, but the required CGI/FastCGI server API is apparently not being used.') . ' ' . tra('It is recommended to use Zend opcode cache as the ByteCode Cache.')
+                );
+            }
+        } else {
+            no_cache_found();
+        }
+    }
+} else {
+    no_cache_found();
+}
+
+
+// memory_limit
+$memory_limit = ini_get('memory_limit');
+$s = trim($memory_limit);
+$last = strtolower(substr($s, -1));
+if (! is_numeric($last)) {
+    $s = substr($s, 0, -1);
+}
+switch ($last) {
+    case 'g':
+        $s *= 1024;
+        // no break
+    case 'm':
+        $s *= 1024;
+        // no break
+    case 'k':
+        $s *= 1024;
+}
+if ($s >= 160 * 1024 * 1024) {
+    $php_properties['memory_limit'] = array(
+        'fitness' => tra('good'),
+        'setting' => $memory_limit,
+        'message' => tra('The memory_limit is at') . ' ' . $memory_limit . '. ' . tra('This is known to support smooth functioning even for bigger sites.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} elseif ($s < 160 * 1024 * 1024 && $s > 127 * 1024 * 1024) {
+    $php_properties['memory_limit'] = array(
+        'fitness' => tra('unsure') ,
+        'setting' => $memory_limit,
+        'message' => tra('The memory_limit is at') . ' ' . $memory_limit . '. ' . tra('This will normally work, but the site might run into problems when it grows.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} elseif ($s == -1) {
+    $php_properties['memory_limit'] = array(
+        'fitness' => tra('unsure') ,
+        'setting' => $memory_limit,
+        'message' => tra("The memory_limit is unlimited. This is not necessarily bad, but it's a good idea to limit this on productions servers in order to eliminate unexpectedly greedy scripts.") . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['memory_limit'] = array(
+        'fitness' => tra('bad'),
+        'setting' => $memory_limit,
+        'message' => tra('Your memory_limit is at') . ' ' . $memory_limit . '. ' . tra('This is known to cause issues! The memory_limit should be increased to at least 128M, which is the PHP default.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// session.save_handler
+$s = ini_get('session.save_handler');
+if ($s != 'files') {
+    $php_properties['session.save_handler'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $s,
+        'message' => tra('The session.save_handler should be set to \'files\'.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['session.save_handler'] = array(
+        'fitness' => tra('good'),
+        'setting' => $s,
+        'message' => tra('Well set! The default setting of \'files\' is recommended for Tiki.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// session.save_path
+$s = ini_get('session.save_path');
+if ($php_properties['session.save_handler']['setting'] == 'files') {
+    if (empty($s) || ! is_writable($s)) {
+        $php_properties['session.save_path'] = array(
+            'fitness' => tra('bad'),
+            'setting' => $s,
+            'message' => tra('The session.save_path must be writable.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+        );
+    } else {
+        $php_properties['session.save_path'] = array(
+            'fitness' => tra('good'),
+            'setting' => $s,
+            'message' => tra('The session.save_path is writable.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+        );
+    }
+} else {
+    if (empty($s) || ! is_writable($s)) {
+        $php_properties['session.save_path'] = array(
+            'fitness' => tra('unsure'),
+            'setting' => $s,
+            'message' => tra('If you would be using the recommended session.save_handler setting of \'files\', the session.save_path would have to be writable. Currently it is not.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+        );
+    } else {
+        $php_properties['session.save_path'] = array(
+            'fitness' => tra('info'),
+            'setting' => $s,
+            'message' => tra('The session.save_path is writable.') . tra('It doesn\'t matter though, since your session.save_handler is not set to \'files\'.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+        );
+    }
+}
+
+$s = ini_get('session.gc_probability');
+$php_properties['session.gc_probability'] = array(
+    'fitness' => tra('info'),
+    'setting' => $s,
+    'message' => tra('In conjunction with gc_divisor is used to manage probability that the gc (garbage collection) routine is started.')
+);
+
+$s = ini_get('session.gc_divisor');
+$php_properties['session.gc_divisor'] = array(
+    'fitness' => tra('info'),
+    'setting' => $s,
+    'message' => tra('Coupled with session.gc_probability defines the probability that the gc (garbage collection) process is started on every session initialization. The probability is calculated by using gc_probability/gc_divisor, e.g. 1/100 means there is a 1% chance that the GC process starts on each request.')
+);
+
+$s = ini_get('session.gc_maxlifetime');
+$php_properties['session.gc_maxlifetime'] = array(
+    'fitness' => tra('info'),
+    'setting' => $s . 's',
+    'message' => tra('Specifies the number of seconds after which data will be seen as \'garbage\' and potentially cleaned up. Garbage collection may occur during session start.')
+);
+
+// test session work
+@session_start();
+
+if (empty($_SESSION['tiki-check'])) {
+    $php_properties['session'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => tra('empty'),
+        'message' => tra('The session is empty. Try reloading the page and, if this message is displayed again, there may be a problem with the server setup.')
+    );
+    $_SESSION['tiki-check'] = 1;
+} else {
+    $php_properties['session'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'ok',
+        'message' => tra('This appears to work.')
+    );
+}
+
+// zlib.output_compression
+$s = ini_get('zlib.output_compression');
+if ($s) {
+    $php_properties['zlib.output_compression'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'On',
+        'message' => tra('zlib output compression is turned on. This saves bandwidth. On the other hand, turning it off would reduce CPU usage. The appropriate choice can be made for this Tiki.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['zlib.output_compression'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Off',
+        'message' => tra('zlib output compression is turned off. This reduces CPU usage. On the other hand, turning it on would save bandwidth. The appropriate choice can be made for this Tiki.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// default_charset
+$s = ini_get('default_charset');
+if (strtolower($s) == 'utf-8') {
+    $php_properties['default_charset'] = array(
+        'fitness' => tra('good'),
+        'setting' => $s,
+        'message' => tra('Correctly set! Tiki is fully UTF-8 and so should be this installation.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['default_charset'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $s,
+        'message' => tra('default_charset should be UTF-8 as Tiki is fully UTF-8. Please check the php.ini file.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// date.timezone
+$s = ini_get('date.timezone');
+if (empty($s)) {
+    $php_properties['date.timezone'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $s,
+        'message' => tra('No time zone is set! While there are a number of fallbacks in PHP to determine the time zone, the only reliable solution is to set it explicitly in php.ini! Please check the value of date.timezone in php.ini.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['date.timezone'] = array(
+        'fitness' => tra('good'),
+        'setting' => $s,
+        'message' => tra('Well done! Having a time zone set protects the site from related errors.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// file_uploads
+$s = ini_get('file_uploads');
+if ($s) {
+    $php_properties['file_uploads'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'On',
+        'message' => tra('Files can be uploaded to Tiki.')
+    );
+} else {
+    $php_properties['file_uploads'] = array(
+        'fitness' => tra('bad'),
+        'setting' => 'Off',
+        'message' => tra('Files cannot be uploaded to Tiki.')
+    );
+}
+
+// max_execution_time
+$s = ini_get('max_execution_time');
+if ($s >= 30 && $s <= 90) {
+    $php_properties['max_execution_time'] = array(
+        'fitness' => tra('good'),
+        'setting' => $s . 's',
+        'message' => tra('The max_execution_time is at') . ' ' . $s . '. ' . tra('This is a good value for production sites. If timeouts are experienced (such as when performing admin functions) this may need to be increased nevertheless.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} elseif ($s == -1 || $s == 0) {
+    $php_properties['max_execution_time'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $s . 's',
+        'message' => tra('The max_execution_time is unlimited.') . ' ' . tra('This is not necessarily bad, but it\'s a good idea to limit this time on productions servers in order to eliminate unexpectedly long running scripts.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} elseif ($s > 90) {
+    $php_properties['max_execution_time'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $s . 's',
+        'message' => tra('The max_execution_time is at') . ' ' . $s . '. ' . tra('This is not necessarily bad, but it\'s a good idea to limit this time on productions servers in order to eliminate unexpectedly long running scripts.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['max_execution_time'] = array(
+        'fitness' => tra('bad'),
+        'setting' => $s . 's',
+        'message' => tra('The max_execution_time is at') . ' ' . $s . '. ' . tra('It is likely that some scripts, such as admin functions, will not finish in this time! The max_execution_time should be incresed to at least 30s.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// max_input_time
+$s = ini_get('max_input_time');
+if ($s >= 30 && $s <= 90) {
+    $php_properties['max_input_time'] = array(
+        'fitness' => tra('good'),
+        'setting' => $s . 's',
+        'message' => tra('The max_input_time is at') . ' ' . $s . '. ' . tra('This is a good value for production sites. If timeouts are experienced (such as when performing admin functions) this may need to be increased nevertheless.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} elseif ($s == -1 || $s == 0) {
+    $php_properties['max_input_time'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $s . 's',
+        'message' => tra('The max_input_time is unlimited.') . ' ' . tra('This is not necessarily bad, but it\'s a good idea to limit this time on productions servers in order to eliminate unexpectedly long running scripts.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} elseif ($s > 90) {
+    $php_properties['max_input_time'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $s . 's',
+        'message' => tra('The max_input_time is at') . ' ' . $s . '. ' . tra('This is not necessarily bad, but it\'s a good idea to limit this time on productions servers in order to eliminate unexpectedly long running scripts.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['max_input_time'] = array(
+        'fitness' => tra('bad'),
+        'setting' => $s . 's',
+        'message' => tra('The max_input_time is at') . ' ' . $s . '. ' . tra('It is likely that some scripts, such as admin functions, will not finish in this time! The max_input_time should be increased to at least 30 seconds.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+// max_file_uploads
+$max_file_uploads = ini_get('max_file_uploads');
+if ($max_file_uploads) {
+    $php_properties['max_file_uploads'] = array(
+        'fitness' => tra('info'),
+        'setting' => $max_file_uploads,
+        'message' => tra('The max_file_uploads is at') . ' ' . $max_file_uploads . '. ' . tra('This is the maximum number of files allowed to be uploaded simultaneously.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['max_file_uploads'] = array(
+        'fitness' => tra('info'),
+        'setting' => 'Not Available',
+        'message' => tra('The maximum number of files allowed to be uploaded is not available')
+    );
+}
+// upload_max_filesize
+$upload_max_filesize = ini_get('upload_max_filesize');
+$s = trim($upload_max_filesize);
+$last = strtolower(substr($s, -1));
+$s = substr($s, 0, -1);
+switch ($last) {
+    case 'g':
+        $s *= 1024;
+        // no break
+    case 'm':
+        $s *= 1024;
+        // no break
+    case 'k':
+        $s *= 1024;
+}
+if ($s >= 8 * 1024 * 1024) {
+    $php_properties['upload_max_filesize'] = array(
+        'fitness' => tra('good'),
+        'setting' => $upload_max_filesize,
+        'message' => tra('The upload_max_filesize is at') . ' ' . $upload_max_filesize . '. ' . tra('Quite large files can be uploaded, but keep in mind to set the script timeouts accordingly.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} elseif ($s == 0) {
+    $php_properties['upload_max_filesize'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $upload_max_filesize,
+        'message' => tra('The upload_max_filesize is at') . ' ' . $upload_max_filesize . '. ' . tra('Upload size is unlimited and this not advised. A user could mistakenly upload a very large file which could fill up the disk. This value should be set to accommodate the realistic needs of the site.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['upload_max_filesize'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $upload_max_filesize,
+        'message' => tra('The upload_max_filesize is at') . ' ' . $upload_max_filesize . '. ' . tra('This is not a bad amount, but be sure the level is high enough to accommodate the needs of the site.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// post_max_size
+$post_max_size = ini_get('post_max_size');
+$s = trim($post_max_size);
+$last = strtolower(substr($s, -1));
+$s = substr($s, 0, -1);
+switch ($last) {
+    case 'g':
+        $s *= 1024;
+        // no break
+    case 'm':
+        $s *= 1024;
+        // no break
+    case 'k':
+        $s *= 1024;
+}
+if ($s >= 8 * 1024 * 1024) {
+    $php_properties['post_max_size'] = array(
+        'fitness' => tra('good'),
+        'setting' => $post_max_size,
+        'message' => tra('The post_max_size is at') . ' ' . $post_max_size . '. ' . tra('Quite large files can be uploaded, but keep in mind to set the script timeouts accordingly.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $php_properties['post_max_size'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => $post_max_size,
+        'message' => tra('The post_max_size is at') . ' ' . $post_max_size . '. ' . tra('This is not a bad amount, but be sure the level is high enough to accommodate the needs of the site.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+// PHP Extensions
+// fileinfo
+$s = extension_loaded('fileinfo');
+if ($s) {
+    $php_properties['fileinfo'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra("The fileinfo extension is needed for the 'Validate uploaded file content' preference.")
+    );
+} else {
+    $php_properties['fileinfo'] = array(
+        'fitness' => tra('unsure'),
+        'setting' => 'Not available',
+        'message' => tra("The fileinfo extension is needed for the 'Validate uploaded file content' preference.")
+    );
+}
+
+// intl
+$s = extension_loaded('intl');
+if ($s) {
+    $php_properties['intl'] = array(
+        'fitness' => tra('good'),
+        'setting' => 'Loaded',
+        'message' => tra("The intl extension is required for Tiki 15 and n
