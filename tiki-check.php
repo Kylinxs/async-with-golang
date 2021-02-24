@@ -1866,4 +1866,430 @@ if ($connection || ! $standalone) {
         );
     } else {
         $mysql_properties['utf8mb4'] = array(
-            'fitness' => 
+            'fitness' => tra('bad'),
+            'setting' => 'not available',
+            'message' => tra('Your database does not support the utf8mb4 character set required in Tiki19 and above. You need to upgrade your mysql or mariadb installation.')
+        );
+    }
+
+    // UTF-8 Charset
+    // Tiki communication is done using UTF-8 MB4 (required for Tiki19+)
+    $charset_types = "client connection database results server system";
+    foreach (explode(' ', $charset_types) as $type) {
+        $query = "SHOW VARIABLES LIKE 'character_set_" . $type . "';";
+        $result = query($query, $connection);
+        foreach ($result as $value) {
+            if ($value['Value'] == 'utf8mb4') {
+                $mysql_properties[$value['Variable_name']] = array(
+                    'fitness' => tra('good'),
+                    'setting' => $value['Value'],
+                    'message' => tra('Tiki is fully utf8mb4 and so should be every part of the stack.')
+                );
+            } else {
+                $mysql_properties[$value['Variable_name']] = array(
+                    'fitness' => tra('unsure'),
+                    'setting' => $value['Value'],
+                    'message' => tra('On a fresh install everything should be set to utf8mb4 to avoid unexpected results. For further information please see <a href="http://doc.tiki.org/Understanding-Encoding">Understanding Encoding</a>.')
+                );
+            }
+        }
+    }
+    // UTF-8 is correct for character_set_system
+    // Because mysql does not allow any config to change this value, and character_set_system is overwritten by the other character_set_* variables anyway. They may change this default in later versions.
+    $query = "SHOW VARIABLES LIKE 'character_set_system';";
+    $result = query($query, $connection);
+    foreach ($result as $value) {
+        if (substr($value['Value'], 0, 4) == 'utf8') {
+            $mysql_properties[$value['Variable_name']] = array(
+                'fitness' => tra('good'),
+                'setting' => $value['Value'],
+                'message' => tra('Tiki is fully utf8mb4 but some database underlying variables are set to utf8 by the database engine and cannot be modified.')
+            );
+        } else {
+            $mysql_properties[$value['Variable_name']] = array(
+                'fitness' => tra('unsure'),
+                'setting' => $value['Value'],
+                'message' => tra('On a fresh install everything should be set to utf8mb4 or utf8 to avoid unexpected results. For further information please see <a href="http://doc.tiki.org/Understanding-Encoding">Understanding Encoding</a>.')
+            );
+        }
+    }
+    // UTF-8 Collation
+    $collation_types = "connection database server";
+    foreach (explode(' ', $collation_types) as $type) {
+        $query = "SHOW VARIABLES LIKE 'collation_" . $type . "';";
+        $result = query($query, $connection);
+        foreach ($result as $value) {
+            if (substr($value['Value'], 0, 7) == 'utf8mb4') {
+                $mysql_properties[$value['Variable_name']] = array(
+                    'fitness' => tra('good'),
+                    'setting' => $value['Value'],
+                    'message' => tra('Tiki is fully utf8mb4 and so should be every part of the stack. utf8mb4_unicode_ci is the default collation for Tiki.')
+                );
+            } else {
+                $mysql_properties[$value['Variable_name']] = array(
+                    'fitness' => tra('unsure'),
+                    'setting' => $value['Value'],
+                    'message' => tra('On a fresh install everything should be set to utf8mb4 to avoid unexpected results. utf8mb4_unicode_ci is the default collation for Tiki. For further information please see <a href="http://doc.tiki.org/Understanding-Encoding">Understanding Encoding</a>.')
+                );
+            }
+        }
+    }
+
+    // slow_query_log
+    $query = "SHOW VARIABLES LIKE 'slow_query_log'";
+    $result = query($query, $connection);
+    $s = $result[0]['Value'];
+    if ($s == 'OFF') {
+        $mysql_properties['slow_query_log'] = array(
+            'fitness' => tra('info'),
+            'setting' => $s,
+            'message' => tra('MySQL doesn\'t log slow queries. If performance issues are noticed, this could be enabled, but keep in mind that the logging itself slows MySQL down.')
+        );
+    } else {
+        $mysql_properties['slow_query_log'] = array(
+            'fitness' => tra('info'),
+            'setting' => $s,
+            'message' => tra('MySQL logs slow queries. If no performance issues are noticed, this should be disabled on a production site as it slows MySQL down.')
+        );
+    }
+
+    // MySQL SSL
+    $query = 'show variables like "have_ssl";';
+    $result = query($query, $connection);
+    if (empty($result)) {
+        $query = 'show variables like "have_openssl";';
+        $result = query($query, $connection);
+    }
+    $haveMySQLSSL = false;
+    if (! empty($result)) {
+        $ssl = $result[0]['Value'];
+        $haveMySQLSSL = $ssl == 'YES';
+    }
+    $s = '';
+    if ($haveMySQLSSL) {
+        $query = 'show status like "Ssl_cipher";';
+        $result = query($query, $connection);
+        $isSSL = ! empty($result[0]['Value']);
+    } else {
+        $isSSL = false;
+    }
+    if ($isSSL) {
+        $msg = tra('MySQL SSL connection is active');
+        $s = tra('ON');
+    } elseif ($haveMySQLSSL && ! $isSSL) {
+        $msg = tra('MySQL connection is not encrypted');
+        $s = tra('OFF');
+    } else {
+        $msg = tra('MySQL Server does not have SSL activated.');
+        $s = 'OFF';
+    }
+    $fitness = tra('info');
+    if ($s == tra('ON')) {
+        $fitness = tra('good');
+    }
+    $mysql_properties['SSL connection'] = array(
+        'fitness' => $fitness,
+        'setting' => $s,
+        'message' => $msg
+    );
+
+    // Strict mode
+    $query = 'SELECT @@sql_mode as Value;';
+    $result = query($query, $connection);
+    $s = '';
+    $msg = 'Unable to query strict mode';
+    if (! empty($result)) {
+        $sql_mode = $result[0]['Value'];
+        $modes = explode(',', $sql_mode);
+
+        if (in_array('STRICT_ALL_TABLES', $modes)) {
+            $s = 'STRICT_ALL_TABLES';
+        }
+        if (in_array('STRICT_TRANS_TABLES', $modes)) {
+            if (! empty($s)) {
+                $s .= ',';
+            }
+            $s .= 'STRICT_TRANS_TABLES';
+        }
+
+        if (! empty($s)) {
+            $msg = 'MySQL is using strict mode';
+        } else {
+            $msg = 'MySQL is not using strict mode.';
+        }
+    }
+    $mysql_properties['Strict Mode'] = array(
+        'fitness' => tra('info'),
+        'setting' => $s,
+        'message' => $msg
+    );
+
+    // MySQL Variables
+    $query = "SHOW VARIABLES;";
+    $result = query($query, $connection);
+    foreach ($result as $value) {
+        $mysql_variables[$value['Variable_name']] = array('value' => $value['Value']);
+    }
+
+    if (! $standalone) {
+        $mysql_crashed_tables = array();
+        // This should give all crashed tables (MyISAM at least) - does need testing though !!
+        $query = 'SHOW TABLE STATUS WHERE engine IS NULL AND comment <> "VIEW";';
+        $result = query($query, $connection);
+        foreach ($result as $value) {
+            $mysql_crashed_tables[$value['Name']] = array('Comment' => $value['Comment']);
+        }
+    }
+}
+
+// Apache properties
+
+$apache_properties = false;
+if (function_exists('apache_get_version')) {
+    // Apache Modules
+    $apache_modules = apache_get_modules();
+
+    // mod_rewrite
+    $s = false;
+    $s = array_search('mod_rewrite', $apache_modules);
+    if ($s) {
+        $apache_properties = array();
+        $apache_properties['mod_rewrite'] = array(
+            'setting' => 'Loaded',
+            'fitness' => tra('good') ,
+            'message' => tra('Tiki needs this module for Search Engine Friendly URLs via .htaccess. However, it can\'t be checked if this web server respects configurations made in .htaccess. For further information go to Admin->SefURL in your Tiki.')
+        );
+    } else {
+        $apache_properties = array();
+        $apache_properties['mod_rewrite'] = array(
+            'setting' => 'Not available',
+            'fitness' => tra('unsure') ,
+            'message' => tra('Tiki needs this module for Search Engine Friendly URLs. For further information go to Admin->SefURL in the Tiki.')
+        );
+    }
+
+    if (! $standalone) {
+        // work out if RewriteBase is set up properly
+        global $url_path;
+        $enabledFileName = '.htaccess';
+        if (file_exists($enabledFileName)) {
+            $enabledFile = fopen($enabledFileName, "r");
+            $rewritebase = '/';
+            while ($nextLine = fgets($enabledFile)) {
+                if (preg_match('/^RewriteBase\s*(.*)$/', $nextLine, $m)) {
+                    $rewritebase = substr($m[1], -1) !== '/' ? $m[1] . '/' : $m[1];
+                    break;
+                }
+            }
+            if ($url_path == $rewritebase) {
+                $smarty->assign('rewritebaseSetting', $rewritebase);
+                $apache_properties['RewriteBase'] = array(
+                    'setting' => $rewritebase,
+                    'fitness' => tra('good') ,
+                    'message' => tra('RewriteBase is set correctly in .htaccess. Search Engine Friendly URLs should work. Be aware, though, that this test can\'t checked if Apache really loads .htaccess.')
+                );
+            } else {
+                $apache_properties['RewriteBase'] = array(
+                    'setting' => $rewritebase,
+                    'fitness' => tra('bad') ,
+                    'message' => tra('RewriteBase is not set correctly in .htaccess. Search Engine Friendly URLs are not going to work with this configuration. It should be set to "') . substr($url_path, 0, -1) . '".'
+                );
+            }
+        } else {
+            $apache_properties['RewriteBase'] = array(
+                'setting' => tra('Not found'),
+                'fitness' => tra('info') ,
+                'message' => tra('The .htaccess file has not been activated, so this check cannot be  performed. To use Search Engine Friendly URLs, activate .htaccess by copying _htaccess into its place (or a symlink if supported by your Operating System). Then do this check again.')
+            );
+        }
+    }
+
+    if ($pos = strpos($_SERVER['REQUEST_URI'], 'tiki-check.php')) {
+        $sef_test_protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) ? 'https://' : 'http://';
+        $sef_test_base_url = $sef_test_protocol . $_SERVER['HTTP_HOST'] . substr($_SERVER['REQUEST_URI'], 0, $pos);
+        $sef_test_ping_value = mt_rand();
+        $sef_test_url = $sef_test_base_url . 'tiki-check?tiki-check-ping=' . $sef_test_ping_value;
+        $sef_test_folder_created = false;
+        $sef_test_folder_writable = true;
+        if ($standalone) {
+            $sef_test_path_current = __DIR__;
+            $sef_test_dir_name = 'tiki-check-' . $sef_test_ping_value;
+            $sef_test_folder = $sef_test_path_current . DIRECTORY_SEPARATOR . $sef_test_dir_name;
+            if (is_writable($sef_test_path_current) && ! file_exists($sef_test_folder)) {
+                if (mkdir($sef_test_folder)) {
+                    $sef_test_folder_created = true;
+                    copy(__FILE__, $sef_test_folder . DIRECTORY_SEPARATOR . 'tiki-check.php');
+                    file_put_contents($sef_test_folder . DIRECTORY_SEPARATOR . '.htaccess', "<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule tiki-check$ tiki-check.php [L]\n</IfModule>\n");
+                    $sef_test_url = $sef_test_base_url . $sef_test_dir_name . '/tiki-check?tiki-check-ping=' . $sef_test_ping_value;
+                }
+            } else {
+                $sef_test_folder_writable = false;
+            }
+        }
+
+        if (! $sef_test_folder_writable) {
+            $apache_properties['SefURL Test'] = array(
+            'setting' => tra('Not Working'),
+            'fitness' => tra('info') ,
+            'message' => tra('The automated test could not run. The required files could not be created  on the server to run the test. That may only mean that there were no permissions, but the Apache configuration should be checked. For further information go to Admin->SefURL in the Tiki.')
+            );
+        } else {
+            $pong_value = get_content_from_url($sef_test_url);
+            if ($pong_value != 'fail-no-request-done') {
+                if ('pong:' . $sef_test_ping_value == $pong_value) {
+                    $apache_properties['SefURL Test'] = array(
+                        'setting' => tra('Working'),
+                        'fitness' => tra('good') ,
+                        'message' => tra('An automated test was done, and the server appears to be configured correctly to handle Search Engine Friendly URLs.')
+                    );
+                } else {
+                    if (strncmp('fail-http-', $pong_value, 10) == 0) {
+                        $apache_return_code = substr($pong_value, 10);
+                        $apache_properties['SefURL Test'] = array(
+                            'setting' => tra('Not Working'),
+                            'fitness' => tra('info') ,
+                            'message' => sprintf(tra('An automated test was done and, based on the results, the server does not appear to be configured correctly to handle Search Engine Friendly URLs. The server returned an unexpected HTTP code: "%s". This automated test may fail due to the infrastructure setup, but the Apache configuration should be checked. For further information go to Admin->SefURL in your Tiki.'), $apache_return_code)
+                        );
+                    } else {
+                        $apache_properties['SefURL Test'] = array(
+                            'setting' => tra('Not Working'),
+                            'fitness' => tra('info') ,
+                            'message' => tra('An automated test was done and, based on the results, the server does not appear to be configured correctly to handle Search Engine Friendly URLs. This automated test may fail due to the infrastructure setup, but the Apache configuration should be checked. For further information go to Admin->SefURL in your Tiki.')
+                        );
+                    }
+                }
+            }
+        }
+        if ($sef_test_folder_created) {
+            unlink($sef_test_folder . DIRECTORY_SEPARATOR . 'tiki-check.php');
+            unlink($sef_test_folder . DIRECTORY_SEPARATOR . '.htaccess');
+            rmdir($sef_test_folder);
+        }
+    }
+
+    // mod_expires
+    $s = false;
+    $s = array_search('mod_expires', $apache_modules);
+    if ($s) {
+        $apache_properties['mod_expires'] = array(
+            'setting' => 'Loaded',
+            'fitness' => tra('good') ,
+            'message' => tra('With this module, the HTTP Expires header can be set, which increases performance. It can\'t be checked, though, if mod_expires is configured correctly.')
+        );
+    } else {
+        $apache_properties['mod_expires'] = array(
+            'setting' => 'Not available',
+            'fitness' => tra('unsure') ,
+            'message' => tra('With this module, the HTTP Expires header can be set, which increases performance. Once it is installed, it still needs to be configured correctly.')
+        );
+    }
+
+    // mod_deflate
+    $s = false;
+    $s = array_search('mod_deflate', $apache_modules);
+    if ($s) {
+        $apache_properties['mod_deflate'] = array(
+            'setting' => 'Loaded',
+            'fitness' => tra('good') ,
+            'message' => tra('With this module, the data the webserver sends out can be compressed, which reduced data transfer amounts and increases performance. This test can\'t check, though, if mod_deflate is configured correctly.')
+        );
+    } else {
+        $apache_properties['mod_deflate'] = array(
+            'setting' => 'Not available',
+            'fitness' => tra('unsure') ,
+            'message' => tra('With this module, the data the webserver sends out can be compressed, which reduces data transfer amounts and increases performance. Once it is installed, it still needs to be configured correctly.')
+        );
+    }
+
+    // mod_security
+    $s = false;
+    $s = array_search('mod_security', $apache_modules);
+    if ($s) {
+        $apache_properties['mod_security'] = array(
+            'setting' => 'Loaded',
+            'fitness' => tra('info') ,
+            'message' => tra('This module can increase security of Tiki and therefore the server, but be aware that it is very tricky to configure correctly. A misconfiguration can lead to failed page saves or other hard to trace bugs.')
+        );
+    } else {
+        $apache_properties['mod_security'] = array(
+            'setting' => 'Not available',
+            'fitness' => tra('info') ,
+            'message' => tra('This module can increase security of Tiki and therefore the server, but be aware that it is very tricky to configure correctly. A misconfiguration can lead to failed page saves or other hard to trace bugs.')
+        );
+    }
+
+    // Get /server-info, if available
+    if (function_exists('curl_init') && function_exists('curl_exec')) {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, 'http://localhost/server-info');
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
+        $apache_server_info = curl_exec($curl);
+        if (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 200) {
+            $apache_server_info = preg_replace('%^.*<body>(.*)</body>.*$%ms', '$1', $apache_server_info);
+        } else {
+            $apache_server_info = false;
+        }
+        curl_close($curl);
+    } else {
+        $apache_server_info = 'nocurl';
+    }
+}
+
+
+// IIS Properties
+$iis_properties = false;
+
+if (check_isIIS()) {
+    // IIS Rewrite module
+    if (check_hasIIS_UrlRewriteModule()) {
+        $iis_properties['IIS Url Rewrite Module'] = array(
+            'fitness' => tra('good'),
+            'setting' => 'Available',
+            'message' => tra('The URL Rewrite Module is required to use SEFURL on IIS.')
+            );
+    } else {
+        $iis_properties['IIS Url Rewrite Module'] = array(
+            'fitness' => tra('bad'),
+            'setting' => 'Not Available',
+            'message' => tra('The URL Rewrite Module is required to use SEFURL on IIS.')
+            );
+    }
+}
+
+// Check Tiki Packages
+if (! $standalone) {
+    global $tikipath, $base_host;
+
+    $composerManager = new ComposerManager($tikipath);
+    $installedLibs = $composerManager->getInstalled() ?: array();
+
+    $packagesToCheck = array(
+        array(
+            'name' => 'jerome-breton/casperjs-installer',
+            'commands' => array(
+                'python'
+            ),
+            'preferences' => array(
+                'casperjs_path' => array(
+                    'name' => tra('casperjs path'),
+                    'type' => 'path'
+                )
+            ),
+        ),
+        array(
+            'name' => 'media-alchemyst/media-alchemyst',
+            'preferences' => array(
+                'alchemy_ffmpeg_path' => array(
+                    'name' => tra('ffmpeg path'),
+                    'type' => 'path'
+                ),
+                'alchemy_ffprobe_path' => array(
+                    'name' => tra('ffprobe path'),
+                    'type' => 'path'
+                ),
+                'alchemy_unoconv_path' => array(
+                    'name' => tra('unoconv path'),
+                    'type' => 'path'
+                ),
+         
