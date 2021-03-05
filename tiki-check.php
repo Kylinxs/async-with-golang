@@ -2292,4 +2292,433 @@ if (! $standalone) {
                     'name' => tra('unoconv path'),
                     'type' => 'path'
                 ),
-         
+                'alchemy_gs_path' => array(
+                    'name' => tra('ghostscript path'),
+                    'type' => 'path'
+                ),
+                'alchemy_imagine_driver' => array(
+                    'name' => tra('Alchemy Image library'),
+                    'type' => 'classOptions',
+                    'options' => array(
+                        'imagick' => array(
+                            'name' => tra('Imagemagick'),
+                            'classLib' => 'Imagine\Imagick\Imagine',
+                            'className' => 'Imagick',
+                            'extension' => false
+                        ),
+                        'gd' => array(
+                            'name' => tra('GD'),
+                            'classLib' => 'Imagine\Gd\Imagine',
+                            'className' => false,
+                            'extension' => 'gd'
+                        )
+                    ),
+                ),
+            )
+        ),
+        array(
+            'name' => 'php-unoconv/php-unoconv',
+            'preferences' => array(
+                'alchemy_unoconv_path' => array(
+                    'name' => tra('unoconv path'),
+                    'type' => 'path'
+                )
+            )
+        ),
+        array(
+            'name' => 'mpdf/mpdf',
+            'urls' => array(
+                $base_host . '/tiki-print.php'
+            )
+        ),
+        array(
+            'name' => 'tikiwiki/diagram',
+            'urls' => array(
+                $prefs['fgal_drawio_service_endpoint']
+            )
+        )
+    );
+
+    $packagesToDisplay = array();
+    foreach ($installedLibs as $installedPackage) {
+        $key = array_search($installedPackage['name'], array_column($packagesToCheck, 'name'));
+        if ($key !== false) {
+            $warnings = array();
+            if (isset($packagesToCheck[$key]['preferences'])) {
+                $warnings = array_merge($warnings, checkPreferences($packagesToCheck[$key]['preferences']));
+            }
+            if (isset($packagesToCheck[$key]['commands'])) {
+                foreach ($packagesToCheck[$key]['commands'] as $command) {
+                    if (! commandIsAvailable($command)) {
+                        $warnings[] = tr("Command '%0' not found, check if it is installed and available.", $command);
+                    }
+                }
+            }
+            if (isset($packagesToCheck[$key]['urls'])) {
+                foreach ($packagesToCheck[$key]['urls'] as $url) {
+                    if (! urlIsAvailable($url)) {
+                        $warnings[] = tr("URL '%0' is not reachable, check your firewall or proxy configurations.", $url);
+                    }
+                }
+            }
+
+            checkPackageWarnings($warnings, $installedPackage);
+
+            $packageInfo = array(
+                'name' => $installedPackage['name'],
+                'version' => $installedPackage['installed'],
+                'status' => count($warnings) > 0 ? tra('unsure') : tra('good'),
+                'message' => $warnings
+            );
+        } else {
+            $packageInfo = array(
+                'name' => $installedPackage['name'],
+                'version' => $installedPackage['installed'],
+                'status' => tra('good'),
+                'message' => array()
+            );
+        }
+        $packagesToDisplay[] = $packageInfo;
+    }
+
+    /**
+     * Tesseract PHP Package Check
+     */
+
+    /** @var string The version of Tesseract required */
+    $tesseractPkgMinVersion = '2.7.0';
+    /** @var string Current Tesseract installed version */
+    $ocrVersion = false;
+    foreach ($packagesToDisplay as $arrayValue) {
+        if ($arrayValue['name'] === 'thiagoalessio/tesseract_ocr') {
+            $ocrVersion = $arrayValue['version'];
+            break;
+        }
+    }
+
+    if (! $ocrVersion) {
+        $ocrVersion = tra('Not Installed');
+        $ocrMessage = tra(
+            'Tesseract PHP package could not be found. Try installing through Packages.'
+        );
+        $ocrStatus = 'bad';
+    } elseif (version_compare($ocrVersion, $tesseractPkgMinVersion, '>=')) {
+        $ocrMessage = tra('Tesseract PHP dependency installed.');
+        $ocrStatus = 'good';
+    } else {
+        $ocrMessage = tra(
+            'The installed Tesseract version is lower than the required version.'
+        );
+        $ocrStatus = 'bad';
+    }
+
+    $ocrToDisplay = array(array(
+                         'name'    => tra('Tesseract package'),
+                         'version' => $ocrVersion,
+                         'status'  => $ocrStatus,
+                         'message' => $ocrMessage,
+                     ));
+
+    /**
+     * Tesseract Binary dependency Check
+     */
+
+    $ocr = TikiLib::lib('ocr');
+    $langCount = count($ocr->getTesseractLangs());
+
+    if ($langCount >= 5) {
+        $ocrMessage = $langCount . ' ' . tra('languages installed.');
+        $ocrStatus = 'good';
+    } else {
+        $ocrMessage = tra(
+            'Not all languages installed. You may need to install additional languages for multilingual support.'
+        );
+        $ocrStatus = 'unsure';
+    }
+
+    $ocrToDisplay[] = array(
+        'name'    => tra('Tesseract languages'),
+        'status'  => $ocrStatus,
+        'message' => $ocrMessage,
+    );
+
+    $ocrVersion = $ocr->getTesseractVersion();
+
+    if (! $ocrVersion) {
+        $ocrVersion = tra('Not Found');
+        $ocrMessage = tra(
+            'Tesseract could not be found.'
+        );
+        $ocrStatus = 'bad';
+    } elseif ($ocr->checkTesseractVersion()) {
+        $ocrMessage = tra(
+            'Tesseract meets or exceeds the version requirements.'
+        );
+        $ocrStatus = 'good';
+    } else {
+        $ocrMessage = tra(
+            'The installed Tesseract version is lower than the required version.'
+        );
+        $ocrStatus = 'bad';
+    }
+
+    $ocrToDisplay[] = array(
+        'name'    => tra('Tesseract binary'),
+        'version' => $ocrVersion,
+        'status'  => $ocrStatus,
+        'message' => $ocrMessage,
+    );
+    try {
+        if (empty($prefs['ocr_tesseract_path'])    || $prefs['ocr_tesseract_path'] === 'tesseract') {
+            $ocrStatus = 'bad';
+            $ocrMessage = tra(
+                'Your path preference is not configured. It may work now but will likely fail with cron. Specify an absolute path.'
+            );
+        } elseif ($prefs['ocr_tesseract_path'] === $ocr->whereIsExecutable('tesseract')) {
+            $ocrStatus = 'good';
+            $ocrMessage = tra('Path setup correctly.');
+        } else {
+            $ocrStatus = 'unsure';
+            $ocrMessage = tra(
+                'Your path may not be configured correctly. It appears to be located at '
+            ) . $ocr->whereIsExecutable(
+                'tesseract' . '.'
+            );
+        }
+    } catch (Exception $e) {
+        if (
+            empty($prefs['ocr_tesseract_path'])
+            || $prefs['ocr_tesseract_path'] === 'tesseract'
+        ) {
+            $ocrStatus = 'bad';
+            $ocrMessage = tra(
+                'Your path preference is not configured. It may work now but will likely fail with cron. Specify an absolute path.'
+            );
+        } else {
+            $ocrStatus = 'unsure';
+            $ocrMessage = tra(
+                'Your path is configured, but we were unable to tell if it was configured properly or not.'
+            );
+        }
+    }
+
+    $ocrToDisplay[] = array(
+        'name'    => tra('Tesseract path'),
+        'status'  => $ocrStatus,
+        'message' => $ocrMessage,
+    );
+
+
+    $pdfimages = TikiLib::lib('pdfimages');
+    $pdfimages->setVersion();
+
+    //lets fall back to configured options for a binary path if its not found with default options.
+    if (! $pdfimages->version) {
+        $pdfimages->setBinaryPath();
+        $pdfimages->setVersion();
+    }
+
+    if ($pdfimages->version) {
+        $ocrStatus = 'good';
+        $ocrMessage = tra('It appears that pdfimages is installed on your system.');
+    } else {
+        $ocrStatus = 'bad';
+        $ocrMessage = tra('Could not find pdfimages. PDF files will not be processed.');
+    }
+
+    $ocrToDisplay[] = array(
+        'name'    => tra('Pdfimages binary'),
+        'version' => $pdfimages->version,
+        'status'  => $ocrStatus,
+        'message' => $ocrMessage,
+    );
+
+    try {
+        if (empty($prefs['ocr_pdfimages_path']) || $prefs['ocr_pdfimages_path'] === 'pdfimages') {
+            $ocrStatus = 'bad';
+            $ocrMessage = tra('Your path preference is not configured. It may work now but will likely fail with cron. Specify an absolute path.');
+        } elseif ($prefs['ocr_pdfimages_path'] === $ocr->whereIsExecutable('pdfimages')) {
+            $ocrStatus = 'good';
+            $ocrMessage = tra('Path setup correctly');
+        } else {
+            $ocrStatus = 'unsure';
+            $ocrMessage = tra('Your path may not be configured correctly. It appears to be located at ') .
+                $ocr->whereIsExecutable('pdfimages' . ' ');
+        }
+    } catch (Exception $e) {
+        if (empty($prefs['ocr_pdfimages_path']) || $prefs['ocr_pdfimages_path'] === 'pdfimages') {
+            $ocrStatus = 'bad';
+            $ocrMessage = tra('Your path preference is not configured. It may work now but will likely fail with cron. Specify an absolute path.');
+        } else {
+            $ocrStatus = 'unsure';
+            $ocrMessage = tra(
+                'Your path is configured, but we were unable to tell if it was configured properly or not.'
+            );
+        }
+    }
+
+    $ocrToDisplay[] = array(
+        'name'    => tra('Pdfimages path'),
+        'status'  => $ocrStatus,
+        'message' => $ocrMessage,
+    );
+
+    // check if scheduler is set up properly.
+    $scheduleDb = $ocr->table('tiki_scheduler');
+    $conditions['status'] = 'active';
+    $conditions['params'] = $scheduleDb->contains('ocr:all');
+    if ($scheduleDb->fetchBool($conditions)) {
+        $ocrToDisplay[] = array(
+            'name'    => tra('Scheduler'),
+            'status'  => 'good',
+            'message' => tra('Scheduler has been successfully setup.'),
+        );
+    } else {
+        $ocrToDisplay[] = array(
+            'name'    => tra('Scheduler'),
+            'status'  => 'bad',
+            'message' => tra('Scheduler needs to have a console command of "ocr:all" set.'),
+        );
+    }
+
+    $smarty->assign('ocr', $ocrToDisplay);
+}
+// Security Checks
+// get all dangerous php settings and check them
+$security = false;
+
+// check file upload dir and compare it to tiki root dir
+$s = ini_get('upload_tmp_dir');
+$sn = substr($_SERVER['SCRIPT_NAME'], 0, -14);
+if ($s != "" && strpos($sn, $s) !== false) {
+    $security['upload_tmp_dir'] = array(
+        'fitness' => tra('unsafe') ,
+        'setting' => $s,
+        'message' => tra('upload_tmp_dir is probably inside the Tiki directory. There is a risk that someone can upload any file to this directory and access it via web browser.')
+    );
+} else {
+    $security = array();
+    $security['upload_tmp_dir'] = array(
+        'fitness' => tra('unknown') ,
+        'setting' => $s,
+        'message' => tra('It can\'t be reliably determined if the upload_tmp_dir is accessible via a web browser. To be sure, check the webserver configuration.')
+    );
+}
+
+// Determine system state
+$pdf_webkit = '';
+if (isset($prefs) && $prefs['print_pdf_from_url'] == 'webkit') {
+    $pdf_webkit = '<b>' . tra('WebKit is enabled') . '.</b> ';
+}
+$feature_blogs = '';
+if (isset($prefs) && $prefs['feature_blogs'] == 'y') {
+    $feature_blogs = '<b>' . tra('The Blogs feature is enabled') . '.</b> ';
+}
+
+$fcts = array(
+         array(
+            'function' => 'exec',
+            'risky' => tra('Exec can potentially be used to execute arbitrary code on the server.') . ' ' . tra('Tiki does not need it; perhaps it should be disabled.') . ' ' . tra('However, the Plugins R/RR need it. If you use the Plugins R/RR and the other PHP software on the server can be trusted, this should be enabled.'),
+            'safe' => tra('Exec can be potentially be used to execute arbitrary code on the server.') . ' ' . tra('Tiki needs it to run the Plugins R/RR.') . tra('If this is needed and the other PHP software on the server can be trusted, this should be enabled.')
+         ),
+         array(
+            'function' => 'passthru',
+            'risky' => tra('Passthru is similar to exec.') . ' ' . tra('Tiki does not need it; perhaps it should be disabled. However, the Composer package manager used for installations in Subversion checkouts may need it.'),
+            'safe' => tra('Passthru is similar to exec.') . ' ' . tra('Tiki does not need it; it is good that it is disabled. However, the Composer package manager used for installations in Subversion checkouts may need it.')
+         ),
+         array(
+            'function' => 'shell_exec',
+            'risky' => tra('Shell_exec is similar to exec.') . ' ' . tra('Tiki needs it to run PDF from URL: WebKit (wkhtmltopdf). ' . $pdf_webkit . 'If this is needed and the other PHP software on the server can be trusted, this should be enabled.'),
+            'safe' => tra('Shell_exec is similar to exec.') . ' ' . tra('Tiki needs it to run PDF from URL: WebKit (wkhtmltopdf). ' . $pdf_webkit . 'If this is needed and the other PHP software on the server can be trusted, this should be enabled.')
+         ),
+         array(
+            'function' => 'system',
+            'risky' => tra('System is similar to exec.') . ' ' . tra('Tiki does not need it; perhaps it should be disabled.'),
+            'safe' => tra('System is similar to exec.') . ' ' . tra('Tiki does not need it; it is good that it is disabled.')
+         ),
+         array(
+            'function' => 'proc_open',
+            'risky' => tra('Proc_open is similar to exec.') . ' ' . tra('Tiki does not need it; perhaps it should be disabled. However, the Composer package manager used for installations in Subversion checkouts or when using the package manager from the <a href="https://doc.tiki.org/Packages" target="_blank">admin interface</a> may need it.'),
+            'safe' => tra('Proc_open is similar to exec.') . ' ' . tra('Tiki does not need it; it is good that it is disabled. However, the Composer package manager used for installations in Subversion checkouts or when using the package manager from the <a href="https://doc.tiki.org/Packages" target="_blank">admin interface</a> may need it.')
+         ),
+         array(
+            'function' => 'popen',
+            'risky' => tra('popen is similar to exec.') . ' ' . tra('Tiki needs it for file search indexing in file galleries. If this is needed and other PHP software on the server can be trusted, this should be enabled.'),
+            'safe' => tra('popen is similar to exec.') . ' ' . tra('Tiki needs it for file search indexing in file galleries. If this is needed and other PHP software on the server can be trusted, this should be enabled.')
+         ),
+         array(
+            'function' => 'curl_exec',
+            'risky' => tra('Curl_exec can potentially be abused to write malicious code.') . ' ' . tra('Tiki needs it to run features like Kaltura, CAS login and CClite. If these are needed and other PHP software on the server can be trusted, this should be enabled.'),
+            'safe' => tra('Curl_exec can potentially be abused to write malicious code.') . ' ' . tra('Tiki needs it to run features like Kaltura, CAS login and CClite. If these are needed and other PHP software on the server can be trusted, this should be enabled.')
+         ),
+         array(
+            'function' => 'curl_multi_exec',
+            'risky' => tra('Curl_multi_exec can potentially be abused to write malicious code.') . ' ' . tra('Tiki needs it to run features like Kaltura, CAS login and CClite. If these are needed and other PHP software on the server can be trusted, this should be enabled.'),
+            'safe' => tra('Curl_multi_exec can potentially be abused to write malicious code.') . ' ' . tra('Tiki needs it to run features like Kaltura, CAS login and CClite. If these are needed and other PHP software on the server can be trusted, this should be enabled.')
+         ),
+         array(
+            'function' => 'parse_ini_file',
+            'risky' => tra('It is probably an urban myth that this is dangerous. Tiki team will reconsider this check, but be warned.') . ' ' . tra('It is required for the <a href="http://doc.tiki.org/System-Configuration" target="_blank">System Configuration</a> feature.'),
+            'safe' => tra('It is probably an urban myth that this is dangerous. Tiki team will reconsider this check, but be warned.') . ' ' . tra('It is required for the <a href="http://doc.tiki.org/System-Configuration" target="_blank">System Configuration</a> feature.'),
+         )
+    );
+
+foreach ($fcts as $fct) {
+    if (function_exists($fct['function'])) {
+        $security[$fct['function']] = array(
+            'setting' => tra('Enabled'),
+            'fitness' => tra('risky'),
+            'message' => $fct['risky']
+        );
+    } else {
+        $security[$fct['function']] = array(
+            'setting' => tra('Disabled'),
+            'fitness' => tra('safe'),
+            'message' => $fct['safe']
+        );
+    }
+}
+
+// trans_sid
+$s = ini_get('session.use_trans_sid');
+if ($s) {
+    $security['session.use_trans_sid'] = array(
+        'setting' => 'Enabled',
+        'fitness' => tra('unsafe'),
+        'message' => tra('session.use_trans_sid should be off by default. See the PHP manual for details.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $security['session.use_trans_sid'] = array(
+        'setting' => 'Disabled',
+        'fitness' => tra('safe'),
+        'message' => tra('session.use_trans_sid should be off by default. See the PHP manual for details.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+$s = ini_get('xbithack');
+if ($s == 1) {
+    $security['xbithack'] = array(
+        'setting' => 'Enabled',
+        'fitness' => tra('unsafe'),
+        'message' => tra('Setting the xbithack option is unsafe. Depending on the file handling of the webserver and the Tiki settings, an attacker may be able to upload scripts to file gallery and execute them.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+} else {
+    $security['xbithack'] = array(
+        'setting' => 'Disabled',
+        'fitness' => tra('safe'),
+        'message' => tra('setting the xbithack option is unsafe. Depending on the file handling of the webserver and the Tiki settings,  an attacker may be able to upload scripts to file gallery and execute them.') . ' <a href="#php_conf_info">' . tra('How to change this value') . '</a>'
+    );
+}
+
+$s = ini_get('allow_url_fopen');
+if ($s == 1) {
+    $security['allow_url_fopen'] = array(
+        'setting' => 'Enabled',
+        'fitness' => tra('risky'),
+        'message' => tra('allow_url_fopen may potentially be used to upload remote data or scripts. Also used by Composer to fetch dependencies. ' . $feature_blogs . 'If this Tiki does not use the Blogs feature, this can be switched off.')
+    );
+} else {
+    $security['allow_url_fopen'] = array(
+        'setting' => 'Disabled',
+        'fitness' => tra('safe'),
+        'message' => tra('allow_url_fopen may potentially be us
