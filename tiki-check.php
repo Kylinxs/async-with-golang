@@ -2721,4 +2721,510 @@ if ($s == 1) {
     $security['allow_url_fopen'] = array(
         'setting' => 'Disabled',
         'fitness' => tra('safe'),
-        'message' => tra('allow_url_fopen may potentially be us
+        'message' => tra('allow_url_fopen may potentially be used to upload remote data or scripts. Also used by Composer to fetch dependencies. ' . $feature_blogs . 'If this Tiki does not use the Blogs feature, this can be switched off.')
+    );
+}
+
+if ($standalone || (! empty($prefs) && $prefs['fgal_enable_auto_indexing'] === 'y')) {
+    // adapted from \FileGalLib::get_file_handlers
+    $fh_possibilities = array(
+        'application/ms-excel' => array('xls2csv %1'),
+        'application/msexcel' => array('xls2csv %1'),
+        // vnd.openxmlformats are handled natively in Zend
+        //'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => array('xlsx2csv.py %1'),
+        'application/ms-powerpoint' => array('catppt %1'),
+        'application/mspowerpoint' => array('catppt %1'),
+        //'application/vnd.openxmlformats-officedocument.presentationml.presentation' => array('pptx2txt.pl %1 -'),
+        'application/msword' => array('catdoc %1', 'strings %1'),
+        //'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => array('docx2txt.pl %1 -'),
+        'application/pdf' => array('pstotext %1', 'pdftotext %1 -'),
+        'application/postscript' => array('pstotext %1'),
+        'application/ps' => array('pstotext %1'),
+        'application/rtf' => array('catdoc %1'),
+        'application/sgml' => array('col -b %1', 'strings %1'),
+        'application/vnd.ms-excel' => array('xls2csv %1'),
+        'application/vnd.ms-powerpoint' => array('catppt %1'),
+        'application/x-msexcel' => array('xls2csv %1'),
+        'application/x-pdf' => array('pstotext %1', 'pdftotext %1 -'),
+        'application/x-troff-man' => array('man -l %1'),
+        'application/zip' => array('unzip -l %1'),
+        'text/enriched' => array('col -b %1', 'strings %1'),
+        'text/html' => array('elinks -dump -no-home %1'),
+        'text/richtext' => array('col -b %1', 'strings %1'),
+        'text/sgml' => array('col -b %1', 'strings %1'),
+        'text/tab-separated-values' => array('col -b %1', 'strings %1'),
+    );
+
+    $fh_native = array(
+        'application/pdf' => 18.0,
+        'application/x-pdf' => 18.0,
+    );
+
+    $file_handlers = array();
+
+    foreach ($fh_possibilities as $type => $options) {
+        $file_handler = array(
+            'fitness' => '',
+            'message' => '',
+        );
+
+        if (! $standalone && array_key_exists($type, $fh_native)) {
+            if ($tikiWikiVersion->getBaseVersion() >= $fh_native["$type"]) {
+                $file_handler['fitness'] = 'good';
+                $file_handler['message'] = "will be handled natively";
+            }
+        }
+        if ($standalone && array_key_exists($type, $fh_native)) {
+            $file_handler['fitness'] = 'info';
+            $file_handler['message'] = "will be handled natively by Tiki &gt;= " . $fh_native["$type"];
+        }
+        if ($file_handler['fitness'] == '' || $file_handler['fitness'] == 'info') {
+            foreach ($options as $opt) {
+                $optArray = explode(' ', $opt, 2);
+                $exec = reset($optArray);
+                $which_exec = `which $exec`;
+                if ($which_exec) {
+                    if ($file_handler['fitness'] == 'info') {
+                        $file_handler['message'] .= ", otherwise handled by $which_exec";
+                    } else {
+                        $file_handler['message'] = "will be handled by $which_exec";
+                    }
+                    $file_handler['fitness'] = 'good';
+                    break;
+                }
+            }
+            if ($file_handler['fitness'] == 'info') {
+                $fh_commands = '';
+                foreach ($options as $opt) {
+                    $fh_commands .= $fh_commands ? ' or ' : '';
+                    $fh_commands .= '"' . substr($opt, 0, strpos($opt, ' ')) . '"';
+                }
+                $file_handler['message'] .= ', otherwise you need to install ' . $fh_commands . ' to index this type of file';
+            }
+        }
+        if (! $file_handler['fitness']) {
+            $file_handler['fitness'] = 'unsure';
+            $fh_commands = '';
+            foreach ($options as $opt) {
+                $fh_commands .= $fh_commands ? ' or ' : '';
+                $fh_commands .= '"' . substr($opt, 0, strpos($opt, ' ')) . '"';
+            }
+            $file_handler['message'] = 'You need to install ' . $fh_commands . ' to index this type of file';
+        }
+        $file_handlers[$type] = $file_handler;
+    }
+}
+
+
+if (! $standalone) {
+    // The following is borrowed from tiki-admin_system.php
+    if ($prefs['feature_forums'] == 'y') {
+        $dirs = TikiLib::lib('comments')->list_directories_to_save();
+    } else {
+        $dirs = array();
+    }
+    if ($prefs['feature_file_galleries'] == 'y' && ! empty($prefs['fgal_use_dir'])) {
+        $dirs[] = $prefs['fgal_use_dir'];
+    }
+    if ($prefs['feature_trackers'] == 'y') {
+        if (! empty($prefs['t_use_dir'])) {
+            $dirs[] = $prefs['t_use_dir'];
+        }
+        $dirs[] = 'img/trackers';
+    }
+    if ($prefs['feature_wiki'] == 'y') {
+        if (! empty($prefs['w_use_dir'])) {
+            $dirs[] = $prefs['w_use_dir'];
+        }
+        if ($prefs['feature_create_webhelp'] == 'y') {
+            $dirs[] = 'whelp';
+        }
+        $dirs[] = 'img/wiki';
+        $dirs[] = 'img/wiki_up';
+    }
+    $dirs = array_unique($dirs);
+    $dirsExist = array();
+    foreach ($dirs as $i => $d) {
+        $dirsWritable[$i] = is_writable($d);
+    }
+    $smarty->assign_by_ref('dirs', $dirs);
+    $smarty->assign_by_ref('dirsWritable', $dirsWritable);
+
+    // Prepare Monitoring acks
+    $query = "SELECT `value` FROM tiki_preferences WHERE `name`='tiki_check_status'";
+    $result = $tikilib->getOne($query);
+    $last_state = json_decode($result, true);
+    $smarty->assign_by_ref('last_state', $last_state);
+
+    function deack_on_state_change(&$check_group, $check_group_name)
+    {
+        global $last_state;
+        foreach ($check_group as $key => $value) {
+            if (! empty($last_state["$check_group_name"]["$key"])) {
+                $check_group["$key"]['ack'] = $last_state["$check_group_name"]["$key"]['ack'];
+                if (
+                    isset($check_group["$key"]['setting']) && isset($last_state["$check_group_name"]["$key"]['setting']) &&
+                            $check_group["$key"]['setting'] != $last_state["$check_group_name"]["$key"]['setting']
+                ) {
+                    $check_group["$key"]['ack'] = false;
+                }
+            }
+        }
+    }
+    deack_on_state_change($mysql_properties, 'MySQL');
+    deack_on_state_change($server_properties, 'Server');
+    if ($apache_properties) {
+        deack_on_state_change($apache_properties, 'Apache');
+    }
+    if ($iis_properties) {
+        deack_on_state_change($iis_properties, 'IIS');
+    }
+    deack_on_state_change($php_properties, 'PHP');
+    deack_on_state_change($security, 'PHP Security');
+
+    $tikiWikiVersion = new TWVersion();
+    if (
+        version_compare($tikiWikiVersion->getBaseVersion(), '18.0', '<') && ! class_exists('mPDF')
+        || version_compare($tikiWikiVersion->getBaseVersion(), '18.0', '>=') && ! class_exists('\\Mpdf\\Mpdf')
+    ) {
+        $smarty->assign('mPDFClassMissing', true);
+    }
+
+    // Engine tables type
+    $db = TikiDb::get();
+    if ($db) {
+        $engineType = '';
+        $query = 'SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_NAME = "tiki_schema" AND TABLE_SCHEMA = DATABASE();';
+        $result = query($query, $connection);
+        if (! empty($result[0]['ENGINE'])) {
+            $engineType = $result[0]['ENGINE'];
+        }
+    }
+    if (version_compare($tikiWikiVersion->getBaseVersion(), '18.0', '>=') && $db && $engineType != 'InnoDB') {
+        $smarty->assign('engineTypeNote', true);
+    } else {
+        $smarty->assign('engineTypeNote', false);
+    }
+
+    //Verify composer and composer install requirements: bzip and unzip bin
+    if ($composerAvailable = $composerManager->composerIsAvailable()) {
+        $composerChecks['composer'] = array(
+            'fitness' => tra('good'),
+            'message' => tra('Composer found')
+        );
+    } else {
+        $composerChecks['composer'] = array(
+            'fitness' => tra('bad'),
+            'message' => tra('Composer not found')
+        );
+    }
+
+    if (extension_loaded('bz2')) {
+        $composerChecks['php-bz2'] = array(
+            'fitness' => tra('good'),
+            'message' => tra('Extension loaded in PHP')
+        );
+    } else {
+        $composerChecks['php-bz2'] = array(
+            'fitness' => tra('bad'),
+            'message' => tra('Bz2 extension not loaded in PHP. It may be needed to install composer packages.')
+        );
+    }
+
+    if (commandIsAvailable('unzip')) {
+        $composerChecks['unzip'] = array(
+            'fitness' => tra('good'),
+            'message' => tra('Command found')
+        );
+    } else {
+        $composerChecks['unzip'] = array(
+            'fitness' => tra('unsure'),
+            'message' => tra('Command not found. As there is no \'unzip\' command installed zip files are being unpacked using the PHP zip extension.
+            This may cause invalid reports of corrupted archives. Besides, any UNIX permissions (e.g. executable) defined in the archives will be lost.')
+        );
+    }
+
+    $packageRepos = array(
+        'composer.tiki.org' => 'https://composer.tiki.org',
+        'packagist.org' => 'https://packagist.org'
+    );
+
+    foreach ($packageRepos as $key => $url) {
+        $isAvailable = urlIsAvailable($url);
+        $composerChecks[$key] = array(
+            'fitness' => $isAvailable ? tra('good') : tra('unsure'),
+            'message' => $isAvailable ? tr("URL '%0' is reachable.", $url) : tr("URL '%0' is not reachable, check your firewall or proxy configurations.", $url)
+        );
+    }
+
+    $smarty->assign('composer_available', $composerAvailable);
+    $smarty->assign('composer_checks', $composerChecks);
+    $smarty->assign('packages', $packagesToDisplay);
+}
+
+$sensitiveDataDetectedFiles = array();
+check_for_remote_readable_files($sensitiveDataDetectedFiles);
+
+if (! empty($sensitiveDataDetectedFiles)) {
+    $files = ' (Files: ' . trim(implode(', ', $sensitiveDataDetectedFiles)) . ')';
+    $tiki_security['Sensitive Data Exposure'] = array(
+        'fitness' => tra('risky'),
+        'message' => tra('Tiki detected that there are temporary files in the db folder that may expose credentials or other sensitive information.') . $files
+    );
+} else {
+    $tiki_security['Sensitive Data Exposure'] = array(
+        'fitness' => tra('safe'),
+        'message' => tra('Tiki did not detect temporary files in the db folder that may expose credentials or other sensitive information.')
+    );
+}
+
+if (isset($_REQUEST['benchmark'])) {
+    $benchmark = BenchmarkPhp::run();
+} else {
+    $benchmark = '';
+}
+
+$diffDatabase = false;
+$diffDbTables = array();
+$diffDbColumns = array();
+$diffFileTables = array();
+$diffFileColumns = array();
+$dynamicTables = array();
+$sqlFileTables = array();
+if (isset($_REQUEST['dbmismatches']) && ! $standalone && file_exists('db/tiki.sql')) {
+    $diffDatabase = true;
+    $tikiSql = file_get_contents('db/tiki.sql');
+    preg_match_all('/CREATE TABLE (?:.(?!;[^\S]))+./s', $tikiSql, $tables);
+
+    foreach ($tables[0] as $table) {
+        preg_match('/CREATE TABLE[\s\t]*`?(\w+)`?/', $table, $matches);
+        $tableName = strtolower(trim($matches[1]));
+        $sqlFileTables[$tableName] = array();
+
+        preg_match_all('/^[\s\t]*`?(?!CREATE|KEY|PRIMARY|UNIQUE|INDEX)(\w+)`?/m', $table, $fields);
+
+        foreach ($fields[1] as $field) {
+            $sqlFileTables[$tableName][] = strtolower($field);
+        }
+    }
+
+    $query = <<<SQL
+SELECT TABLE_NAME, COLUMN_NAME
+FROM information_schema.columns
+WHERE table_schema = database()
+  AND (TABLE_NAME NOT LIKE "index_%" OR TABLE_NAME LIKE "zzz_unused_%");
+SQL;
+
+    $result = query($query);
+    $diffFileTables = array_keys($sqlFileTables);
+    $diffFileColumns = $sqlFileTables;
+    foreach ($result as $tables) {
+        $dbTable = strtolower($tables['TABLE_NAME']);
+        $dbColumn = strtolower($tables['COLUMN_NAME']);
+
+        // Table in DB and SQL
+        $key = array_search($dbTable, $diffFileTables);
+        if ($key !== false) {
+            unset($diffFileTables[$key]);
+        }
+
+        // Table in DB but not in SQL file
+        if (! array_key_exists($dbTable, $sqlFileTables)) {
+            if (! in_array($dbTable, $diffDbTables)) {
+                $diffDbTables[] = $dbTable;
+            }
+
+            continue;
+        }
+
+        // Column in DB but not in SQL file
+        if (! in_array($dbColumn, $sqlFileTables[$dbTable])) {
+            $diffDbColumns[$dbTable][] = $dbColumn;
+        }
+
+        if (isset($diffFileColumns[$dbTable])) {
+            $key = array_search($dbColumn, $diffFileColumns[$dbTable]);
+            unset($diffFileColumns[$dbTable][$key]);
+        }
+
+        if (empty($diffFileColumns[$dbTable])) {
+            unset($diffFileColumns[$dbTable]);
+        }
+    }
+
+    // If table is missing, then all columns will be missing too (remove from columns diff)
+    foreach ($diffFileTables as $table) {
+        if (isset($diffFileColumns[$table])) {
+            unset($diffFileColumns[$table]);
+        }
+    }
+
+    $query = <<<SQL
+SELECT TABLE_NAME
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = database()
+  AND TABLE_NAME LIKE "index_%";
+SQL;
+
+    $result = query($query);
+    foreach ($result as $tables) {
+        $dynamicTables[] = $tables['TABLE_NAME'];
+    }
+}
+
+/**
+ * Tiki Manager Section
+ **/
+if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    $trimCapable = false;
+} else {
+    $trimCapable = true;
+}
+
+if ($trimCapable) {
+    $trimServerRequirements = array();
+    $trimClientRequirements = array();
+
+    $trimServerRequirements['Operating System Path'] = array(
+        'fitness' => tra('info'),
+        'message' => $_SERVER['PATH'] ?? ''
+    );
+
+    $trimClientRequirements['Operating System Path'] = array(
+        'fitness' => tra('info'),
+        'message' => $_SERVER['PATH'] ?? ''
+    );
+
+    $trimClientRequirements['SSH or FTP server'] = array(
+        'fitness' => tra('info'),
+        'message' => tra('To manage this instance from a remote server you need SSH or FTP access to this server')
+    );
+
+    $serverCommands = array(
+        'php-cli'     => array('command' => 'php'),
+        'rsync'       => array('command' => 'rsync'),
+        'nice'        => array('command' => 'nice'),
+        'tar'         => array('command' => 'tar'),
+        'bzip2'       => array('command' => 'bzip2'),
+        'ssh'         => array('command' => 'ssh'),
+        'ssh-copy-id' => array('command' => 'ssh-copy-id'),
+        'scp'         => array('command' => 'scp'),
+        'sqlite'      => array(
+            'command' => 'sqlite3',
+            'message' => 'Command not found, check if it is installed and available in one of the paths above.'
+                . ' While this does not impact normal operations, will prevent you to be able to see/debug the'
+                . ' internal db using "database:view"',
+        ),
+    );
+
+    $serverPHPExtensions = array(
+        'php-sqlite' => 'sqlite3',
+    );
+
+    $clientCommands = array(
+        'php-cli' => 'php',
+        'mysql' => 'mysql',
+        'mysqldump' => 'mysqldump',
+        'gzip' => 'gzip',
+    );
+
+    foreach ($serverCommands as $key => $commandData) {
+        if (commandIsAvailable($commandData['command'])) {
+            $trimServerRequirements[$key] = array(
+                'fitness' => tra('good'),
+                'message' => tra('Command found')
+            );
+        } else {
+            $message = isset($commandData['message'])
+                ? $commandData['message']
+                : tra('Command not found, check if it is installed and available in one of the paths above.');
+            $trimServerRequirements[$key] = array(
+                'fitness' => tra('unsure'),
+                'message' => $message
+            );
+        }
+    }
+
+    foreach ($serverPHPExtensions as $key => $extension) {
+        if (extension_loaded($extension)) {
+            $trimServerRequirements[$key] = array(
+                'fitness' => tra('good'),
+                'message' => tra('Extension loaded in PHP')
+            );
+        } else {
+            $trimServerRequirements[$key] = array(
+                'fitness' => tra('unsure'),
+                'message' => tra('Extension not loaded in PHP')
+            );
+        }
+    }
+
+    foreach ($clientCommands as $key => $command) {
+        if (commandIsAvailable($command)) {
+            $trimClientRequirements[$key] = array(
+                'fitness' => tra('good'),
+                'message' => tra('Command found')
+            );
+        } else {
+            $trimClientRequirements[$key] = array(
+                'fitness' => tra('unsure'),
+                'message' => tra('Command not found, check if it is installed and available in one of the paths above')
+            );
+        }
+    }
+}
+
+$dbEngine = $dbVersion = null;
+if ($connection || ! $standalone) {
+    $dbEngine = $isMariaDB ? 'mariadb' : 'mysql';
+    $dbVersion = ! empty($mysql_properties['Version']['setting']) ? $mysql_properties['Version']['setting'] : null;
+} elseif (isset($_POST['db-engine'], $_POST['db-version'])) {
+    $dbEngine = $_POST['db-engine'];
+    $dbVersion = $_POST['db-version'];
+}
+
+$serverRequirements = checkServerRequirements(PHP_VERSION, $dbEngine, $dbVersion);
+$available_tiki_properties = getCompatibleVersions($dbEngine, $dbVersion);
+
+if (! $standalone) {
+    $serverRequirements['Tiki Version'] = array(
+        'value' => $tikiBaseVersion,
+        'fitness' => 'info',
+        'message' => 'Current Tiki version',
+    );
+} else {
+    $recTikiVersion = array_filter($available_tiki_properties, function ($details) {
+        return $details['fitness'] == 'good';
+    });
+    if ($recTikiVersion = reset($recTikiVersion)) {
+        $serverRequirements['Tiki Version'] = array(
+            'value' => $recTikiVersion['name'],
+            'fitness' => 'info',
+            'message' => 'Recommended Tiki version',
+        );
+    } else {
+        $serverRequirements['Tiki Version'] = array(
+            'value' => 'N/A',
+            'fitness' => 'unsure',
+            'message' => 'Unable to find a Tiki Version that uses the detected/selected PHP and Database versions.',
+        );
+    }
+}
+
+if ($standalone && ! $nagios) {
+    $render .= '<style type="text/css">td, th { border: 1px solid #000000; vertical-align: baseline; padding: .5em; }</style>';
+    $render .= '<h2>Server compatibility</h2>';
+
+    renderTable($serverRequirements);
+
+    if (! $locked) {
+        if (! $connection) {
+            $render .= '<p>Unable to check the server compatibility and the recommended Tiki version.<br>';
+            $render .= 'Use the form bellow to select the Database engine and version, to detect the recommended version.</p>';
+            $render .= '<form method="post" action="' . $_SERVER['SCRIPT_NAME'] . '">';
+            $render .= '<div class="form-group"><label for="db-engine">Database Engine</label>:';
+            $render .= '<select name="db-engine" class="form-control">';
+            $render .= '<option value="mysql" ' . ($dbEngine == 'mysql' ? 'selected' : '') . '>MySQL</option>';
+            $render .= '<option value="mariadb" ' . ($dbEngine == 'mariadb' ? 'selected' : '') . '>MariaDB</option>';
+            $render .= '</select></div>';
+            $render .= '<div class="form-group"><label for="db-engine">Database Version</label>: <input type="text"  class="form-
