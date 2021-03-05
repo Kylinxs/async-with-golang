@@ -3227,4 +3227,424 @@ if ($standalone && ! $nagios) {
             $render .= '<option value="mysql" ' . ($dbEngine == 'mysql' ? 'selected' : '') . '>MySQL</option>';
             $render .= '<option value="mariadb" ' . ($dbEngine == 'mariadb' ? 'selected' : '') . '>MariaDB</option>';
             $render .= '</select></div>';
-            $render .= '<div class="form-group"><label for="db-engine">Database Version</label>: <input type="text"  class="form-
+            $render .= '<div class="form-group"><label for="db-engine">Database Version</label>: <input type="text"  class="form-control" id="db-version" name="db-version" value="' . $dbVersion . '"/></div>';
+            $render .= '<div class="form-group"><input type="submit" class="btn btn-primary btn-sm" value="Check compatibility" /></div>';
+            $render .= '</form>';
+        }
+
+        $render .= '<h3>Compatible Tiki Versions</h3>';
+
+        renderAvailableTikiTable($available_tiki_properties);
+
+        $render .= '<h2>MySQL or MariaDB Database Properties</h2>';
+        renderTable($mysql_properties);
+        $render .= '<h2>Test sending emails</h2>';
+        if (isset($_REQUEST['email_test_to'])) {
+            $email = filter_var($_POST['email_test_to'], FILTER_SANITIZE_EMAIL);
+            $email_test_headers = 'From: noreply@tiki.org' . "\n";    // needs a valid sender
+            $email_test_headers .= 'Reply-to: ' . $email . "\n";
+            $email_test_headers .= "Content-type: text/plain; charset=utf-8\n";
+            $email_test_headers .= 'X-Mailer: Tiki-Check - PHP/' . PHP_VERSION . "\n";
+            $email_test_subject = tra('Test mail from Tiki Server Compatibility Test');
+            $email_test_body = tra("Congratulations!\n\nThis server can send emails.\n\n");
+            $email_test_body .= "\t" . tra('Server:') . ' ' . (empty($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_ADDR'] : $_SERVER['SERVER_NAME']) . "\n";
+            $email_test_body .= "\t" . tra('Sent:') . ' ' . date(DATE_RFC822) . "\n";
+
+            $sentmail = mail($email, $email_test_subject, $email_test_body, $email_test_headers);
+            if ($sentmail) {
+                $mail['Sending mail'] = array(
+                    'setting' => 'Accepted',
+                    'fitness' => tra('good'),
+                    'message' => tra('It was possible to send an e-mail. This only means that a mail server accepted the mail for delivery. This check can\;t verify if that server actually delivered the mail. Please check the inbox of ' . htmlspecialchars($email) . ' to see if the mail was delivered.')
+                );
+            } else {
+                $mail['Sending mail'] = array(
+                    'setting' => 'Not accepted',
+                    'fitness' => tra('bad'),
+                    'message' => tra('It was not possible to send an e-mail. It may be that there is no mail server installed on this machine or that it is incorrectly configured. If the local mail server cannot be made to work, a regular mail account can be set up and its SMTP settings configured in tiki-admin.php.')
+                );
+            }
+            renderTable($mail);
+        } else {
+            $render .= '<form method="post" action="' . $_SERVER['SCRIPT_NAME'] . '">';
+            $render .= '<div class="form-group"><label for="e-mail">e-mail address to send test mail to</label>: <input type="text"  class="form-control" id="email_test_to" name="email_test_to" /></div>';
+            $render .= '<div class="form-group"><input type="submit" class="btn btn-primary btn-sm" value=" Send e-mail " /></div>';
+            $render .= '<p><input type="hidden" id="dbhost" name="dbhost" value="';
+            if (isset($_POST['dbhost'])) {
+                $render .= htmlentities(strip_tags($_POST['dbhost']));
+            };
+                $render .= '" /></p>';
+                $render .= '<p><input type="hidden" id="dbuser" name="dbuser" value="';
+            if (isset($_POST['dbuser'])) {
+                $render .= htmlentities(strip_tags($_POST['dbuser']));
+            };
+                $render .= '"/></p>';
+                $render .= '<p><input type="hidden" id="dbpass" name="dbpass" value="';
+            if (isset($_POST['dbpass'])) {
+                $render .= htmlentities(strip_tags($_POST['dbpass']));
+            };
+                $render .= '"/></p>';
+            $render .= '</form>';
+        }
+    }
+
+    $render .= '<h2>Server Information</h2>';
+    renderTable($server_information);
+    $render .= '<h2>Server Properties</h2>';
+    renderTable($server_properties);
+    $render .= '<h2>Apache properties</h2>';
+    if ($apache_properties) {
+        renderTable($apache_properties);
+        if ($apache_server_info != 'nocurl' && $apache_server_info != false) {
+            if (isset($_REQUEST['apacheinfo']) && $_REQUEST['apacheinfo'] == 'y') {
+                $render .= $apache_server_info;
+            } else {
+                $render .= '<a href="' . $_SERVER['SCRIPT_NAME'] . '?apacheinfo=y">Append Apache /server-info;</a>';
+            }
+        } elseif ($apache_server_info == 'nocurl') {
+            $render .= 'You don\'t have the Curl extension in PHP, so we can\'t append Apache\'s server-info.';
+        } else {
+            $render .= 'Apparently you have not enabled mod_info in your Apache, so we can\'t append more verbose information to this output.';
+        }
+    } else {
+        $render .= 'You are either not running the preferred Apache web server or you are running PHP with a SAPI that does not allow checking Apache properties (for example, CGI or FPM).';
+    }
+    $render .= '<h2>IIS properties</h2>';
+    if ($iis_properties) {
+        renderTable($iis_properties);
+    } else {
+        $render .= "You are not running IIS web server.";
+    }
+    $render .= '<h2>PHP scripting language properties</h2>';
+    renderTable($php_properties);
+
+    $render_sapi_info = '';
+    if (! empty($php_sapi_info)) {
+        if (! empty($php_sapi_info['message'])) {
+            $render_sapi_info .= $php_sapi_info['message'];
+        }
+        if (! empty($php_sapi_info['link'])) {
+            $render_sapi_info .= '<a href="' . $php_sapi_info['link'] . '"> ' . $php_sapi_info['link'] . '</a>';
+        }
+        $render_sapi_info = '<p>' . $render_sapi_info . '</p>';
+    }
+
+    $render .= '<p><a name="php_conf_info"></a>Change PHP configuration values:' . $render_sapi_info . ' You can check the full documentation on how to change the configurations values in <a href="http://www.php.net/manual/en/configuration.php">http://www.php.net/manual/en/configuration.php</a></p>';
+    $render .= '<h2>PHP security properties</h2>';
+    renderTable($security);
+    $render .= '<h2>Tiki Security</h2>';
+    renderTable($tiki_security);
+    $render .= '<h2>MySQL Variables</h2>';
+    renderTable($mysql_variables, 'wrap');
+
+    $render .= '<h2>File Gallery Search Indexing</h2>';
+    $render .= '<em>More info <a href="https://doc.tiki.org/Search-within-files">here</a></em>
+    ';
+    renderTable($file_handlers);
+
+    $render .= '<h2>PHP Info</h2>';
+    if (isset($_REQUEST['phpinfo']) && $_REQUEST['phpinfo'] == 'y') {
+        ob_start();
+        phpinfo();
+        $info = ob_get_contents();
+        ob_end_clean();
+        $info = preg_replace('%^.*<body>(.*)</body>.*$%ms', '$1', $info);
+        $render .= $info;
+    } else {
+        $render .= '<a href="' . $_SERVER['SCRIPT_NAME'] . '?phpinfo=y">Append phpinfo();</a>';
+    }
+
+    $render .= '<a name="benchmark"></a><h2>Benchmark PHP/MySQL</h2>';
+    $render .= '<a href="tiki-check.php?benchmark=run&ts=' . time() . '#benchmark" style="margin-bottom: 10px;">Check</a>';
+    if (! empty($benchmark)) {
+        renderTable($benchmark);
+    }
+
+    $render .= '<h2>Tiki Manager</h2>';
+    $render .= '<em>For more detailed information about Tiki Manager please check <a href="https://doc.tiki.org/Manager">doc.tiki.org/Manager</a></em>.';
+    if ($trimCapable) {
+        $render .= '<h3>Where Tiki Manager is installed</h3>';
+        renderTable($trimServerRequirements);
+        $render .= '<h3>Where Tiki instances are installed</h3>';
+        renderTable($trimClientRequirements);
+    } else {
+        $render .= '<p>Apparently Tiki is running on a Windows based server. This feature is not supported natively.</p>';
+    }
+
+    createPage('Tiki Server Compatibility', $render);
+} elseif ($nagios) {
+//  0    OK
+//  1    WARNING
+//  2    CRITICAL
+//  3    UNKNOWN
+    $monitoring_info = array( 'state' => 0,
+             'message' => '');
+
+    function update_overall_status($check_group, $check_group_name)
+    {
+        global $monitoring_info;
+        $state = 0;
+        $message = '';
+
+        foreach ($check_group as $property => $values) {
+            if (! isset($values['ack']) || $values['ack'] != true) {
+                switch ($values['fitness']) {
+                    case 'unsure':
+                        $state = max($state, 1);
+                        $message .= "$property" . "->unsure, ";
+                        break;
+                    case 'risky':
+                        $state = max($state, 1);
+                        $message .= "$property" . "->risky, ";
+                        break;
+                    case 'bad':
+                        $state = max($state, 2);
+                        $message .= "$property" . "->BAD, ";
+                        break;
+                    case 'info':
+                        $state = max($state, 3);
+                        $message .= "$property" . "->info, ";
+                        break;
+                    case 'good':
+                    case 'safe':
+                        break;
+                }
+            }
+        }
+        $monitoring_info['state'] = max($monitoring_info['state'], $state);
+        if ($state != 0) {
+            $monitoring_info['message'] .= $check_group_name . ": " . trim($message, ' ,') . " -- ";
+        }
+    }
+
+    // Might not be set, i.e. in standalone mode
+    if ($mysql_properties) {
+        update_overall_status($mysql_properties, "MySQL");
+    }
+    update_overall_status($server_properties, "Server");
+    if ($apache_properties) {
+        update_overall_status($apache_properties, "Apache");
+    }
+    if ($iis_properties) {
+        update_overall_status($iis_properties, "IIS");
+    }
+    update_overall_status($php_properties, "PHP");
+    update_overall_status($security, "PHP Security");
+    update_overall_status($tiki_security, "Tiki Security");
+    $return = json_encode($monitoring_info);
+    echo $return;
+} else {    // not stand-alone
+    if (isset($_REQUEST['acknowledge']) || empty($last_state)) {
+        $tiki_check_status = array();
+        function process_acks(&$check_group, $check_group_name)
+        {
+            global $tiki_check_status;
+            foreach ($check_group as $key => $value) {
+                $formkey = str_replace(array('.',' '), '_', $key);
+                if (
+                    isset($check_group["$key"]['fitness']) && ($check_group["$key"]['fitness'] === 'good' || $check_group["$key"]['fitness'] === 'safe') ||
+                    (isset($_REQUEST["$formkey"]) && $_REQUEST["$formkey"] === "on")
+                ) {
+                    $check_group["$key"]['ack'] = true;
+                } else {
+                    $check_group["$key"]['ack'] = false;
+                }
+            }
+            $tiki_check_status["$check_group_name"] = $check_group;
+        }
+        process_acks($mysql_properties, 'MySQL');
+        process_acks($server_properties, 'Server');
+        if ($apache_properties) {
+            process_acks($apache_properties, "Apache");
+        }
+        if ($iis_properties) {
+            process_acks($iis_properties, "IIS");
+        }
+        process_acks($php_properties, "PHP");
+        process_acks($security, "PHP Security");
+        $json_tiki_check_status = json_encode($tiki_check_status);
+        $query = "INSERT INTO tiki_preferences (`name`, `value`) values('tiki_check_status', ? ) on duplicate key update `value`=values(`value`)";
+        $bindvars = array($json_tiki_check_status);
+        $result = $tikilib->query($query, $bindvars);
+    }
+
+    $smarty->assign_by_ref('current_tiki_version', $tikiBaseVersion);
+    $is_compatible = checkTikiVersionCompatible($available_tiki_properties, $tikiBaseVersion);
+    $smarty->assign_by_ref('is_compatible', $is_compatible);
+    $smarty->assign_by_ref('server_req', $serverRequirements);
+    $smarty->assign_by_ref('is_compatible', $is_compatible);
+    $smarty->assign_by_ref('available_tiki_properties', $available_tiki_properties);
+    $smarty->assign_by_ref('server_information', $server_information);
+    $smarty->assign_by_ref('server_properties', $server_properties);
+    $smarty->assign_by_ref('mysql_properties', $mysql_properties);
+    $smarty->assign_by_ref('php_properties', $php_properties);
+    $smarty->assign_by_ref('php_sapi_info', $php_sapi_info);
+    if ($apache_properties) {
+        $smarty->assign_by_ref('apache_properties', $apache_properties);
+    } else {
+        $smarty->assign('no_apache_properties', 'You are either not running the preferred Apache web server or you are running PHP with a SAPI that does not allow checking Apache properties (e.g. CGI or FPM).');
+    }
+    if ($iis_properties) {
+        $smarty->assign_by_ref('iis_properties', $iis_properties);
+    } else {
+        $smarty->assign('no_iis_properties', 'You are not running IIS web server.');
+    }
+    $smarty->assign_by_ref('security', $security);
+    $smarty->assign_by_ref('mysql_variables', $mysql_variables);
+    $smarty->assign_by_ref('mysql_crashed_tables', $mysql_crashed_tables);
+    if ($prefs['fgal_enable_auto_indexing'] === 'y') {
+        $smarty->assign_by_ref('file_handlers', $file_handlers);
+    }
+    // disallow robots to index page:
+
+    $fmap = array(
+        'good' => array('icon' => 'ok', 'class' => 'success'),
+        'safe' => array('icon' => 'ok', 'class' => 'success'),
+        'bad' => array('icon' => 'ban', 'class' => 'danger'),
+        'unsafe' => array('icon' => 'ban', 'class' => 'danger'),
+        'risky' => array('icon' => 'warning', 'class' => 'warning'),
+        'unsure' => array('icon' => 'warning', 'class' => 'warning'),
+        'info' => array('icon' => 'information', 'class' => 'info'),
+        'unknown' => array('icon' => 'help', 'class' => 'muted'),
+    );
+    $smarty->assign('fmap', $fmap);
+
+    if (isset($_REQUEST['bomscanner']) && class_exists('BOMChecker_Scanner')) {
+        $timeoutLimit = ini_get('max_execution_time');
+        if ($timeoutLimit < 120) {
+            set_time_limit(120);
+        }
+
+        $BOMScanner = new BOMChecker_Scanner();
+        $BOMFiles = $BOMScanner->scan();
+        $BOMTotalScannedFiles = $BOMScanner->getScannedFiles();
+
+        $smarty->assign('bom_total_files_scanned', $BOMTotalScannedFiles);
+        $smarty->assign('bom_detected_files', $BOMFiles);
+        $smarty->assign('bomscanner', true);
+    }
+
+    $smarty->assign('trim_capable', $trimCapable);
+    if ($trimCapable) {
+        $smarty->assign('trim_server_requirements', $trimServerRequirements);
+        $smarty->assign('trim_client_requirements', $trimClientRequirements);
+    }
+
+    $smarty->assign('sensitive_data_detected_files', $sensitiveDataDetectedFiles);
+
+    $smarty->assign('benchmark', $benchmark);
+    $smarty->assign('diffDatabase', $diffDatabase);
+    $smarty->assign('diffDbTables', $diffDbTables);
+    $smarty->assign('diffDbColumns', $diffDbColumns);
+    $smarty->assign('diffFileTables', $diffFileTables);
+    $smarty->assign('diffFileColumns', $diffFileColumns);
+    $smarty->assign('dynamicTables', $dynamicTables);
+
+    $criptLib = TikiLib::lib('crypt');
+    $smarty->assign('user_encryption_stats', array(
+        'Sodium' => $criptLib->getUserCryptDataStats('sodium'),
+        'OpenSSL' => $criptLib->getUserCryptDataStats('openssl'),
+        'MCrypt' => $criptLib->getUserCryptDataStats('mcrypt'),
+    ));
+    $ws_port = $prefs['realtime_port'] ? $prefs['realtime_port'] : '8080';
+    $ws_conn = @fsockopen('localhost', $ws_port);
+    if (is_resource($ws_conn)) {
+        $ws_listening = true;
+        fclose($ws_conn);
+    } else {
+        $ws_listening = false;
+    }
+    $realtime = array(
+        'feature_enabled' => array(
+            'requirement' => 'Feature enabled',
+            'status' => $prefs['feature_realtime'] === 'y' ? 'good' : 'bad',
+            'message' => $prefs['feature_realtime'] === 'y' ? 'Feature is enabled.' : 'Feature is disabled in Tiki admin.',
+        ),
+        'port_listening' => array(
+            'requirement' => 'Server listening',
+            'status' => $ws_listening ? 'good' : 'unsure',
+            'message' => $ws_listening ? 'Server is listening on local system port ' . $ws_port . '.' : 'No server found listening on default port ' . $ws_port . '. Server might be running on a different port or not running at all.',
+        ),
+        'connectivity' => array(
+            'requirement' => 'Connectivity',
+            'status' => 'js',
+            'message_good' => 'Connection to WS server established successfully.',
+            'message_bad' => 'Could not establish connection to WS server. Check if server is listening and web server proxy configured correctly.',
+        ),
+        'message_exchange' => array(
+            'requirement' => 'Message exchange',
+            'status' => 'js',
+            'message_good' => 'Successfully exchanged messages with realtime server.',
+            'message_bad' => 'Could not exchange messages with realtime server. Check if server is running and configured correctly.',
+        )
+    );
+    $smarty->assign('realtime', $realtime);
+    $smarty->assign('realtime_url', preg_replace('#http://#', 'ws://', preg_replace('#https://#', 'wss://', $base_url)) . 'ws/');
+
+    $smarty->assign('metatag_robots', 'NOINDEX, NOFOLLOW');
+    $smarty->assign('mid', 'tiki-check.tpl');
+    $smarty->display('tiki.tpl');
+}
+
+/**
+ * Check package warnings based on specific nuances of each package
+ * @param $warnings
+ * @param $package
+ */
+function checkPackageWarnings(&$warnings, $package)
+{
+    global $prefs;
+
+    switch ($package['name']) {
+        case 'media-alchemyst/media-alchemyst':
+            if (! AlchemyLib::hasReadWritePolicies()) {
+                $warnings[] = tr(
+                    'Alchemy requires "Read" and "Write" policy rights. More info: <a href="%0" target="_blank">%1</a>',
+                    'https://doc.tiki.org/tiki-index.php?page=Media+Alchemyst#Document_to_Image_issues',
+                    'Media Alchemyst - Document to Image issues'
+                );
+            }
+
+            if (! UnoconvLib::isPortAvailable()) {
+                $warnings[] = tr(
+                    'The configured port (%0) to execute unoconv is in use by another process. The port can be set in \'unoconv port\' preference.',
+                    $prefs['alchemy_unoconv_port'] ?: UnoconvLib::DEFAULT_PORT
+                );
+            }
+
+            break;
+    }
+}
+
+/**
+ * Check if paths set in preferences exist in the system, or if classes exist in project/system
+ *
+ * @param array $preferences An array with preference key and preference info
+ *
+ * @return array An array with warning messages.
+ */
+function checkPreferences(array $preferences)
+{
+    global $prefs;
+
+    $warnings = array();
+
+    foreach ($preferences as $prefKey => $pref) {
+        if ($pref['type'] == 'path') {
+            if (isset($prefs[$prefKey]) && ! file_exists($prefs[$prefKey])) {
+                $warnings[] = tr("The path '%0' on preference '%1' does not exist", $prefs[$prefKey], $pref['name']);
+            }
+        } elseif ($pref['type'] == 'classOptions') {
+            if (isset($prefs[$prefKey])) {
+                $options = $pref['options'][$prefs[$prefKey]];
+
+                if (! empty($options['classLib']) && ! class_exists($options['classLib'])) {
+                    $warnings[] = tr("The lib '%0' on preference '%1', option '%2' does not exist", $options['classLib'], $pref['name'], $options['name']);
+                }
+
+                if (! empty($options['className']) && ! class_exists($options['className'])) {
+                    $warnings[] = tr("The class '%0' needed for preference '%1', with option '%2' selected, does not exist", $options['className'], $pref['name'], $options['name']);
+                }
+
+                if (! empty($options['extension']) && ! extension_loaded($options['extension'])) {
+                    $warnings[] = tr("The extension '%0' on preference '%1', with option '%2' selected, is not loaded", $options['exte
