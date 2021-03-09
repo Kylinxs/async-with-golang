@@ -3647,4 +3647,481 @@ function checkPreferences(array $preferences)
                 }
 
                 if (! empty($options['extension']) && ! extension_loaded($options['extension'])) {
-                    $warnings[] = tr("The extension '%0' on preference '%1', with option '%2' selected, is not loaded", $options['exte
+                    $warnings[] = tr("The extension '%0' on preference '%1', with option '%2' selected, is not loaded", $options['extension'], $pref['name'], $options['name']);
+                }
+            }
+        }
+    }
+
+    return $warnings;
+}
+
+/**
+ * Check if a given command can be located in the system
+ *
+ * @param $command
+ * @return bool true if available, false if not.
+ */
+function commandIsAvailable($command)
+{
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+        $template = "where %s";
+    } else {
+        $template = "command -v %s 2>/dev/null";
+    }
+
+    $returnCode = '';
+    if (function_exists('exec')) {
+        exec(sprintf($template, escapeshellarg($command)), $output, $returnCode);
+    }
+
+    return $returnCode === 0 ? true : false;
+}
+
+/**
+ * Check if a given url can be reach from the system
+ *
+ * @param string $url
+ * @return bool true if available, false if not.
+ */
+function urlIsAvailable($url)
+{
+    $client = TikiLib::lib('tiki')->get_http_client($url);
+    $response = $client->getResponse();
+
+    return $response && $response->getStatusCode();
+}
+
+/**
+ * Script to benchmark PHP and MySQL
+ * @see https://github.com/odan/benchmark-php
+ */
+class BenchmarkPhp
+{
+    /**
+     * Executes the benchmark and returns an array in the format expected by renderTable
+     * @return array Benchmark results
+     */
+    public static function run()
+    {
+        set_time_limit(120); // 2 minutes
+
+        require 'db/local.php';
+
+        $options = array();
+
+        $options['db.host'] = $host_tiki;
+        $options['db.user'] = $user_tiki;
+        $options['db.pw'] = $pass_tiki;
+        $options['db.name'] = $dbs_tiki;
+
+        $benchmarkResult = self::test_benchmark($options);
+
+        $benchmark = $benchmarkResult['benchmark'];
+        if (isset($benchmark['mysql'])) {
+            foreach ($benchmark['mysql'] as $k => $v) {
+                $benchmark['mysql.' . $k] = $v;
+            }
+            unset($benchmark['mysql']);
+        }
+        $benchmark['total'] = $benchmarkResult['total'];
+        $benchmark = array_map(
+            function ($v) {
+                return array('value' => $v);
+            },
+            $benchmark
+        );
+
+        return $benchmark;
+    }
+
+    /**
+     * Execute the benchmark
+     * @param $settings database connection settings
+     * @return array Benchmark results
+     */
+    protected static function test_benchmark($settings)
+    {
+        $timeStart = microtime(true);
+
+        $result = array();
+        $result['version'] = '1.1';
+        $result['sysinfo']['time'] = date("Y-m-d H:i:s");
+        $result['sysinfo']['php_version'] = PHP_VERSION;
+        $result['sysinfo']['platform'] = PHP_OS;
+        $result['sysinfo']['server_name'] = $_SERVER['SERVER_NAME'];
+        $result['sysinfo']['server_addr'] = $_SERVER['SERVER_ADDR'];
+
+        self::test_math($result);
+        self::test_string($result);
+        self::test_loops($result);
+        self::test_ifelse($result);
+        if (isset($settings['db.host']) && function_exists('mysqli_connect')) {
+            self::test_mysql($result, $settings);
+        }
+
+        $result['total'] = self::timer_diff($timeStart);
+        return $result;
+    }
+
+    /**
+     * Benchmark the execution of multiple math functions
+     * @param $result Benchmark results
+     * @param int $count Number of iterations
+     */
+    protected static function test_math(&$result, $count = 400000)
+    {
+        $timeStart = microtime(true);
+
+        for ($i = 0; $i < $count; $i++) {
+            sin($i);
+            asin($i);
+            cos($i);
+            acos($i);
+            tan($i);
+            atan($i);
+            abs($i);
+            floor($i);
+            exp($i);
+            is_finite($i);
+            is_nan($i);
+            sqrt($i);
+            log10($i);
+        }
+        $result['benchmark']['math'] = self::timer_diff($timeStart);
+    }
+
+    /**
+     * Benchmark the execution of multiple string functions
+     * @param $result Benchmark results
+     * @param int $count Number of iterations
+     */
+    protected static function test_string(&$result, $count = 400000)
+    {
+        $timeStart = microtime(true);
+
+        $string = 'the quick brown fox jumps over the lazy dog';
+        for ($i = 0; $i < $count; $i++) {
+            addslashes($string);
+            chunk_split($string);
+            metaphone($string);
+            strip_tags($string);
+            md5($string);
+            sha1($string);
+            strtoupper($string);
+            strtolower($string);
+            strrev($string);
+            strlen($string);
+            soundex($string);
+            ord($string);
+        }
+        $result['benchmark']['string'] = self::timer_diff($timeStart);
+    }
+
+    /**
+     * Benchmark the execution of loops
+     * @param $result Benchmark results
+     * @param int $count Number of iterations
+     */
+    protected static function test_loops(&$result, $count = 4000000)
+    {
+        $timeStart = microtime(true);
+        for ($i = 0; $i < $count; ++$i) {
+        }
+        $i = 0;
+        while ($i < $count) {
+            ++$i;
+        }
+        $result['benchmark']['loops'] = self::timer_diff($timeStart);
+    }
+
+    /**
+     * Benchmark the execution of conditional operators
+     * @param $result Benchmark results
+     * @param int $count Number of iterations
+     */
+    protected static function test_ifelse(&$result, $count = 4000000)
+    {
+        $timeStart = microtime(true);
+        for ($i = 0; $i < $count; $i++) {
+            if ($i == -1) {
+            } elseif ($i == -2) {
+            } else {
+                if ($i == -3) {
+                }
+            }
+        }
+        $result['benchmark']['ifelse'] = self::timer_diff($timeStart);
+    }
+
+    /**
+     * Benchmark MySQL operations
+     * @param $result Benchmark results
+     * @param $settings MySQL connection information
+     * @return array
+     */
+    protected static function test_mysql(&$result, $settings)
+    {
+        $timeStart = microtime(true);
+
+        $link = mysqli_connect($settings['db.host'], $settings['db.user'], $settings['db.pw']);
+        $result['benchmark']['mysql']['connect'] = self::timer_diff($timeStart);
+
+        mysqli_select_db($link, $settings['db.name']);
+        $result['benchmark']['mysql']['select_db'] = self::timer_diff($timeStart);
+
+        $dbResult = mysqli_query($link, 'SELECT VERSION() as version;');
+        $arr_row = mysqli_fetch_array($dbResult);
+        $result['sysinfo']['mysql_version'] = $arr_row['version'];
+        $result['benchmark']['mysql']['query_version'] = self::timer_diff($timeStart);
+
+        $query = "SELECT BENCHMARK(1000000,ENCODE('hello',RAND()));";
+        $dbResult = mysqli_query($link, $query);
+        $result['benchmark']['mysql']['query_benchmark'] = self::timer_diff($timeStart);
+
+        mysqli_close($link);
+
+        $result['benchmark']['mysql']['total'] = self::timer_diff($timeStart);
+        return $result;
+    }
+
+    /**
+     * Helper to calculate time elapsed
+     * @param $timeStart time to compare against now
+     * @return string time elapsed
+     */
+    protected static function timer_diff($timeStart)
+    {
+        return number_format(microtime(true) - $timeStart, 3);
+    }
+}
+
+/**
+ * Identify files, like backup copies made by editors, or manual copies of the local.php files,
+ * that may be accessed remotely and, because they are not interpreted as PHP, may expose the source,
+ * which might contain credentials or other sensitive information.
+ * Ref: http://feross.org/cmsploit/
+ *
+ * @param array $files Array of filenames. Suspicious files will be added to this array.
+ * @param string $sourceDir Path of the directory to check
+ */
+function check_for_remote_readable_files(array &$files, $sourceDir = 'db')
+{
+    //fix dir slash
+    $sourceDir = str_replace('\\', '/', $sourceDir);
+
+    if (substr($sourceDir, -1, 1) != '/') {
+        $sourceDir .= '/';
+    }
+
+    if (! is_dir($sourceDir)) {
+        return;
+    }
+
+    $sourceDirHandler = opendir($sourceDir);
+
+    if ($sourceDirHandler === false) {
+        return;
+    }
+
+    while ($file = readdir($sourceDirHandler)) {
+        // Skip ".", ".."
+        if ($file == '.' || $file == '..') {
+            continue;
+        }
+
+        $sourceFilePath = $sourceDir . $file;
+
+        if (is_dir($sourceFilePath)) {
+            check_for_remote_readable_files($files, $sourceFilePath);
+        }
+
+        if (! is_file($sourceFilePath)) {
+            continue;
+        }
+
+        $pattern = '/(^#.*#|~|.sw[op])$/';
+        preg_match($pattern, $file, $matches);
+
+        if (! empty($matches[1])) {
+            $files[] = $file;
+            continue;
+        }
+
+        // Match "local.php.bak", "local.php.bck", "local.php.save", "local.php." or "local.txt", for example
+        $pattern = '/local(?!.*[.]php$).*$/'; // The negative lookahead prevents local.php and other files which will be interpreted as PHP from matching.
+        preg_match($pattern, $file, $matches);
+
+        if (! empty($matches[0])) {
+            $files[] = $file;
+            continue;
+        }
+    }
+}
+
+function check_isIIS()
+{
+    static $IIS;
+    // Sample value Microsoft-IIS/7.5
+    if (! isset($IIS) && isset($_SERVER['SERVER_SOFTWARE'])) {
+        $IIS = substr($_SERVER['SERVER_SOFTWARE'], 0, 13) == 'Microsoft-IIS';
+    }
+    return $IIS;
+}
+
+function check_hasIIS_UrlRewriteModule()
+{
+    return isset($_SERVER['IIS_UrlRewriteModule']) == true;
+}
+
+function get_content_from_url($url)
+{
+    if (function_exists('curl_init') && function_exists('curl_exec')) {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
+        if (isset($_SERVER) && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+            curl_setopt($curl, CURLOPT_USERPWD, $_SERVER['PHP_AUTH_USER'] . ":" . $_SERVER['PHP_AUTH_PW']);
+        }
+        $content = curl_exec($curl);
+        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        if ($http_code != 200) {
+            $content = "fail-http-" . $http_code;
+        }
+        curl_close($curl);
+    } else {
+        $content = "fail-no-request-done";
+    }
+    return $content;
+}
+
+function createPage($title, $content)
+{
+    echo <<<END
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link type="text/css" rel="stylesheet" href="//dev.tiki.org/vendor_bundled/vendor/twbs/bootstrap/dist/css/bootstrap.css" />
+        <title>$title</title>
+        <style type="text/css">
+            table { border-collapse: collapse;}
+            #middle {  margin: 0 auto; }
+            .button {
+                border-radius: 3px 3px 3px 3px;
+                font-size: 12.05px;
+                font-weight: bold;
+                padding: 2px 4px 3px;
+                text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+                color: #FFF;
+                text-transform: uppercase;
+            }
+            .unsure {background: #f89406;}
+            .bad, .risky { background-color: #bd362f;}
+            .good, .safe { background-color: #5bb75b;}
+            .info {background-color: #2f96b4;}
+           .sitetitle, h1, h2, h3, h4, h5 { 
+            font-family: BlinkMacSystemFont,"Segoe UI", Roboto, sans-serif;
+           }
+        
+table {
+  border-spacing: 0;
+}
+
+td,
+th {
+  padding: 0.5em;
+}
+
+th {
+  font-weight: bold;
+  text-align: left;
+}
+
+td > div {
+  float: right;
+}
+
+.visible-on-mobile{
+    visibility:hidden;
+    display:none;
+}
+
+@media only screen and (max-width: 40em) {
+  thead th:not(:first-child) {
+    display: none;
+  }
+  td, th {
+    display: block;
+    clear: both;
+  }
+  td[data-th]:before {
+    content: attr(data-th);
+    float: left;
+  }
+  .visible-on-mobile{
+    visibility:visible;
+    display:inline;
+}
+}
+
+</style>
+    </head>
+    <body class="tiki_wiki ">
+    <div class="container" >
+    <div id="fixedwidth" >
+        <div class="header_outer">
+            <div class="header_container">
+                <div class="clearfix ">
+                    <header id="header" class="header">
+                    <div class="content clearfix modules" id="top_modules" style="min-height: 168px;">
+                        <div class="sitelogo" style="float: left">
+END;
+    echo tikiLogo();
+                            echo <<< END
+                        </div>
+                        <div class="sitetitles" style="float: left;">
+                            <div class="sitetitle" style="font-size: 42px;">$title</div>
+                        </div>
+                    </div>
+                    </header>
+                </div>
+            </div>
+        </div>
+        <div class="middle_outer">
+            <div id="middle" >
+                <div class="topbar clearfix">
+                    <h1 style="font-size: 30px; line-height: 30px; color: #fff; text-shadow: 3px 2px 0 #781437; margin: 8px 0 0 10px; padding: 0;">
+                    </h1>
+                </div>
+            </div>
+            <div id="middle" >
+                $content
+            </div>
+        </div>
+    </div>
+    <footer id="footer" class="footer" style="margin-top: 50px;">
+    <div class="footer_liner">
+        <div class="footerbgtrap" style="padding: 10px 0;">
+            <a href="http://tiki.org" target="_blank" title="Powered by Tiki Wiki CMS Groupware">
+END;
+    echo tikiButton();
+    echo <<< END
+                <img src="img/tiki/tikibutton.png" alt="Powered by Tiki Wiki CMS Groupware" />
+            </a>
+        </div>
+    </div>
+</footer>
+</div></div>
+    </body>
+</html>
+END;
+    die;
+}
+
+function tikiLogo()
+{
+    return '<img alt="Tiki Logo" src="data:image/png;base64,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
