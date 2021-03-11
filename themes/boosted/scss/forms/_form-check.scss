@@ -1,0 +1,372 @@
+//
+// Check/radio
+//
+
+.form-check {
+  display: block;
+  min-height: $form-check-min-height;
+  padding-left: $form-check-padding-start;
+  margin-bottom: $form-check-margin-bottom;
+
+  .form-check-input {
+    float: left;
+    margin-left: $form-check-padding-start * -1;
+  }
+}
+
+.form-check-reverse {
+  padding-right: $form-check-padding-start;
+  padding-left: 0;
+  text-align: right;
+
+  .form-check-input {
+    float: right;
+    margin-right: $form-check-padding-start * -1;
+    margin-left: 0;
+  }
+}
+
+.form-check-input {
+  width: $form-check-input-width;
+  height: $form-check-input-width;
+  margin-top: ($input-btn-line-height - $form-check-input-width) * .5; // line-height minus check height
+  vertical-align: top;
+  background-color: $form-check-input-bg;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: $form-check-input-border;
+  appearance: none;
+  print-color-adjust: exact; // Keep themed appearance for print
+  @include transition($form-check-transition);
+
+  &[type="checkbox"] {
+    @include border-radius($form-check-input-border-radius, $form-check-input-border-radius); // Boosted mod
+  }
+
+  &[type="radio"] {
+    // stylelint-disable-next-line property-disallowed-list
+    border-radius: $form-check-radio-border-radius;
+  }
+
+  &:active {
+    background-color: $form-check-input-active-bg-color; // Boosted mod
+    filter: $form-check-input-active-filter;
+    border-color: $form-check-input-active-bg-color; // Boosted mod
+  }
+
+  &:focus {
+    border-color: $form-check-input-focus-border;
+    // Boosted mod: default outline
+    box-shadow: $form-check-input-focus-box-shadow;
+  }
+
+  &:checked {
+    background-color: $form-check-input-checked-bg-color;
+    border-color: $form-check-input-checked-border-color;
+
+    &[type="checkbox"] {
+      @if $enable-gradients {
+        background-image: $form-check-input-checked-bg-image, var(--#{$prefix}gradient);
+      } @else {
+        background-image: $form-check-input-checked-bg-image;
+      }
+    }
+
+    &[type="radio"] {
+      @if $enable-gradients {
+        background-image: escape-svg($form-check-radio-checked-bg-image), var(--#{$prefix}gradient);
+      } @else {
+        background-image: escape-svg($form-check-radio-checked-bg-image);
+      }
+    }
+  }
+
+  &[type="checkbox"]:indeterminate {
+    background-color: $form-check-input-indeterminate-bg-color;
+    border-color: $form-check-input-indeterminate-border-color;
+
+    @if $enable-gradients {
+      background-image: escape-svg($form-check-input-indeterminate-bg-image), var(--#{$prefix}gradient);
+      background-position: 50% add(50%, $border-width * .25), center; // Boosted mod
+      background-size: map-get($spacers, 2) $border-width * 1.5, auto; // Boosted mod
+    } @else {
+      background-image: escape-svg($form-check-input-indeterminate-bg-image);
+      background-position: 50% add(50%, $border-width * .25); // Boosted mod
+      background-size: map-get($spacers, 2) $border-width * 1.5; // Boosted mod
+    }
+  }
+
+  &:disabled {
+    pointer-events: none;
+    background-color: $input-disabled-bg; // Boosted mod
+    filter: none;
+    opacity: $form-check-input-disabled-opacity;
+
+    // Boosted mod
+    &:checked,
+    &:indeterminate {
+      background-color: $form-check-input-disabled-color;
+      filter: $invert-filter;
+      border-color: $form-check-input-disabled-color;
+    }
+    // End mod
+  }
+
+  // Use disabled attribute in addition of :disabled pseudo-class
+  // See: https://github.com/twbs/bootstrap/issues/28247
+  &[disabled],
+  &:disabled {
+    ~ .form-check-label {
+      color: $form-label-disabled-color; // Boosted mod
+      pointer-events: none;
+      cursor: default;
+      opacity: $form-check-label-disabled-opacity;
+    }
+  }
+
+  // Boosted mod: required symbol
+  &:required {
+    ~ .form-check-label::after {
+      margin-left: $form-label-required-margin-left;
+      color: $accessible-orange;
+      content: "*";
+    }
+  }
+}
+
+.form-check-label {
+  color: $form-check-label-color;
+  cursor: $form-check-label-cursor;
+}
+
+//
+// Switch
+//
+
+.form-switch {
+  // Boosted mod
+  --#{$boosted-prefix}switch-gradient: #{linear-gradient(to right, $black $form-switch-bg-square-size, transparent)};
+  min-height: $form-switch-width * .5;
+  padding-left: $form-switch-padding-start;
+
+  .form-check-input {
+    width: $form-switch-width;
+    height: $form-switch-width * .5;
+    margin-left: $form-switch-padding-start * -1;
+    background-color: $white; // Boosted mod
+    background-image: $form-switch-bg-image, var(--#{$boosted-prefix}switch-gradient);
+    filter: $invert-filter; // Boosted mod
+    background-position: $form-switch-bg-position, 0 0;
+    background-size: $form-switch-bg-size, $form-switch-bg-square-size; // Get a 1px separation
+    border-color: $white; // Boosted mod
+    outline-color: $white; // Boosted mod
+    outline-offset: $spacer; // Boosted mod
+    @include border-radius($form-switch-border-radius);
+    @include transition($form-switch-transition);
+
+    &:checked {
+      background-color: $primary;
+      filter: none; // Boosted mod
+      border-color: $primary;
+
+      @if $enable-gradients {
+        background-image: $form-switch-checked-bg-image, var(--#{$prefix}gradient), var(--#{$boosted-prefix}switch-gradient);
+        background-position: $form-switch-checked-bg-position, 100%, 100% 0;
+        background-size: $form-switch-checked-bg-size, auto, $form-switch-bg-square-size;
+      } @else {
+        background-image: $form-switch-checked-bg-image, var(--#{$boosted-prefix}switch-gradient);
+        background-position: $form-switch-checked-bg-position, 100% 0;
+        background-size: $form-switch-checked-bg-size, $form-switch-bg-square-size;
+      }
+
+      &:active,
+      &:focus {
+        outline-color: $primary;
+      }
+
+      // Boosted mod
+      &:not(:disabled) {
+        --#{$boosted-prefix}switch-gradient: #{linear-gradient(to right, $white $form-switch-bg-square-size, transparent)};
+      }
+      // End mod
+    }
+
+    &:focus {
+      outline-offset: $outline-width * .5;
+    }
+
+    &:active {
+      background-color: $form-check-input-active-bg-color;
+      filter: none;
+      border-color: $form-check-input-active-bg-color;
+    }
+
+    // Boosted mod
+    &:disabled {
+      background-color: $form-check-input-disabled-color;
+      filter: $invert-filter;
+      border-color: $form-check-input-disabled-color;
+    }
+    // End mod
+  }
+
+  .form-check-label {
+    padding-top: $form-check-label-padding-top;
+  }
+  // End mod
+
+  &.form-check-reverse {
+    padding-right: $form-switch-padding-start;
+    padding-left: 0;
+
+    .form-check-input {
+      margin-right: $form-switch-padding-start * -1;
+      margin-left: 0;
+    }
+  }
+}
+
+.form-check-inline {
+  display: inline-block;
+  margin-right: $form-check-inline-margin-end;
+}
+
+.btn-check {
+  position: absolute;
+  clip: rect(0, 0, 0, 0);
+  pointer-events: none;
+
+  // Boosted mod: custom styles for .btn-check
+  // @note almost the same structure than the button-variant() mixin
+  // @note meant to override whatever .btn-* variant is used
+  + .btn {
+    margin-left: 0 !important; // stylelint-disable-line declaration-no-important
+    color: $black;
+    @include gradient-bg($white);
+    border-color: $gray-500;
+    @include box-shadow($btn-box-shadow);
+
+    &.btn-icon:not(.btn-no-outline)::before,
+    &.btn-icon:not(.btn-no-outline)::after {
+      display: inline-block;
+      width: $border-width;
+      height: 100%;
+      content: "";
+    }
+
+    &:not(:first-of-type) {
+      border-left: 0;
+    }
+
+    &:not(:last-of-type) {
+      border-right: 0;
+    }
+  }
+
+  &:hover + .btn,
+  + .btn:hover {
+    color: $accessible-orange;
+    background-color: $white;
+    border-color: $gray-500;
+  }
+
+  .btn-group & + .btn:hover {
+    z-index: 0;
+  }
+
+  &[data-focus-visible-added] {
+    + .btn {
+      outline: $outline-width solid;
+      outline-offset: $outline-width;
+      box-shadow: $btn-focus-box-shadow;
+    }
+
+    &:checked + .btn-no-outline {
+      border-color: $gray-500;
+      outline-color: currentcolor;
+    }
+  }
+
+  &:checked {
+    + .btn {
+      color: $white;
+      background-color: $black;
+      // Remove CSS gradients if they're enabled
+      background-image: if($enable-gradients, none, null);
+      border-color: $black;
+      outline-color: $black;
+    }
+
+    + .btn-no-outline {
+      &,
+      &:hover,
+      &:focus {
+        color: $accessible-orange;
+        background-color: transparent;
+      }
+    }
+  }
+
+  &:active + .btn,
+  + .btn:active,
+  + .btn.active {
+    color: color-contrast($primary);
+    background-color: $primary;
+    // Remove CSS gradients if they're enabled
+    background-image: if($enable-gradients, none, null);
+    border-color: $primary;
+    outline-color: $primary;
+  }
+  // End mod
+
+  &[disabled],
+  &:disabled {
+    + .btn {
+      color: $form-label-disabled-color; // Boosted mod
+      pointer-events: none;
+      background-color: $white; // Boosted mod
+      // Remove CSS gradients if they're enabled
+      background-image: if($enable-gradients, none, null); // Boosted mod
+      filter: none;
+      border-color: currentcolor; // Boosted mod
+      opacity: $form-check-btn-check-disabled-opacity;
+    }
+
+    // Boosted mod
+    &:checked + .btn {
+      color: $white;
+      background-color: $form-label-disabled-color;
+      border-color: $form-label-disabled-color;
+    }
+
+    &:checked + .btn-no-outline {
+      color: $gray-500;
+      background-color: transparent;
+      border-color: currentcolor;
+    }
+    // End mod
+  }
+
+  // Boosted mod: handle no-outline case
+  + .btn-no-outline {
+    // Absurd selector to hack on specifity
+    &:not(:only-of-type) {
+      border: $border-width solid transparent;
+    }
+
+    &:hover,
+    &:focus,
+    &:active,
+    &.active {
+      color: $black;
+      border-color: $gray-500;
+    }
+
+    &:active {
+      color: $accessible-orange;
+      background-color: transparent;
+    }
+  }
+  // End mod
+}
