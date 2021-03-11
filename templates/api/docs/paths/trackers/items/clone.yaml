@@ -1,0 +1,46 @@
+---
+post:
+  description: Clone a tracker item
+  parameters:
+    - name: trackerId
+      in: path
+      required: true
+      schema:
+        type: integer
+    - name: itemId
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: cloned item
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              trackerId:
+                type: integer
+              itemId:
+                type: integer
+              created:
+                type: integer
+              data:
+                type: object
+              fields:
+                type: object
+              forced:
+                type: object
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
+    '404':
+      description: not found
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
