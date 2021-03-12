@@ -285,4 +285,144 @@ class PerspectiveLib
     /**
      * Adds or renames a perspective. If $perspectiveId exists, rename it to $name.
      * Otherwise, create a new perspective with id $perspectiveId named $name.
-     * Returns true if and only if the operation suc
+     * Returns true if and only if the operation succeeds.
+     *
+     */
+    public function replace_perspective($perspectiveId, $name)
+    {
+        if ($perspectiveId) {
+            $this->perspectives->update(
+                ['name' => $name,],
+                ['perspectiveId' => $perspectiveId,]
+            );
+
+            return $perspectiveId;
+        } else {
+            return $this->perspectives->insert(['name' => $name,]);
+        }
+    }
+
+    /**
+     * Removes a perspective
+     *
+     */
+    public function remove_perspective($perspectiveId)
+    {
+        if ($perspectiveId) {
+            $this->perspectives->delete(['perspectiveId' => $perspectiveId]);
+            $this->perspectivePreferences->deleteMultiple(['perspectiveId' => $perspectiveId]);
+        }
+    }
+
+    /**
+     * Replaces all preferences from $perspectiveId with those in the provided string-indexed
+     *   array (in format "pref_name" => "pref_value").
+     *
+     */
+    public function replace_preferences($perspectiveId, $preferences)
+    {
+        $this->perspectivePreferences->deleteMultiple(['perspectiveId' => $perspectiveId]);
+
+        $prefslib = TikiLib::lib('prefs');
+        foreach ($preferences as $pref => $value) {
+            $value = $prefslib->formatPreference($pref, [$pref => $value]);
+            $this->set_preference($perspectiveId, $pref, $value);
+        }
+    }
+
+    /**
+     * Replaces a specific preference
+     *
+     */
+    public function replace_preference($preference, $value, $newValue)
+    {
+        $this->perspectivePreferences->update(
+            ['value' => serialize($newValue),],
+            [
+                'pref' => $preference,
+                'value' => serialize($value),
+            ]
+        );
+    }
+
+    /**
+     * Sets $preference's value for $perspectiveId to $value
+     *
+     */
+    public function set_preference($perspectiveId, $preference, $value)
+    {
+        $this->perspectivePreferences->delete(
+            [
+                'perspectiveId' => $perspectiveId,
+                'pref' => $preference,
+            ]
+        );
+
+        $this->perspectivePreferences->insert(
+            [
+                'perspectiveId' => $perspectiveId,
+                'pref' => $preference,
+                'value' => serialize($value),
+            ]
+        );
+    }
+
+    /**
+     * Returns true if and only if a perspective with the given $perspectiveId exists
+     *
+     */
+    public function perspective_exists($perspectiveId)
+    {
+        $db = TikiDb::get();
+
+        $id = $db->getOne(
+            'SELECT perspectiveId FROM tiki_perspectives WHERE perspectiveId = ?',
+            [ $perspectiveId ]
+        );
+
+        return ! empty($id);
+    }
+
+    /**
+     * @param int $offset
+     * @param $maxRecords
+     * @return array
+     */
+    public function list_perspectives($offset = 0, $maxRecords = -1)
+    {
+        $db = TikiDb::get();
+
+        $list = $db->fetchAll("SELECT perspectiveId, name FROM tiki_perspectives", [], $maxRecords, $offset);
+
+        $list = Perms::simpleFilter('perspective', 'perspectiveId', 'perspective_view', $list);
+
+        foreach ($list as & $info) {
+            $perms = Perms::get([ 'type' => 'perspective', 'object' => $info['perspectiveId'] ]);
+            $this->write_permissions($info, $perms);
+        }
+
+        return $list;
+    }
+
+    /**
+     * Returns one of the perspectives with the given name
+     *
+     */
+    public function get_perspective_with_given_name($name)
+    {
+        $db = TikiDb::get();
+
+        return $db->getOne("SELECT perspectiveId FROM tiki_perspectives WHERE name = ?", [ $name ]);
+    }
+
+    /**
+     * Returns perspective's name from the Id
+     *
+     */
+    public function get_perspective_name($id)
+    {
+        $db = TikiDb::get();
+
+        return $db->getOne("SELECT name FROM tiki_perspectives WHERE perspectiveId = ?", [ $id ]);
+    }
+}
