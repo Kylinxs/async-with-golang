@@ -626,4 +626,80 @@ $smarty->assign('listlanguages', $languages);
 
 $smarty->assign('listpriorities', ['0','1','2','3','4','5','6','7','8','9']);
 $smarty->assign('listprioritycolors', ['fff','fdd','fcc','fbb','faa','f99','e88','d77','c66','b66','a66']);
-$smarty->assign('listroles', ['0' => '','1' =>
+$smarty->assign('listroles', ['0' => '','1' => tra('required'),'2' => tra('optional'),'3' => tra('non-participant')]);
+
+
+if ($prefs['feature_theme_control'] == 'y') {
+    $cat_type = "calendar";
+    $cat_objid = $calID;
+    include('tiki-tc.php');
+}
+
+$headerlib->add_cssfile('themes/base_files/feature_css/calendar.css', 20);
+
+if ($prefs['feature_categories'] == 'y') {
+    $cat_type = 'calendaritem';
+    $cat_objid = isset($_REQUEST['viewcalitemId']) ? $_REQUEST['viewcalitemId'] : (isset($_REQUEST['calitemId']) ? $_REQUEST['calitemId'] : 0);
+    include_once("categorize_list.php");
+    $cs = $categlib->get_object_categories('calendaritem', $cat_objid);
+    if (! empty($cs)) {
+        for ($i = count($categories) - 1; $i >= 0; --$i) {
+            if (in_array($categories[$i]['categId'], $cs)) {
+                $categories[$i]['incat'] = 'y';
+            }
+        }
+    }
+}
+
+
+$smarty->assign('referer', empty($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], 'tiki-calendar_edit_item.php') !== false ? 'tiki-calendar.php' : $_SERVER['HTTP_REFERER']);
+$smarty->assign('myurl', 'tiki-calendar_edit_item.php');
+$smarty->assign('id', $id);
+$smarty->assign('hour_minmax', $hour_minmax);
+if (isset($calitem['recurrenceId']) && $calitem['recurrenceId'] > 0) {
+    if (! isset($_REQUEST['preview'])) {
+        $cr = new CalRecurrence($calitem['recurrenceId']);
+        $smarty->assign('recurrence', $cr->toArray());
+    }
+    $recurranceNumChangedEvents = TikiDb::get()->table('tiki_calendar_items')->fetchCount([
+        'recurrenceId' => $calitem['recurrenceId'],
+        'changed' => 1,
+    ]);
+    $smarty->assign('recurranceNumChangedEvents', (int) $recurranceNumChangedEvents);
+}
+$headerlib->add_jsfile('lib/jquery_tiki/calendar_edit_item.js');
+
+//Do not apply the timezone in view mode, because it is already applied in the training function
+if (empty($_REQUEST['viewcalitemId'])) {
+    if (! empty($calitem['start'])) {
+        $calitem['start'] += TikiDate::tzServerOffset(TikiLib::lib('tiki')->get_display_timezone(), $calitem['start']);
+    }
+    if (! empty($calitem['end'])) {
+        $calitem['end'] += TikiDate::tzServerOffset(TikiLib::lib('tiki')->get_display_timezone(), $calitem['end']);
+    }
+}
+
+$smarty->assign('calitem', $calitem);
+$smarty->assign('calendar', $calendar);
+$smarty->assign('calendarId', $calID);
+$smarty->assign('preview', isset($_REQUEST['preview']));
+if ($calitem['allday']) {
+    $smarty->assign('hidden_if_all_day', ' style="display:none;"');
+} else {
+    $smarty->assign('hidden_if_all_day', '');
+}
+
+if (array_key_exists('CalendarViewGroups', $_SESSION) && count($_SESSION['CalendarViewGroups']) == 1) {
+    $smarty->assign('calendarView', $_SESSION['CalendarViewGroups'][0]);
+}
+
+$wikilib = TikiLib::lib('wiki');
+$plugins = $wikilib->list_plugins(true, 'editwiki');
+$smarty->assign_by_ref('plugins', $plugins);
+$smarty->assign('impossibleDates', $impossibleDates);
+if (! empty($_REQUEST['fullcalendar'])) {
+    $smarty->display('calendar.tpl');
+} else {
+    $smarty->assign('mid', 'tiki-calendar_edit_item.tpl');
+    $smarty->display('tiki.tpl');
+}
