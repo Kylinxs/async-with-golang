@@ -1,0 +1,202 @@
+
+//$Id$
+//Custom styles for a new theme.
+// - - - - - - - Bootstrap variables (override values in vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss - - - - - - //
+
+// Colors
+$white:    #fff !default;
+$gray-100: #f8f9fa !default;
+$gray-200: #e9ecef !default;
+$gray-300: #dee2e6 !default;
+$gray-400: #ced4da !default;
+$gray-500: #adb5bd !default;
+$gray-600: #868e96 !default;
+$gray-700: #495057 !default;
+$gray-800: #343a40 !default;
+$gray-900: #212529 !default;
+$black:    #000 !default;
+$light: #fffff8;
+$dark: $gray-800;
+
+$primary: #a25D25;
+$success: #357935;
+$info: #20809D;
+$warning: #D79F12; //#8B6504;
+$danger: #c02F2a;
+
+$theme-colors: (
+ 	"primary":        	#a25D25,
+ 	"secondary": #783C12, //rgba(223, 110, 30, 0.5),
+ 	"success":         	#357935,
+ 	"info":           	#20809D,
+ 	"warning":         	#D79F12, //#8B6504,
+ 	"danger":          	#c02f2a,
+	"light":			#fffff8,
+ 	"dark":				#000000
+);
+
+// Options
+// Spacing
+
+// Body
+$body-bg: #fffff8;
+$body-color: $gray-800;
+
+// Links
+$link-color:            #222;
+$link-hover-color:      darken($link-color, 15%);
+//** Link hover decoration.
+$link-hover-decoration: none; // underline;
+
+// Components
+$component-active-color:    #fff;
+$component-active-bg:       $primary;
+
+// Fonts
+$enable-responsive-font-sizes:                true; // from "Options"
+$font-size-base: 1.2rem;
+$font-family-sans-serif:  "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-family-serif:       et-book, Palatino, "Palatino Linotype", "Palatino LT STD", "Book Antiqua", Georgia, serif;
+$font-family-monospace:   Menlo, Monaco, Consolas, "Courier New", monospace;
+$font-family-base:        $font-family-serif;
+
+$headings-font-weight:    500;
+$text-muted: #6D757E; //#686f78;
+$lead-font-weight:            400;
+
+$small-font-size:             .875em !default;
+
+$blockquote-font-size:        $font-size-base * 1.25 !default;
+$blockquote-footer-color:     $gray-700;
+$blockquote-footer-font-size: $small-font-size !default;
+
+// Tables
+$table-bg:                      transparent;
+$table-bg-accent:               darken( $body-bg, 4% ); //#f9f9f9;
+$table-bg-hover:                transparent; //#f5f5f5;
+$table-bg-active:               transparent; // $table-bg-hover;
+$table-border-color:            darken( $body-bg, 5% ); // #ddd;
+
+// Buttons + Forms
+//
+// Shared variables that are reassigned to `$input-` and `$btn-` specific variables.
+$input-btn-font-size: 1.2rem;
+
+// Buttons
+$btn-link-disabled-color: #4C5357;
+
+
+// Forms
+//$input-border: #dddddd;
+$input-bg:                       #fff;
+//$input-color:                    $gray-500;
+//** `<input>` border color
+$input-border:                   #ccc;
+$input-border-focus:             #66afe9;
+$legend-color:                   $gray-800;
+$legend-border-color:            #e5e5e5;
+
+$input-group-addon-bg:           $gray-300;
+$input-group-addon-border-color: $input-border;
+
+// Dropdowns
+$dropdown-bg:                    #fff;
+$dropdown-border:                rgba(0,0,0,.15);
+$dropdown-fallback-border:       #ccc;
+$dropdown-divider-bg:            #e5e5e5;
+$dropdown-font-size: 1.2rem;
+
+$dropdown-color:            $gray-800;
+$dropdown-hover-color:      darken($gray-800, 5%);
+$dropdown-hover-bg:         #f5f5f5;
+
+$dropdown-active-color:     $component-active-color;
+$dropdown-active-bg:        $component-active-bg;
+$dropdown-header-color:          $gray-300;
+
+// Navs
+// Navbar
+$navbar-light-color:             $body-color; // #777;
+$navbar-light-bg:                $body-bg; // #f8f8f8;
+$navbar-light-border:            darken( $navbar-light-bg, 6.5% );
+
+// Navbar links
+$navbar-light-color:                $link-color; //#777;
+$navbar-light-hover-color:          $link-hover-color; // #333;
+$navbar-light-hover-bg:             transparent;
+$navbar-light-active-color:         #555;
+$navbar-light-active-bg:            darken( $navbar-light-bg, 6.5% );
+$navbar-light-disabled-color:       #ccc;
+$navbar-light-disabled-bg:          transparent;
+
+// Navbar brand label
+$navbar-light-brand-color:               $navbar-light-color;
+$navbar-light-brand-hover-color:         darken( $navbar-light-brand-color, 10% );
+$navbar-light-brand-hover-bg:            transparent;
+
+$navbar-dark-color:                      lighten( $gray-300, 15%) ;
+$navbar-dark-bg:                         #222;
+$navbar-dark-border:                     darken( $navbar-dark-bg, 10%) ;
+
+// Inverted navbar links
+$navbar-dark-hover-color:           #fff;
+$navbar-dark-hover-bg:              transparent;
+$navbar-dark-active-color:          $navbar-dark-hover-color;
+$navbar-dark-active-bg:             darken($navbar-dark-bg, 10%);
+$navbar-dark-disabled-color:        #444;
+$navbar-dark-disabled-bg:           transparent;
+
+// Inverted navbar brand label
+$navbar-dark-brand-color:                $navbar-dark-color;
+$navbar-dark-brand-hover-color:          #fff;
+$navbar-dark-brand-hover-bg:             transparent;
+
+$navbar-dark-toggle-hover-bg:            #333;
+$navbar-dark-toggle-icon-bar-bg:         #fff;
+$navbar-dark-toggle-border-color:        #333;
+
+$nav-tabs-border-color:                     #ddd;
+
+$nav-tabs-link-hover-border-color:          $gray-300;
+
+$nav-tabs-link-active-hover-bg:             $body-bg;
+$nav-tabs-link-active-hover-color:          $gray-500;
+$nav-tabs-link-active-hover-border-color:   #ddd;
+
+$nav-link-disabled-color: $btn-link-disabled-color;
+
+
+// Pagination
+$pagination-disabled-color: $btn-link-disabled-color;
+
+// Jumbotron
+$jumbotron-bg: #f5f5e9;
+
+// Cards
+$card-bg:                    lighten($body-bg, 2.5%); // #fff;
+
+// Tooltips
+// Popovers
+// Badges
+// Modals
+//$modal-header-border-color: #386dbb;
+// $modal-content-bg
+// Alerts
+// Progress bars
+// List group
+$list-group-disabled-color: $btn-link-disabled-color;
+
+// Image thumbnails
+// Figures
+$figure-caption-color:              $gray-800;
+
+// Breadcrumbs
+$breadcrumb-bg:                     transparent;
+$breadcrumb-divider-color:          $body-color;
+$breadcrumb-active-color:           $body-color;
+$breadcrumb-divider:                quote("/");
+// Carousel
+// Close
+// Code
+
+// - - - - - - - - - -  - - - - - - Other variables, if any - - - - - - - - - - - - - - - - - //

@@ -343,4 +343,26 @@ class Scheduler_Item
         $delayMinutes = (int)TikiLib::lib('tiki')->get_preference('scheduler_delay', 0);
         $delaySeconds = $delayMinutes * 60;
 
-        $anchorT
+        $anchorTime->sub(DateInterval::createFromDateString($delayMinutes . ' minutes'));
+
+        return $cron->getPreviousRunDate($anchorTime)->getTimestamp() + $delaySeconds;
+    }
+
+    /**
+     * Transforms an array (from schedulers lib) to a Scheduler_Item object
+     *
+     * @param array             $scheduler  The scheduler details
+     * @param LoggerInterface   $logger     Logger
+     *
+     * @return Scheduler_Item
+     */
+    public static function fromArray(array $scheduler, $logger)
+    {
+        $item = new self($logger);
+        foreach ($scheduler as $attr => $value) {
+            $item->$attr = $value;
+        }
+
+        return $item;
+    }
+}
