@@ -1,0 +1,344 @@
+
+.admin-wrapper {
+    display: flex;
+
+    .admin-nav {
+        width: auto;
+
+        li a {
+            white-space: nowrap;
+        }
+    }
+}
+
+
+a.admbox,
+a.admbox:visited {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 120px;
+    text-align: center;
+    vertical-align: middle;
+    overflow: hidden;
+    margin: .4em;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding: 15px 6px;
+    text-decoration: none;
+}
+
+a.admbox .icon {
+    font-size: 2rem;
+    margin-bottom: 6px;
+}
+
+a.admbox span.title {
+    display: block;
+    font-size: 1.1rem;
+    text-align: center;
+    margin: .1em;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+// Make disabled feature icons clickable for navigation to feature activation page.
+a.admbox.btn.btn-primary.disabled.disabled-clickable {
+    pointer-events: inherit;
+    cursor: pointer;
+}
+
+// Font icons are vertically centered ok, but the .pngs were too high.
+.admbox .icon img {
+    margin-top: 18px;
+}
+
+// Metadata dialog box
+.meta-col1 {
+    text-align: right;
+    font-weight: bold;
+    font-size: 14px;
+    width: 225px;
+    margin-right: 5px;
+}
+
+.meta-col2 {
+    font-size: 14px;
+    width: 375px;
+}
+
+// Metadata page tabs
+.meta-tabs-col1 {
+    text-align: right;
+    font-weight: bold;
+    font-size: inherit;
+    width: 225px;
+    margin-right: 5px;
+}
+
+.meta-tabs-col2 {
+    font-size: inherit;
+    width: 375px;
+}
+
+// Wizards
+.margin-left-9em {
+    margin-left: .9em;
+}
+
+.margin-right-18em {
+    margin-right: 1.8em;
+}
+
+// User Wizard
+
+.userWizardIconleft {
+    float: left;
+    margin-right: 10px;
+}
+
+.userWizardIconright {
+    float: right;
+    margin-left: 10px;
+}
+
+.userWizardContent {
+    margin-top: 1em;
+}
+
+.userWizardContent legend {
+    margin-bottom: 1em;
+    font-weight: bold;
+}
+
+.userWizardContent fieldset {
+    margin: 1em 0;
+}
+
+// Conditions and Terms validation
+.age-validation .form-control {
+    width: auto;
+    display: inline;
+    margin: 0 1em;
+}
+
+.adminoptionboxchild {
+    padding-left: 4em;
+    margin-bottom: 2em;
+    legend {
+        margin-bottom: 0;
+    }
+}
+
+// Don't apply actual site title styling to admin labels
+.adminoptionbox.sitetitle,
+.adminoptionbox.sitesubtitle {
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+.tiki-admin fieldset {
+    width: 100%;
+}
+
+// Admin navbar switch
+
+input[type="checkbox"].preffilter-toggle {
+    position: absolute;
+    margin-left: -9999px;
+    visibility: hidden;
+}
+
+input[type="checkbox"].preffilter-toggle + label {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input[type="checkbox"].preffilter-toggle-round + label {
+    width: 100px;
+    height: 30px;
+    background-color: #dddddd;
+    border-radius: 20px;
+    float: left;
+    margin: 7px 0 0 5px;
+}
+
+input[type="checkbox"].preffilter-toggle-round + label:before,
+input[type="checkbox"].preffilter-toggle-round + label:after {
+    display: block;
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    bottom: 1px;
+    content: "";
+}
+
+input[type="checkbox"].preffilter-toggle-round + label:before {
+    right: 1px;
+    background-color: #f1f1f1;
+    border-radius: 20px;
+    -webkit-transition: background 0.4s;
+    -moz-transition: background 0.4s;
+    -o-transition: background 0.4s;
+    transition: background 0.4s;
+    content: "Basic";
+    font-size: 0.8rem;
+    font-weight: normal;
+    padding-left: 40px;
+    padding-top: 0.2rem;
+}
+
+input[type="checkbox"].preffilter-toggle-round + label:after {
+    width: 28px;
+    background-color: #fff;
+    border-radius: 100%;
+    -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    -webkit-transition: margin 0.4s;
+    -moz-transition:margin 0.4s;
+    -o-transition:margin 0.4s;
+    transition: margin 0.4s;
+}
+
+input[type="checkbox"].preffilter-toggle-round:checked + label:before {
+    background-color: #8ce196;
+    content: "Advanced";
+    font-size: 0.8rem;
+    font-weight: normal;
+    padding-left: 10px;
+    padding-top: 0.2rem;
+}
+
+input[type="checkbox"].preffilter-toggle-round:checked + label:after {
+    margin-left: 70px;
+}
+
+.filter-menu.navbar-nav > li > a {
+        padding-top: 12px;
+        padding-bottom: 12px;
+}
+
+.filter-menu.navbar-nav .dropdown-menu {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+table.treetable.objectperms .checkBoxHeader,
+table.objectperms > tbody > tr.subHeader {
+    height: 140px;
+    white-space: nowrap !important;
+}
+
+table.treetable.objectperms .checkBoxHeader {
+    position: relative;
+    vertical-align: bottom;
+    width: 30px;
+}
+
+table.objectperms th:not(.checkBoxHeader),
+table.objectperms .subHeader td:not(.checkBoxHeader) { text-align: center; }
+
+tr.odd.leaf.collapsed > td:last-of-type,
+tr.even.leaf.collapsed > td:last-of-type { text-indent: 15px; }
+
+table.treetable .checkBoxHeader > td,
+.table > tbody > tr.subHeader > td { vertical-align: bottom; }
+
+table.objectperms .checkBoxHeader > div,
+table.objectperms > tbody .checkBoxLabel {
+    -webkit-transform: rotate(305deg);
+    transform: rotate(305deg);
+    width: 140px;
+    display: block;
+    position: absolute;
+    left: -20px;
+    bottom: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 2;
+    text-indent: 1.7em;
+}
+// Added 9/6/2017 to position top labels
+.objectperms .checkBoxHeader > div > label {
+    width: 140px;
+    position: absolute;
+    top: -25px;
+    padding-top: 25px;
+    padding-bottom: 5px;
+}
+
+
+//// Target Firefox to fix checkbox label text not displaying
+//@-moz-document url-prefix() {
+//    table.objectperms .checkBoxHeader > div,
+//    table.objectperms > tbody .checkBoxLabel {
+//        width: auto;
+//    }
+//}
+
+//// Target MS Edge to fix checkbox label text not displaying
+//@supports (-ms-ime-align:auto) {
+//    table.objectperms .checkBoxHeader > div,
+//    table.objectperms > tbody .checkBoxLabel {
+//        width: auto;
+//    }
+//}
+
+// Target MS IE to fix checkbox label text not displaying
+@media all and (-ms-high-contrast:none) {
+//    table.objectperms .checkBoxHeader > div,
+//    table.objectperms > tbody .checkBoxLabel { width: auto; } /* IE10 */
+//    *::-ms-backdrop, table.objectperms .checkBoxHeader > div { width: auto; } /* IE11 */
+    .objectperms .checkBoxHeader > div > label {
+        width: auto;
+        position: absolute;
+        top: -25px;
+        padding-top: 0;
+        padding-bottom: 5px;
+    }
+}
+
+//table.objectperms .checkBoxHeader > div,
+//table.objectperms > tbody .checkBoxLabel {
+//line-height: 2;
+//text-indent: .6em; }
+
+.objectperms .checkBoxHeader > div > label { width: 140px; }
+
+.objectperms .checkBoxHeader > div > input { transform: rotate(-305deg); }
+
+table.treetable.objectperms span.indenter,
+.subHeader .checkBoxHeader .indenter { padding-left: 0 !important; }
+
+table.objectperms > tbody .checkBoxCell {
+//    width: 30px !important; Not doing anything
+    padding-left: 10px;
+    padding-right: 5px;
+}
+// Make global permission checkboxes not display
+table.objectperms thead th { display: none; }
+
+@media (max-width: breakpoint-max(sm)) {
+    .admin-navbar {
+        .filter-menu { margin: 0; text-align: center; }
+        .form-inline .form-check { width: auto; }
+        .navbar-nav { padding: 0 15px; }
+        .form-inline { min-width: 100%; }
+        input[type="checkbox"].preffilter-toggle-round + label { margin-left: 10px; }
+    }
+
+    .meta-tabs-col1 { width: auto; }
+    .meta-tabs-col2 { width: auto; }
+}
+.resize-vertical {
+    resize: vertical;
+}
+
+// Applies the same padding to admin (horiz) menu items when UAB is off as when it is on - remove when legacy admin screen is removed.
+.tiki-admin .navbar-expand-md .navbar-nav.mr-auto .nav-link { padding: 0 0.4rem; }

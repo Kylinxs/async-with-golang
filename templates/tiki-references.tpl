@@ -157,4 +157,122 @@
             </div>
         </div>
         <div class="mb-3 row">
-    
+            <label class="col-sm-3 col-md-2 col-form-label" for="ref_title">{tr}Part{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='ref_part' class="form-control" name='ref_part' value="{$referenceinfo.part|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="ref_title">{tr}URI{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='ref_uri' class="form-control" name='ref_uri' value="{$referenceinfo.uri|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="ref_title">{tr}Code{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='ref_code' class="form-control" name='ref_code' value="{$referenceinfo.code|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="ref_title">{tr}Publisher{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='ref_publisher' class="form-control" name='ref_publisher' value="{$referenceinfo.publisher|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="ref_title">{tr}Location{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='ref_location' class="form-control" name='ref_location' value="{$referenceinfo.location|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="ref_title">{tr}Style{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='ref_style' class="form-control" name='ref_style' value="{$referenceinfo.style|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="ref_title">{tr}Template{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='ref_template' class="form-control" name='ref_template' value="{$referenceinfo.template|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <div class="col-sm-7 col-md-6 offset-sm-3 offset-md-2">
+                {if isset($referenceinfo.ref_id) && $referenceinfo.ref_id}
+                    <input type="hidden" name="referenceId" value="{$referenceinfo.ref_id|escape}">
+                    <input type="hidden" name="editreference" value="1">
+                    <input type="submit" class="btn btn-primary" name="save" value="{tr}Save{/tr}">
+                {else}
+                    <input type="submit" class="btn btn-primary" name="addreference" value="{tr}Add{/tr}">
+                {/if}
+            </div>
+        </div>
+    </form>
+{/tab}
+    <a id="tab3"></a>
+{if isset($referenceinfo.ref_id) && $referenceinfo.ref_id}
+    {tab name="{tr}Reference usage{/tr}"}
+        <h2>{tr _0=$referenceinfo.biblio_code|escape}Pages using reference %0{/tr}</h2>
+        <table class="table normal table-striped table-hover">
+            <thead>
+            <tr>
+                <th>Page Name</th>
+            </tr>
+            </thead>
+            <tbody>
+            {section name=page loop=$pagereferences}
+                <tr>
+                    <td>
+                        <a href="{$pagereferences[page].pageName|sefurl}" class="link tips" title="{$pagereferences[page].pageName|escape}:{tr}View page{/tr}">
+                            {$pagereferences[page].pageName|truncate:$prefs.wiki_list_name_len:"...":true|escape}
+                        </a>
+                    </td>
+                </tr>
+            {/section}
+            </tbody>
+        </table>
+    {/tab}
+{/if}
+{/tabset}
+{if empty($referenceinfo.biblio_code)}
+    {jq}
+        $('#add_ref_auto_biblio_code').click(function(){
+        if ($('#add_ref_auto_biblio_code').is(':checked')) {
+        $('#ref_biblio_code_block').hide();
+        $('#ref_biblio_code').val('');
+        } else {
+        $('#ref_biblio_code_block').show();
+        }
+        });
+    {/jq}
+{/if}
+{jq}
+    $('#references-edit-form').submit(function(event){
+    var ck_code = /^[A-Za-z0-9]+$/;
+    {* var ck_uri = /^((https?|ftp|smtp):\/\/)?(www.)?[a-z0-9]+(\.[a-z]{2, }){1, 3}(#?\/?[a-zA-Z0-9#]+)*\/?(\?[a-zA-Z0-9-_]+=[a-zA-Z0-9-%]+&?)?$/; *}
+    var ck_year = /^[1-2][0-9][0-9][0-9]$/;
+    if (!$('#add_ref_auto_biblio_code').is(':checked') && $('#ref_biblio_code').val() == '') {
+    alert('Please fill the biblio code field or enable biblio code auto generator');
+    return false;
+    }
+    if(!$('#add_ref_auto_biblio_code').is(':checked') && !ck_code.test($('#ref_biblio_code').val())){
+    alert('Biblio code is not valid');
+    return false;
+    }
+    {* if(!$('#add_ref_uri').val() == '' &&  !ck_uri.test($('#add_ref_uri').val())){
+        alert('uri no valid');
+        return false;
+    } *}
+    if(!$('#ref_author').val().trim()){
+    alert('Author is not valid');
+    return false;
+    }
+    if(!$('#ref_year').val() == '' && !ck_year.test($('#ref_year').val())){
+    alert('Year is not valid');
+    return false;
+    }
+    return true;
+    })
+{/jq}
