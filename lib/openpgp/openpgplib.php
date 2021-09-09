@@ -554,4 +554,434 @@ class OpenPGPLib
         return $ret;
     }
 
-    /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////
+    //
+    // MESSAGE COMPOSING
+    //
+    /////////////////////////////////////////////////////////////////
+
+    /**
+     * ALPHAFIELDS 2012-01-08: added to retrieve admin email public key armor block
+     * Returns the contact users' email or empty
+     *
+     * @access public
+     * @return string (contact users' email or empty)
+     */
+    public function get_admin_email_for_armor_block()
+    {
+        global $user, $prefs, $tikilib;
+        $empty = '';
+        return isset($prefs['sender_email']) ? $prefs['sender_email'] : $empty;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    /**
+     * Function to get publickey ascii-armor-block and original headers into body
+     *
+     * @param  string   $req_priority
+     * @param  string   $req_to
+     * @param  string   $req_cc
+     * @access public
+     * @return array
+     *      0 => $prepend_email_body
+     *      1 => $user_armor
+     */
+    public function getPublickeyArmorBlock($req_priority, $req_to, $req_cc)
+    {
+
+        global $user;
+        $userlib = TikiLib::lib('user');
+
+        // get user email for publickey armor block retrieval
+        $user_email = '';
+        if ($user != 'admin') {
+            $user_email = $userlib->get_user_email($user);
+        } else {
+            // NOTE: This function is in this lib-class, not in $userlib!
+            $user_email = $this->get_admin_email_for_armor_block();
+        }
+        $user_armor = '';
+        if ($user_email) {
+            //retrieve armor block for keyid
+            $gpg = $this->gpg_getPublicKey($user_email);
+            // $gpg is an array containing
+            // $gpg[0] armor output (STDOUT)
+            // $gpg[1] warnings and notices (STDERR)
+            // $gpg[2] exit status from gpg
+
+            // test gpg's exit status
+            if ("$gpg[2]" == '0') {
+                // if the gpg command returned zero
+                $user_armor = "\n\n--original sender public key below--\n\n" . $gpg[0];
+            } else {
+                // if the gpg command returned non-zero
+                $error_msg = 'OpenPGPLib: _getPublickeyArmorBlock() returned error code: ' . $gpg[2];
+                trigger_error($error_msg, E_USER_ERROR);
+                // if an error message directs you to the line above please
+                // double check that your gnupg-configuration, process-call commandline input, and other parameters are correct
+            }
+            // TODO: hardcoded addresses into preferences from db
+            $gpg = $this->gpg_getFingerprint($user_email);
+            // $gpg is an array containing
+            // $gpg[0] fingerprint (STDOUT)
+            // $gpg[1] warnings and notices (STDERR)
+            // $gpg[2] exit status from gpg
+
+            // test gpg's exit status
+            if ("$gpg[2]" == '0') {
+                // if the gpg command returned zero
+                $user_armor = $user_armor . "\n-----fingerprint data below-------\n\n" . $gpg[0]
+                              . "\n----------------------------------\n\n";
+            } else {
+                // if the gpg command returned non-zero
+                $error_msg = 'OpenPGPLib: _getPublickeyArmorBlock() returned error code: ' . $gpg[2];
+                trigger_error($error_msg, E_USER_ERROR);
+                // if an error message directs you to the line above please
+                // double check that your gnupg-configuration, process-call commandline input, and other parameters are correct
+            }
+        }
+        // generate a message has ID to be used as a consistent message referenceID across all recipients
+        // and prepend it into message body
+        $tmpstr = chunk_split(md5(rand() . microtime()), 8, '-');
+        $tmpstr = substr($tmpstr, 0, strlen($tmpstr) - 1);
+        $prepend_email_body = "ID:      "
+                    . $tmpstr
+                    . " (use this for message reference)\n"
+                    . "Prio:    " . $req_priority . "\n"
+                    . "From:    " . $user . " (" . $user_email . ")\n"
+                    . "To:      " . $req_to . "\n"
+                    . "Cc:      " . $req_cc . "\n\n";
+
+        return [$prepend_email_body,$user_armor];
+    }
+
+    /////////////////////////////////////////////////////////////////
+    //
+    // WEBMAIL/htmlMimeMail GNUPG-ENCRYPTED PGP/MIME MAIL FUNCTIONS
+    //
+    /////////////////////////////////////////////////////////////////
+
+    /////////////////////////////////////////////////////////////////
+    /**
+     * Function to encode a header if necessary
+     * according to RFC2047
+     */
+    public function encodeHeader($input, $charset = 'ISO-8859-1')
+    {
+        preg_match_all('/(\w*[\x80-\xFF]+\w*)/', $input, $matches);
+
+        foreach ($matches[1] as $value) {
+            $replacement = preg_replace_callback('/([\\x80-\\xFF])/', function ($match) {
+                return "=" . strtoupper(dechex(ord($match[1])));
+            }, $value);
+
+            $input = str_replace($value, '=?' . $charset . '?Q?' . $replacement . '?=', $input);
+        }
+
+        return $input;
+    }
+
+
+    /////////////////////////////////////////////////////////////////
+    /**
+     * Send a message to a user with gpg-armor block etc included
+     * A changed encryption-related version was copied/changed from lib/messu/messulib.pgp
+     * into lib/openpgp/openpgplib.php for prepending/appending content into
+     * message body
+
+     * @param  string   $user
+     * @param  string   $from
+     * @param  string   $to
+     * @param  string   $cc
+     * @param  string   $subject
+     * @param  string   $body
+     * @param  string   $prepend_email_body
+     * @param  string   $user_pubkeyarmor
+     * @param  string   $priority
+     * @param  string   $replyto_hash
+     * @param  string   $replyto_email
+     * @param  string   $bcc_sender
+     * @access public
+     * @return boolean  true/false
+     */
+    public function post_message_with_pgparmor_attachment(
+        $user,
+        $from,
+        $to,
+        $cc,
+        $subject,
+        $body,
+        $prepend_email_body,
+        // NOTE this
+        $user_pubkeyarmor,
+        // NOTE this
+        $priority,
+        $replyto_hash = '',
+        $replyto_email = '',
+        $bcc_sender = ''
+    ) {
+
+        global $prefs;
+        $userlib = TikiLib::lib('user');
+        $tikilib = TikiLib::lib('tiki');
+        $smarty = TikiLib::lib('smarty');
+
+        $subject = strip_tags($subject);
+        $body = strip_tags($body, '<a><b><img><i>');
+        // Prevent duplicates
+        $hash = md5($subject . $body);
+
+        if ($tikilib->getOne("select count(*) from `messu_messages` where `user`=? and `user_from`=? and `hash`=?", [$user,$from,$hash])) {
+            return false;
+        }
+
+        $query = "insert into `messu_messages`(`user`,`user_from`,`user_to`,`user_cc`,`subject`,`body`,`date`,`isRead`,`isReplied`,`isFlagged`,`priority`,`hash`,`replyto_hash`) values(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        $tikilib->query($query, [$user,$from,$to,$cc,$subject,$body,(int) $tikilib->now,'n','n','n',(int) $priority,$hash,$replyto_hash]);
+
+        // Now check if the user should be notified by email
+        $foo = parse_url($_SERVER["REQUEST_URI"]);
+        $machine = $tikilib->httpPrefix(true) . $foo["path"];
+        $machine = str_replace('messu-compose', 'messu-mailbox', $machine);
+        if ($tikilib->get_user_preference($user, 'minPrio', 6) <= $priority) {
+            if (! isset($_SERVER["SERVER_NAME"])) {
+                $_SERVER["SERVER_NAME"] = $_SERVER["HTTP_HOST"];
+            }
+            $email = $userlib->get_user_email($user);
+            if ($email) {
+                include_once('lib/webmail/tikimaillib.php');
+                $smarty->assign('mail_site', $_SERVER["SERVER_NAME"]);
+                $smarty->assign('mail_machine', $machine);
+                $smarty->assign('mail_date', $tikilib->now);
+                $smarty->assign('mail_user', stripslashes($user));
+                $smarty->assign('mail_from', stripslashes($from));
+                $smarty->assign('mail_subject', stripslashes($subject));
+                ////////////////////////////////////////////////////////////////////////
+                //                                                                    //
+                // ALPHAFIELDS 2012-11-03: ADDED PGP/MIME ENCRYPTION PREPARATION      //
+                // USING lib/openpgp/opepgplib.php                                    //
+                //                                                                    //
+                // prepend original headers into email                                //
+                $aux_body = $prepend_email_body . $body;
+                $body = $aux_body;
+                //                                                                    //
+                ////////////////////////////////////////////////////////////////////////
+                $smarty->assign('mail_body', stripslashes($body));
+                $mail = new TikiMail($user);
+                $lg = $tikilib->get_user_preference($user, 'language', $prefs['site_language']);
+                if (empty($subject)) {
+                    $s = $smarty->fetchLang($lg, 'mail/messu_message_notification_subject.tpl');
+                    $mail->setSubject(sprintf($s, $_SERVER["SERVER_NAME"]));
+                } else {
+                    $mail->setSubject($subject);
+                }
+                $mail_data = $smarty->fetchLang($lg, 'mail/messu_message_notification.tpl');
+                ////////////////////////////////////////////////////////////////////////
+                //                                                                    //
+                // ALPHAFIELDS 2012-11-03: ADDED PGP/MIME ENCRYPTION PREPARATION      //
+                // USING lib/openpgp/opepgplib.php                                    //
+                //                                                                    //
+                // append pgparmor block and fingerprint into email                   //
+                $mail_data .= $user_pubkeyarmor;
+                //                                                                    //
+                ////////////////////////////////////////////////////////////////////////
+                $mail->setText($mail_data);
+
+                if ($userlib->user_exists($from)) {
+                    $from_email = $userlib->get_user_email($from);
+                    if ($bcc_sender === 'y' && ! empty($from_email)) {
+                        $mail->setBcc($from_email);
+                    }
+                    if ($replyto_email !== 'y' && $userlib->get_user_preference($from, 'email is public', 'n') == 'n') {
+                        $from_email = '';   // empty $from_email if not to be used - saves getting it twice
+                    }
+                    if (! empty($from_email)) {
+                        $mail->setReplyTo($from_email);
+                    }
+                }
+                if (! empty($from_email)) {
+                    $mail->setFrom($from_email);
+                }
+
+                if (! $mail->send([$email], 'mail')) {
+                    return false; //TODO echo $mail->errors;
+                }
+            }
+        }
+        return true;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    /**
+     * Function to insert original subject into text part body
+     *
+     * @param  array    $mail_headers / headers array
+     * @param  string   $text / The text body of the message
+     * @access public
+     * @return string   $text / The text body of the message prepended with original subject
+     */
+    public function prependSubjectToText($mail_headers, $text)
+    {
+
+        // AS THE Subject-header is hidden and contains a hash only in a pgp/mime encrypted message subject-header
+        // extract the original subject and prepend it into the text part
+        // TODO: for some reason, newsletter notifications etc
+        // do not set Subject yet at this point so no adjustment is generated for them;
+        // what is the problem and solution?
+        $subject = '';
+        if (! empty($mail_headers['Subject'])) {
+            $subject = $mail_headers['Subject'];
+        }
+        $ret = "******** PGP/MIME-ENCRYPTED MESSAGE ********\n"
+                  . "Subject: " . $subject
+                  . "\n\n"
+                  . $text;
+        return $ret;
+    }
+
+    /**
+     * Function to insert original subject into html part body
+     *
+     * @param  array    $mail_headers / headers array
+     * @param  string   $html / The html body of the message
+     * @param  string   $text / The text body of the message
+     * @access public
+     * @return array
+     *      0 => $html / The html body of the message prepended with original subject
+     *      1 => $html_text / The html_text body of the message prepended with original subject
+     */
+    public function prependSubjectToHtml($mail_headers, $html, $text)
+    {
+
+        // AS THE Subject-header is hidden and contains a hash only in a pgp/mime encrypted message subject-header
+        // extract the original subject and prepend it into the html part
+        // TODO: for some reason, newsletter notifications etc
+        // do not set Subject yet at this point so no adjustment is generated for them;
+        // what is the problem and solution?
+        $subject = '';
+        if (! empty($mail_headers['Subject'])) {
+            $subject = $mail_headers['Subject'];
+        }
+        $ret_html = "******** PGP/MIME-ENCRYPTED MESSAGE ********<br>"
+                    . "Subject: " . $subject
+                    . "<br>"
+                    . $html;
+
+        $ret_html_text = "******** PGP/MIME-ENCRYPTED MESSAGE ********<br>"
+                    . "Subject: " . $subject
+                    . "<br>"
+                    . $text;
+        return [$ret_html,$ret_html_text];
+    }
+
+    /////////////////////////////////////////////////////////////////
+    /**
+     * Prepate encryption of a mail using gnupg
+     *
+     * @param  array        $original_mail_headers / headers array
+     * @param  string   $original_mail_body / The main body of the message after building
+     * @param  string   $mail_build_params_head_charset
+     * @param  array/string $recipients (needs to be not-imploded string or array)
+     * @access public
+     * @return array
+     *      0 => string $gnupg_header
+     *      1 => string $gnupg_subject
+     *      2 => string $pgpmime_encrypted_message_body
+     */
+    public function prepareEncryptWithMailSender($original_mail_headers, $original_mail_body, $mail_build_params_head_charset, $mail_recipients)
+    {
+
+            // Define gnupg/mime header variables; see constants above in this class
+            $gnupg_mpe = OpenPGPLib::MULTIPART_PGP_ENCRYPTED;
+            $gnupg_tpp = OpenPGPLib::TYPE_PGP_PROTOCOL;
+            $gnupg_pmn = OpenPGPLib::PGP_MIME_NOTE;
+            $gnupg_tpcv = OpenPGPLib::TYPE_PGP_CONTENT_VERSION;
+            $gnupg_dpcv = OpenPGPLib::DESCRIPTION_PGP_CONTENT_VERSION;
+            $gnupg_pmvi = OpenPGPLib::PGP_MIME_VERSION_IDENTIFICATION;
+            $gnupg_tpce = OpenPGPLib::TYPE_PGP_CONTENT_ENCRYPTED;
+            $gnupg_dpce = OpenPGPLib::DESCRIPTION_PGP_CONTENT_ENCRYPTED;
+            $gnupg_dpci = OpenPGPLib::DISPOSITION_PGP_CONTENT_INLINE;
+
+
+        // Define gnupg boundary
+        $gnupg_boundary = '------gnupg-' . md5(rand() . microtime());
+
+        // Get flat representation of headers
+        foreach ($original_mail_headers as $name => $value) {
+            // first process Content-Type and discard original and set pgp/mime-required after loop
+            if ($name == 'Content-Type') {
+                $tmpvalue = $this->encodeHeader($value, $mail_build_params_head_charset);
+                // check if original message is just text/plain, so we can discard the entire
+                // orig_header from being prepended into encrypted part
+                $pos = strpos($tmpvalue, 'text/plain');
+                if ($pos !== false) {
+                    // so text/plain ...set discard-flag...
+                    $discard_orig_header = true;
+                } else {
+                    // reach here if not text/plain
+                    $orig_headers[] = $name . ': ' . $tmpvalue;
+                }
+            } else {
+                // Get flat representation of original headers
+                $orig_headers[] = $name . ': ' . $this->encodeHeader($value, $mail_build_params_head_charset);
+            }
+        }
+
+        // save original header to be added into encrypted part
+        if ($discard_orig_header) {
+            // original body is text/plain, so no headers there
+            $orig_header = '';
+        } else {
+            $orig_header = implode(CRLF, $orig_headers);
+        }
+
+        //////////////////////////////////////////////////////////////////////////
+        // NOTE: pgpmime_header; this must be returned as header (string here) for the mail() function
+        $pgpmime_header = "Content-Type: {$gnupg_mpe};{$this->EOL} protocol=\"{$gnupg_tpp}\";{$this->EOL} boundary=\"{$gnupg_boundary}\"{$this->EOL}{$this->EOL}";
+
+        // Instead of original Subject, use this to hide even the subject:
+        // - generate a message hash ID to be used instead of orig subject;
+        // - show the original Subject in the encrypted message body;
+        $tmpstr = chunk_split(
+            md5(
+                $pgpmime_header
+                . rand()
+                . microtime()
+            ),
+            8,
+            '-'
+        );
+        $tmpstr = substr($tmpstr, 0, strlen($tmpstr) - 1);
+            $replace_subject_with_msgID = '[PGP/MIME] ' . $tmpstr;
+        //////////////////////////////////////////////////////////////////////////
+        // NOTE: pgpmime subject; this must be returned as subject for the mail() function
+            $pgpmime_subject = $replace_subject_with_msgID;
+
+            // gnupg pgp/mime note
+            $gnupg = "{$gnupg_pmn}{$this->EOL}";
+
+            // gnupg part 1 header
+            $gnupg .= "--{$gnupg_boundary}{$this->EOL}Content-Type: {$gnupg_tpcv}{$this->EOL}Content-Description: {$gnupg_dpcv}{$this->EOL}{$this->EOL}{$gnupg_pmvi}{$this->EOL}{$this->EOL}";
+
+            // gnupg part 2 header
+            $gnupg .= "--{$gnupg_boundary}{$this->EOL}Content-Type: {$gnupg_tpce}{$this->EOL}Content-Description: {$gnupg_dpce}{$this->EOL}Content-Disposition: {$gnupg_dpci}{$this->EOL}{$this->EOL}";
+
+            // gnupg encrypted/signed message body
+            // original header to be added into encrypted part (use here the prepared/imploded orig_header from above)
+        // NOTE: signer and signer passphrase are set ready in this class instantiation,
+        // and used in the following function directly from there
+            $gnupg .= $this->encryptSignGnuPG($orig_header . "{$this->EOL}{$this->EOL}" . $original_mail_body, $mail_recipients);
+            // gnupg end boundary
+            $gnupg .= "{$this->EOL}--{$gnupg_boundary}--{$this->EOL}";
+
+        //////////////////////////////////////////////////////////////////////////
+        // NOTE: gnupg into mail body; this must be returned as encrypted body for the mail() function
+            $pgpmime_encrypted_message_body = $gnupg;
+
+        return [
+                0 => $pgpmime_header,
+                1 => $pgpmime_subject,
+                2 => $pgpmime_encrypted_message_body];
+    }
+
+
+    //////////////////////////////
