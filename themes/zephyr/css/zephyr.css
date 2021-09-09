@@ -11691,4 +11691,164 @@ div.ts-wrapperdiv div.ts-pager .right-margin {
   --bs-btn-disabled-bg: #3459e6;
   --bs-btn-disabled-border-color: #3459e6;
 }
-.inline-cypht i
+.inline-cypht input[type=button] {
+  --bs-btn-color: #000;
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: #fff;
+  --bs-btn-hover-color: #000;
+  --bs-btn-hover-bg: white;
+  --bs-btn-hover-border-color: white;
+  --bs-btn-focus-shadow-rgb: 217, 217, 217;
+  --bs-btn-active-color: #000;
+  --bs-btn-active-bg: white;
+  --bs-btn-active-border-color: white;
+  --bs-btn-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --bs-btn-disabled-color: #000;
+  --bs-btn-disabled-bg: #fff;
+  --bs-btn-disabled-border-color: #fff;
+}
+.inline-cypht .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear, .inline-cypht .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__clear {
+  right: 1.8rem !important;
+}
+.inline-cypht .select2-selection--single .select2-selection__rendered, .inline-cypht .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option {
+  padding-right: 2.2rem !important;
+}
+.mobile.tiki-cypht .content_cell .content_title, .mobile.tiki-cypht .content_cell .content_title .list_controls, .mobile.tiki-webmail .content_cell .content_title, .mobile.tiki-webmail .content_cell .content_title .list_controls {
+  background: #f0f0f0;
+  color: #212529;
+}
+.mobile.tiki-cypht .msg_controls, .mobile.tiki-webmail .msg_controls {
+  background: #f0f0f0 !important;
+}
+.mobile.tiki-cypht .folder_list, .mobile.tiki-webmail .folder_list {
+  background-color: #fff;
+  color: #495057;
+  border: 1px solid #ced4da;
+}
+.mobile.tiki-cypht .folder_list .src_name, .mobile.tiki-webmail .folder_list .src_name {
+  background: #f0f0f0;
+  color: #212529;
+  border-left-color: transparent;
+}
+.mobile.tiki-cypht .nux_dev_news table td:last-child, .mobile.tiki-webmail .nux_dev_news table td:last-child {
+  border-bottom: 1px solid #ced4da;
+}
+.tiki .select2-container--bootstrap-5 .select2-selection--single .select2-selection__clear, .tiki .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__clear {
+  position: absolute;
+  top: 50%;
+  right: 3em;
+}
+.tiki .toastui-editor-contents {
+  font-family: var(--bs-font-sans-serif);
+  font-size: 1rem;
+  background: #fff;
+  color: #495057;
+  text-shadow: none;
+}
+.tiki .toastui-editor-contents a, .tiki .toastui-editor-contents a:visited {
+  color: #3459e6;
+  text-decoration: underline;
+}
+.tiki .toastui-editor-contents a:hover, .tiki .toastui-editor-contents a:visited:hover {
+  color: #2a47b8;
+}
+.tiki .toastui-editor-contents p {
+  color: #495057;
+}
+.tiki .toastui-editor-contents h1, .tiki .toastui-editor-contents .h1 {
+  color: red;
+}
+.tiki .toastui-editor-contents h1, .tiki .toastui-editor-contents .h1, .tiki .toastui-editor-contents h2, .tiki .toastui-editor-contents .h2, .tiki .toastui-editor-contents h3, .tiki .toastui-editor-contents .h3, .tiki .toastui-editor-contents h4, .tiki .toastui-editor-contents .h4, .tiki .toastui-editor-contents h5, .tiki .toastui-editor-contents .h5, .tiki .toastui-editor-contents h6, .tiki .toastui-editor-contents .h6 {
+  font-family: var(--bs-font-sans-serif);
+  /* should be $headings-font-family */
+  font-weight: 400;
+  /* $headings-font-weight */
+  color: #495057;
+  /* $headings-color */
+  line-height: 1.5;
+  /* $headings-line-height */
+  /* no variable? */
+  border-bottom: none;
+}
+.tiki .toastui-editor-contents h1, .tiki .toastui-editor-contents .h1 {
+  font-size: 2.5rem;
+}
+.tiki .toastui-editor-contents h2, .tiki .toastui-editor-contents .h2 {
+  font-size: 2rem;
+}
+.tiki .toastui-editor-contents h3, .tiki .toastui-editor-contents .h3 {
+  font-size: 1.75rem;
+}
+.tiki .toastui-editor-contents h4, .tiki .toastui-editor-contents .h4 {
+  font-size: 1.5rem;
+}
+.tiki .toastui-editor-contents h5, .tiki .toastui-editor-contents .h5 {
+  font-size: 1.25rem;
+}
+.tiki .toastui-editor-contents h6, .tiki .toastui-editor-contents .h6 {
+  font-size: 1rem;
+}
+.tiki .toastui-editor-contents code {
+  font-size: 0.875em;
+  color: #212529;
+  background-color: #f8f9fa;
+}
+.tiki .toastui-editor-contents table {
+  background-color: transparent;
+}
+.tiki .toastui-editor-contents table th {
+  background-color: transparent;
+  color: var(--bs-body-color);
+  /* should be a var */
+  font-weight: bold;
+}
+.tiki .toastui-editor-contents table th p {
+  background-color: transparent;
+  color: var(--bs-body-color);
+}
+.tiki .toastui-editor-contents table .odd {
+  background: transparent;
+}
+.tiki .select2-container--bootstrap-5 .select2-selection {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+}
+.tiki .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered, .tiki .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option {
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+}
+.tiki .select2-container--bootstrap-5 .select2-dropdown {
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+}
+.tiki .select2-results__options .select2-results__option {
+  color: #495057;
+  background: #fff;
+}
+.tiki .select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: #ced4da 0.15s ease-in-out, inset 0 1px 2px rgba(0, 0, 0, 0.075) 0.15s ease-in-out;
+}
+.tiki .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--selected, .tiki .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option[aria-selected="true"] {
+  color: #fff;
+  background-color: #3459e6;
+}
+
