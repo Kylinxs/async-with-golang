@@ -474,4 +474,125 @@ class EnglishUpdateCommand extends Command
         }
 
         /**
-         * Tokens indicating that the replacement strin
+         * Tokens indicating that the replacement string was found and replaced in the language file
+         * @ver array
+         */
+        $string = [];
+
+        /**
+         * Tokens indicating that the replacement string was already present in the language file, so was skipped
+         * @var array
+         */
+        $skipped = [];
+
+        /**
+         * Tokens indicating what language files have had changes made to them
+         * @var array
+         */
+        $lang = [];
+
+        // update the language files with the new strings
+
+        if ($this->stringCount) {
+            foreach ($this->languages as $directory) {
+                $langNow = substr($directory, strrpos($directory, "/") + 1);
+                if (is_writable($directory . '/language.php')) {
+                    $file = file_get_contents($directory . '/language.php');
+                    foreach ($diffs as $key => $entry) {
+                        // if the original string is in the language file
+                        if (preg_match('/^"' . preg_quote($entry['-'], '/') . '[' . implode('', Language::PUNCTUATIONS) . ']?".*/m', $file, $match)) {
+                            // if the replacement string does not already exist
+                            if (! strpos($file, "\n\"" . $entry['+'] . '"')) {
+                                // then replace the original string with an exact copy and a 'updated' copy on the next line
+                                $replace = preg_replace('/"' . preg_quote($entry['-'], '/') . '[' . implode('', Language::PUNCTUATIONS) . ']?"/', '"' . $entry['+'] . '"', $match[0], 1);
+                                $file = str_replace($match[0], $match[0] . "\n" . $replace, $file);
+
+                                // keep track of overall numbers
+                                $string[$key] = true;
+                                $lang[$langNow] = true;
+                            } else {
+                                $skipped[$key] = true;
+                            }
+                        }
+                        // If the replacement string has context information, create a non-commented translation in the english language file
+                        // Strings with context need to be translated in the 'en' language file
+                        // See https://dev.tiki.org/Translations-Revamp
+                        if ($langNow == 'en') {
+                            if (preg_match('/^\/\/ "' . preg_quote($entry['-'], '/') . '[' . implode('', Language::PUNCTUATIONS) . ']?".*/m', $file, $match)) {
+                                // if the replacement string does not already exist
+                                if (! strpos($file, "\n\"" . $entry['+'] . '"')) {
+                                    // then replace the original string with an exact copy and a 'updated' copy on the next line
+                                    $replace = preg_replace('/\/\/ "' . preg_quote($entry['-'], '/') . '[' . implode('', Language::PUNCTUATIONS) . ']?"/', '"' . $entry['+'] . '"', $match[0], 1);
+                                    $file = str_replace($match[0], $match[0] . "\n" . $replace, $file);
+
+                                    // keep track of overall numbers
+                                    $string[$key] = true;
+                                    $lang[$langNow] = true;
+                                    unset($skipped[$key]);
+                                } else {
+                                    $skipped[$key] = true;
+                                }
+                            }
+                        }
+                    }
+                    if (isset($lang[$langNow])) {
+                        $progress->setMessage($langNow . "\tStrings to update");
+                        $progress->advance();
+                        if (! $input->getOption('audit')) {
+                            file_put_contents($directory . '/language.php', $file);
+                        }
+                    } else {
+                        $progress->setMessage($langNow . "\tNo changes to make");
+                        $progress->advance();
+                    }
+                } else {
+                    $progress->setMessage($langNow . "\tSkipping <info>language.php not writable</info>");
+                    $progress->advance();
+                }
+            }
+        }
+        $skippedMessage = '';
+        if ($this->duplicates) {
+            $skippedMessage = ' Skipped ' . $this->duplicates . ' duplicate strings.';
+        }
+
+        if ($input->getOption('audit')) {
+            $updateMessage = 'Out of Sync';
+        } else {
+            $updateMessage = 'Updated';
+        }
+        $progress->setMessage(count($string) . " of $this->stringCount strings $updateMessage in " . count($lang) . ' of ' . count($this->languages) . ' language files.' . $skippedMessage);
+        $progress->finish();
+
+        if ($input->getOption('audit')) {
+            if (count($string)) {
+                $syncMessage = "\n";
+                $output->writeln("\n\n<info>Updated Strings not found in Language Files</info>");
+                foreach ($diffs as $key => $entry) {
+                    if (isset($string[$key])) {
+                        $syncMessage .= '* ' . $entry['-'] . "\n";
+                    }
+                }
+                $output->writeln($syncMessage);
+                if ($input->getOption('email')) {
+                    mail($input->getOption('email'), 'Updated Strings not found in Language Files', wordwrap(TIKI_PATH . "\n" . $syncMessage, 70, "\r\n"));
+                }
+                exit(1);
+            }
+            $output->writeln("\n\n<info>English and Translations are in Sync</info>\n");
+            // if were not in audit mode
+        } else {
+            if (count($string) < $this->stringCount) {
+                $output->writeln("\n\n<info>Strings Not Translated</info>");
+                foreach ($diffs as $key => $entry) {
+                    if (! isset($string[$key]) && ! isset($skipped[$key])) {
+                        $output->writeln('* ' . $entry['-']);
+                    }
+                }
+            }
+            $output->writeln("\n\nOptionally run php get_strings.php to remove any unused translation strings.");
+            $output->writeln("Verify before committing.\n");
+        }
+        exit(0);
+    }
+}
