@@ -1,0 +1,40 @@
+---
+type: object
+properties:
+  pageName:
+    type: string
+    description: Used only when creating a wiki page
+  data:
+    type: string
+    description: raw content
+  description:
+    type: string
+  comment:
+    type: string
+  lang:
+    type: string
+  is_html:
+    type: integer
+    description: raw data is html formatted
+  lock_it:
+    $ref: schemas-TikiBoolean.yaml
+  comments_enabled:
+    $ref: schemas-TikiBoolean.yaml
+  wiki_authors_style:
+    type: string
+  is_minor:
+    $ref: schemas-TikiBoolean.yaml
+  translationOf:
+    type: string
+    description: Send the page name of the original version of the page when adding a translation
+  translationComplete:
+    $ref: schemas-TikiBoolean.yaml
+  geolocation:
+    type: string
+    description: Lat/Lng/Zoom coordinates to associate with this wiki page
+  page_auto_toc:
+    $ref: schemas-TikiBoolean.yaml
+  page_hide_title:
+    $ref: schemas-TikiBoolean.yaml
+  explicit_namespace:
+    type: string
