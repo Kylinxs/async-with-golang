@@ -1,0 +1,169 @@
+
+// $Id$  
+$imagePath: "../images/";
+// body {
+//     background-image: url('#{$imagePath}bg.jpg');
+// }
+
+body {
+    border-top: 6px solid $sky-light;
+    border-bottom: 8px solid $sea;
+}
+
+.topbar {
+    margin-bottom: 20px;
+}
+
+//button, input, optgroup, select, textarea {
+//    background: #242424;
+//    color: #cfcfcf;
+//}
+
+//.navbar-dark.bg-dark,
+//.bg-dark-parent {
+//    background-color: #343a40 !important;
+//}
+
+//.navbar-light.bg-light,
+//.bg-light-parent {
+//    background-color: $sky-light !important; //#7a0101 !important;
+//}
+
+// navbar-dark: #343a40
+
+//.top_modules { background: #030511; }
+
+// prevent unwanted background-on-background or on middle box-shadow
+//.layout_classic #topbar_modules {
+//  .navbar.bg-dark,
+//  .navbar.bg-light { background: transparent !important; }
+//}
+
+//.layout_classic {
+//  #top_modules.bg-dark,
+//  #top_modules.bg-light,
+//  #topbar_modules,
+//  #topbar.bg-dark,
+//  #topbar.bg-light{ background: transparent !important; }
+//}
+
+.navbar-light.navbar-fixed-top > .container {
+    border: none;
+    margin-bottom: 0;
+}
+
+//.header-container .container,
+//.navbar-light.navbar-fixed-top {
+//    a,
+//    a:visited,
+//    .btn-link {
+//        color: #f4f4f4;
+//    }
+//}
+
+//.box-quickadmin .cssmenu_horiz ul li {
+//    background-color: #4c4c4c;
+//}
+
+.middle_outer > .container {
+    border-top: none;
+}
+
+#topbar_modules .box-search {
+    margin-top: 8px;
+}
+
+
+.card-header {
+    border-bottom: 5px solid $wood;
+}
+
+
+footer.footer .modules {
+    background: #030511;
+  padding-top: 1rem;
+      color: #f4f4f4;
+    font-size: 0.9em;
+    a, a:visited {
+        color: #f4f4f4;
+    }
+}
+
+.popover {
+    background-color: lighten(#030511, 10%);
+}
+
+.popover-header {
+    background-color: #696969;
+    border-bottom: 1px solid #ebebeb;
+}
+
+body.fullscreen {
+    background: $body-bg;
+    .container {
+        border: none;
+    }
+}
+// Update for Smartmenus (override tiki_base.css value)
+.dropdown-menu.mega-menu a //,
+//.dropdown-item
+    {
+    color: $body-color;
+    &:hover {
+        color: $link-hover-color;
+    }
+}
+
+//.dropdown-item {
+//    color: $link-color !important;
+//}
+
+// Badges
+.badge {
+//    &.bg-primary,
+    &.bg-danger,
+    &.bg-secondary,
+    &.bg-success,
+    &.bg-info,
+    &.bg-warning { color: #000 !important; }
+}
+
+// Modals
+.modal-header .btn-close {
+    background-color: #fff;
+}
+
+// Breadcrumbs
+.breadcrumb {
+    display: inline-block;
+}
+
+.btn.btn-outline-primary {
+    color: lighten($primary, 50%);
+    border-color: lighten($primary, 50%);
+}
+
+
+
+// override for some cypht background colors
+.tiki {
+    .inline-cypht {
+        .folder_list, .content_cell, .compose_page, .message_list, .msg_text, .selected_part,
+        .server_content, .profile_content, .user_settings,
+        .nux_add_account, .imap_server_setup, .pop3_server_setup {
+            background-color: $card-bg;
+        }
+        .src_name, .content_title, .list_controls {
+            background: $card-header-bg;
+        }
+    }
+    &.mobile.tiki-cypht {
+        .folder_list {
+            background-color: $card-bg;
+            .src_name { background: $card-header-bg; }
+        }
+        .content_title {
+            &, .list_controls { background: $card-header-bg; }
+        }
+    }
+}
