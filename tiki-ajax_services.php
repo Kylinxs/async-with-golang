@@ -194,3 +194,28 @@ if ($access->is_serializable_request() && isset($_REQUEST['listonly'])) {
     } else {
         $access->output_serialized(['type' => 'success', 'results' => $references]);
     }
+} elseif (isset($_REQUEST['geocode']) && $access->is_serializable_request()) {
+    $access->output_serialized(TikiLib::lib('geo')->geocode($_REQUEST['geocode']));
+} else {
+    $access->display_error(null, 'No AJAX service matches request parameters', 404);
+}
+
+/**
+ * @param $dir
+ * @param $icons
+ * @param $max
+ */
+function read_icon_dir($dir, &$icons, $max, $query)
+{
+    $fp = opendir($dir);
+    while (false !== ($f = readdir($fp))) {
+        preg_match('/^([^\.].*)\..*$/', $f, $m);
+        if (
+            count($m) > 0 && count($icons) < $max &&
+                stripos($m[1], $query) !== false &&
+                ! in_array($dir . '/' . $f, $icons)
+        ) {
+            $icons[] = $dir . '/' . $f;
+        }
+    }
+}
