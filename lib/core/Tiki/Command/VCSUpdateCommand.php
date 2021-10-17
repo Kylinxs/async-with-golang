@@ -505,4 +505,161 @@ class VCSUpdateCommand extends Command
                     mail($email, 'Git update aborted', wordwrap('Working copy currency conflicted. Update Aborted. ' . __FILE__, 70, "\r\n"));
                 }
                 if (! $noDb) {
-                    $logslib->add_action($action, "Working copy currency conflicted. Update Aborted. $star
+                    $logslib->add_action($action, "Working copy currency conflicted. Update Aborted. $startRev", 'system');
+                }
+                if ($noHttps) {
+                    // Revert composer https changes
+                    $this->executeComposerHttp();
+                }
+                $progress->advance();
+                die("\n");
+            }
+
+            // Revert merge changes, to keep the repository unchanged
+            if (! preg_match('/Already up[- ]to[- ]date/', $raw)) {
+                $this->execCommand("git merge --abort 2>&1");
+            }
+        }
+
+        $update = $isGit ? 'GIT' : 'SVN';
+        $progress->setMessage('Updating ' . $update);
+        $progress->advance();
+
+        if ($isGit) {
+            $errors = ['','Automatic merge failed'];
+            $commitHash = $rev ?: '';
+            $gitUpdate = $this->gitUpdate($rev, $conflict);
+            $this->OutputErrors($logger, $gitUpdate, 'Problem with git merge, check for conflicts.', $errors, ! $noDb);
+            if ($logger->hasErrored()) {
+                return 2;
+            }
+            $endRev = $this->getGitRevision();
+            $this->execCommand('git gc 2>&1');
+        } else {
+            $errors = ['','Text conflicts'];
+            $svnUpdate = $this->svnUpdate($rev, $conflict);
+            $this->OutputErrors($logger, $svnUpdate, 'Problem with svn up, check for conflicts.', $errors, ! $noDb);
+            $endRev = $this->getSvnRevision($output);
+            $raw = $this->execCommand('svn cleanup  2>&1');
+        }
+
+        if (! $noDb) {
+            $cacheLib = new \Cachelib();
+            $progress->setMessage('Clearing all caches');
+            $progress->advance();
+            $cacheLib->empty_cache();
+        }
+
+        $progress->setMessage('Updating dependencies & setting file permissions');
+        $progress->advance();
+        $errors = ['', 'Please provide an existing command', 'you are behind a proxy', 'Composer failed', 'Wrong PHP version'];
+
+        $setupParams = '';
+        if ($input->getOption('user')) {
+            $setupParams .= ' -u ' . $input->getOption('user');
+        }
+        if ($input->getOption('group')) {
+            $setupParams .= ' -g ' . $input->getOption('group');
+        }
+
+        $composerHome = '';
+        if (! getenv('COMPOSER_HOME')) {
+            $composerHome = sprintf('COMPOSER_HOME="%s"', $tikipath . ComposerCli::COMPOSER_HOME);
+        }
+
+        if ($noHttps) {
+            $this->executeComposerHttp();
+        }
+
+        $shellCom = sprintf("%s sh setup.sh %s -n fix", $composerHome, $setupParams);
+        $raw = $this->execCommand($shellCom . ' 2>&1');
+        $this->OutputErrors($logger, $raw, 'Problem running setup.sh', $errors, ! $input->getOption('no-db'));
+
+        if (! $noDb) {
+            // generate a secdb database so when database:update is run, it also gets updated.
+            if (! $input->getOption('no-secdb')) {
+                $progress->setMessage('Updating secdb');
+                $progress->advance();
+
+                $errors = ['is not writable', ''];
+                $command = 'php doc/devtools/release.php --only-secdb --no-check-vcs';
+                $command .= $isGit ? ' --use-git' : '';
+                $raw = $this->execCommand($command);
+                $this->OutputErrors($logger, $raw, 'Problem updating secdb', $errors);
+            }
+
+            // note: running database update also clears the cache
+            $progress->setMessage('Updating database');
+            $progress->advance();
+            try {
+                $this->dbUpdate($output);
+            } catch (\Exception $e) {
+                $logger->error('Database update error: ' . $e->getMessage());
+                $logslib->add_action($action, 'Database update error: ' . $e, 'system');
+            }
+
+
+            // rebuild tiki index. Since this could take a while, make it optional.
+            if (! $input->getOption('no-reindex')) {
+                $progress->setMessage('Rebuilding search index');
+                $progress->advance();
+                $errors = ['', 'Fatal error'];
+                $shellCom = 'php console.php index:rebuild';
+                if ($output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG) {
+                    $shellCom .= ' -vvv';
+                }
+
+                putenv('SHELL_VERBOSITY'); // Clear the environment variable, since console.php (Symfony console application) will pick this value if set
+                $raw = $this->execCommand($shellCom . ' 2>&1');
+                $this->OutputErrors($logger, $raw, 'Problem Rebuilding Index', $errors, ! $noDb);   // 2>&1 suppresses all terminal output, but allows full capturing for logs & verbiage
+            }
+
+            /* generate caches */
+            if (! $input->getOption('no-generate')) {
+                $progress->setMessage('Generating caches');
+                $progress->advance();
+                try {
+                    //$cacheLib->generateCache();    disable generating module cache until regression if fixed that causes premature termination.
+                    $cacheLib->generateCache(['templates', 'misc']);
+                } catch (\Exception $e) {
+                    $logger->error('Cache generating error: ' . $e->getMessage());
+                    $logslib->add_action($action, 'Cache generating error: ' . $e, 'system');
+                }
+            }
+        }
+
+        if ($logger->hasErrored()) {
+            if (! $noDb) {
+                $logslib->add_action($action, "Automatic update completed with errors, " . $prefix . $startRev . " -> " . $prefix . $endRev . ", Try again or debug.", 'system');
+            }
+            if ($email) {
+                echo mail($email, $action . ' Aborted', wordwrap("Automatic update completed with errors, " . $prefix . $startRev . " -> " . $prefix . $endRev . ", Try again or debug." . __FILE__, 70, "\r\n"));
+            }
+            $progress->setMessage("Automatic update completed with errors, " . $prefix . $startRev . " -> " . $prefix . $endRev . ", Try again or ensure update functioning.");
+        } elseif ($noDb) {
+            $progress->setMessage("<comment>Automatic update completed in no-db mode, " . $prefix . $startRev . " -> " . $prefix . $endRev . ", Database not updated.</comment>");
+        } else {
+            $logslib->add_action($action, "Automatic update completed, " . $prefix . $startRev . " -> " . $prefix . $endRev, 'system');
+            $progress->setMessage("<comment>Automatic update completed " . $prefix . $startRev . " -> " . $prefix . $endRev . "</comment>");
+        }
+
+        $progress->finish();
+        if ($output->getVerbosity() > OutputInterface::VERBOSITY_QUIET) {
+            $output->writeln('');
+        }
+    }
+
+    /**
+     * @param string command
+     * @return string|null
+     */
+    protected function execCommand(string $command): string
+    {
+        $this->logger->debug('Command: ' . $command);
+        $output = shell_exec($command);
+        $output = trim($output);
+        $this->logger->debug('Output: ' . $output);
+
+        return $output;
+    }
+}
