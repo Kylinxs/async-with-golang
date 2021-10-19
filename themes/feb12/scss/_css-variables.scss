@@ -1,0 +1,39 @@
+
+// CSS variables
+:root {
+    --tiki-top-light-bg:  linear-gradient(to bottom,  #dbdbdb 0%,#b6b6b6 2%,#acacac 3%,#ababab 5%,#c8c8c8 10%,#d4d4d4 17%,#e6e6e6 48%,#eaeaea 60%,#f3f3f3 77%,#fdfdfd 90%,#ffffff 100%);
+    --tiki-top-light-color: #{$navbar-light-color};
+    --tiki-top-light-link-color: #{$navbar-light-color};
+    --tiki-top-light-link-hover-color: #{$navbar-light-hover-color};
+
+    --tiki-topbar-light-bg: linear-gradient(to bottom,  #dbdbdb 0%,#b6b6b6 2%,#acacac 3%,#ababab 5%,#c8c8c8 10%,#d4d4d4 17%,#e6e6e6 48%,#eaeaea 60%,#f3f3f3 77%,#fdfdfd 90%,#ffffff 100%);
+    --tiki-topbar-light-color: #{$navbar-light-color};
+    --tiki-topbar-light-link-color: #{$navbar-light-color};
+    --tiki-topbar-light-link-hover-color: #{$navbar-light-hover-color};
+
+    --tiki-top-dark-bg: linear-gradient(to bottom,  #3e7ca1 0%,#609ec3 3%,#163866 5%,#0b2d5b 8%,#0f2658 11%,#002552 16%,#002d57 24%,#052b58 27%,#0c3867 43%,#11406e 57%,#1b507c 76%,#235685 86%,#1c5b87 100%);
+    --tiki-top-dark-color: rgba($white, .75); //#{$navbar-dark-color};
+    --tiki-top-dark-link-color: rgba($white, .75);
+    --tiki-top-dark-link-hover-color: rgba($white, .85);
+
+    --tiki-topbar-dark-bg: linear-gradient(to bottom, #3e7ca1 0%, #609ec3 3%, #163866 5%, #0b2d5b 8%, #0f2658 11%, #002552 16%, #002d57 24%, #052b58 27%, #0c3867 43%, #11406e 57%, #1b507c 76%, #235685 86%, #1c5b87 100%);
+    --tiki-topbar-dark-color: rgba($white, .75);
+    --tiki-topbar-dark-link-color: rgba($white, .75);
+    --tiki-topbar-dark-link-hover-color: rgba($white, .85);
+}
+
+.tiki-admin {
+    --tiki-admin-navbar-dark-bg: var(--tiki-top-dark-bg) !important;
+    --tiki-admin-dropdown-dark-color: #{$dropdown-dark-color};
+    --tiki-admin-dropdown-dark-hover-bg: #{$dropdown-dark-link-hover-bg};
+    --tiki-admin-dropdown-dark-bg: #{$dropdown-dark-bg};
+    --tiki-admin-navbar-light-bg: var(--tiki-top-light-bg);
+    --tiki-admin-dropdown-light-color: #{$navbar-light-color};
+    --tiki-admin-dropdown-light-hover-color: #{$navbar-light-hover-color};
+    --tiki-admin-dropdown-light-bg: #{$dropdown-bg};
+    --tiki-admin-toggle-light-bg: #{$dropdown-bg};
+    --tiki-admin-navbar-dark-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-dark-highlight-color: #{$dropdown-link-hover-color};
+    --tiki-admin-navbar-light-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-light-highlight-color: #{$dropdown-link-hover-color};
+}
