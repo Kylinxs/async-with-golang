@@ -1,0 +1,55 @@
+// This is a copy of vendor_bundled/vendor/twbs/bootstrap/scss/_bootstrap.scss but without the default variables
+//@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/mixins/banner"; // copied to _tiki-bootstrap_functions
+//@include bsBanner("");
+
+
+// scss-docs-start import-stack
+// // Configuration
+// @import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/functions";
+//@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/variables";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/maps";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/mixins";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/utilities";
+
+// Layout & components
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/root";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/reboot";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/type";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/images";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/containers";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/grid";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/tables";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/forms";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/buttons";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/transitions";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/dropdown";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/button-group";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/nav";  // why is this and the next commented out?
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/navbar";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/card";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/accordion";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/breadcrumb";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/pagination";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/badge";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/alert";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/progress";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/list-group";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/close";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/toasts";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/modal";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/tooltip";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/popover";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/carousel";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/spinners";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/offcanvas";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/placeholders";
+
+// Helpers
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/helpers";
+
+// Utilities
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/utilities/api";
+// scss-docs-end import-stack
+
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/nav"; // Needed to move this down to get correct navlink color in ohia and other themes
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/navbar"; // Needed to move this down to get correct navbar nav-link color in default theme
