@@ -64,4 +64,52 @@
                                 <input type="hidden" name="id" value="{$comment.threadId}" />
                                 <input type="hidden" name="type" value="comment" />
                             </form>
-      
+                            {jq}
+                                var crf = $('form.commentRatingForm').submit(function() {
+                                    var vals = $(this).serialize();
+                                    $.tikiModal(tr('Loading...'));
+                                    $.post($.service('rating', 'vote'), vals, function() {
+                                        $.tikiModal();
+                                        $.notify(tr('Thanks for rating!'));
+                                    });
+                                    return false;
+                                });
+                            {/jq}
+                        {/if}
+                        {if $prefs.wiki_comments_simple_ratings eq 'y' && ($tiki_p_ratings_view_results eq 'y' or $tiki_p_admin eq 'y')}
+                            {rating_result type="comment" id=$comment.threadId}
+                        {/if}
+                        {if !empty($comment.diffInfo)}
+                            <div class="{*well*}"><pre style="display: none;">{$comment.diffInfo|var_dump}</pre>
+                                <h4 class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target=".version{$comment.diffInfo[0].version}" aria-expanded="false" aria-controls="collapseExample">
+                                    Version {$comment.diffInfo[0].version}
+                                    {icon name='history'}
+                                </h4>
+                                <div class="collapse table-responsive version{$comment.diffInfo[0].version}">
+                                    <table class="table">
+                                        {foreach $comment.diffInfo as $info}
+                                            <label>{$info.fieldName}</label>
+                                            {trackeroutput fieldId=$info.fieldId list_mode='y' history=y process=y oldValue=$info.value value=$info.new diff_style='sidediff'}
+                                        {/foreach}
+                                    </table>
+                                </div>
+                            </div>
+                        {/if}
+
+                    </div>{* End of comment-footer *}
+                </div>{* End of comment-item *}
+                {if ! $level || $level lt 5}
+                    {if $comment.replies_info.numReplies gt 0}
+                        {include file='comment/list_inner.tpl' comments=$comment.replies_info.replies cant=$comment.replies_info.numReplies parentId=$comment.threadId level=(level) ? $level+1 : 0 repliedTo=$comment}
+                    {/if}
+                {/if}
+            </div>{* End of flex-grow-1 ms-3 *}
+        </li>
+        {if $prefs.comments_threshold_indent neq '0' && $level && $level gte $prefs.comments_threshold_indent}
+            {if $comment.replies_info.numReplies gt 0}
+                {include file='comment/list_inner.tpl' comments=$comment.replies_info.replies cant=$comment.replies_info.numReplies parentId=$comment.threadId level=(level) ? $level+1 : 0 repliedTo=$comment}
+            {/if}
+        {/if}
+    {/foreach}
+</ul>
+{pagination_links cant=$cant step=$maxRecords offset=$offset offset_jsvar='comment_offset' _onclick=$paginationOnClick}{/pagination_links}
