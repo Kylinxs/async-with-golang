@@ -1025,4 +1025,364 @@ $form-check-min-height:                   $font-size-base * $input-btn-line-heig
 $form-check-padding-start:                $form-check-input-width + .5em !default;
 $form-check-margin-bottom:                .125rem !default;
 $form-check-label-padding-top:            .4375rem !default; // Boosted mod
-$form-check-
+$form-check-label-color:                  null !default;
+$form-check-label-cursor:                 null !default;
+$form-check-transition:                   null !default;
+
+$form-check-input-active-filter:          null !default;
+$form-check-input-active-bg-color:        $component-active-bg !default; // Boosted mod
+
+$form-check-input-bg:                     $input-bg !default;
+$form-check-input-border:                 $border-width solid $input-border-color !default;
+$form-check-input-border-radius:          0 !default;
+$form-check-radio-border-radius:          50% !default;
+$form-check-input-focus-border:           null !default;
+$form-check-input-focus-box-shadow:       $input-btn-focus-box-shadow !default;
+
+$form-check-input-checked-color:          $component-active-color !default;
+$form-check-input-checked-bg-color:       $component-active-bg !default;
+$form-check-input-checked-border-color:   $form-check-input-checked-bg-color !default;
+$form-check-input-checked-bg-image:       var(--#{$boosted-prefix}check-icon) !default;
+$form-check-input-disabled-color:         $gray-900 !default; // Boosted mod
+$form-check-radio-checked-bg-image:       url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'><circle r='2' fill='#{$form-check-input-checked-color}'/></svg>") !default;
+
+$form-check-input-indeterminate-color:          $form-check-input-checked-color !default;
+$form-check-input-indeterminate-bg-color:       $form-check-input-checked-bg-color !default;
+$form-check-input-indeterminate-border-color:   $form-check-input-indeterminate-bg-color !default;
+$form-check-input-indeterminate-bg-image:       url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 3'><path fill='#{$form-check-input-indeterminate-color}' d='M0 0h10v3H0z'/></svg>") !default;
+
+$form-check-input-disabled-opacity:        null !default;
+$form-check-label-disabled-opacity:        null !default;
+$form-check-btn-check-disabled-opacity:    null !default;
+
+$form-check-inline-margin-end:    1rem !default;
+
+// Boosted mod: Star rating
+$form-star-size:                  1.5625rem !default;
+$form-star-size-sm:               1.25rem !default;
+$form-star-margin-between:        -.125rem !default;
+
+$form-star-focus-box-shadow:      $input-btn-focus-box-shadow !default;
+$form-star-focus-color:           $black !default;
+$form-star-focus-outline:         $border-width solid $form-star-focus-color !default;
+
+$form-star-focus-color-dark:      $white !default;
+$form-star-focus-outline-dark:    $border-width solid $form-star-focus-color-dark !default;
+// End mod
+// scss-docs-end form-check-variables
+
+// scss-docs-start form-switch-variables
+// Boosted mod: no $form-switch-color
+$form-switch-width:               $spacer * 3 !default; // Boosted mod
+$form-switch-padding-start:       $form-switch-width + .5rem !default;
+$form-switch-bg-image:            var(--#{$boosted-prefix}close-icon) !default;  // Boosted mod
+$form-switch-bg-position:         right .5rem top 50% !default;  // Boosted mod
+$form-switch-bg-size:             .75rem !default;  // Boosted mod
+$form-switch-bg-square-size:      add(1rem, $spacer * .5) !default;  // Boosted mod
+$form-switch-border-radius:       null !default; // Boosted mod
+$form-switch-transition:          background-position .15s ease-in-out, $transition-focus !default; // Boosted mod
+
+// Boosted mod: no $form-switch-focus-color
+// Boosted mod: no $form-switch-focus-bg-image
+
+// Boosted mod: no $form-switch-checked-color
+$form-switch-checked-bg-image:    $form-check-input-checked-bg-image !default; // Boosted mod
+$form-switch-checked-bg-size:     add(map-get($spacers, 2), map-get($spacers, 1)) !default; // Boosted mod
+$form-switch-checked-bg-position: $border-width * 3 50% !default; // Boosted mod
+// scss-docs-end form-switch-variables
+
+// scss-docs-start input-group-variables
+$input-group-addon-padding-y:           $input-padding-y !default;
+$input-group-addon-padding-x:           $input-padding-x !default;
+$input-group-addon-font-weight:         $input-font-weight !default;
+$input-group-addon-color:               null !default;
+$input-group-addon-bg:                  null !default;
+$input-group-addon-border-color:        null !default;
+// scss-docs-end input-group-variables
+
+// scss-docs-start form-select-variables
+$form-select-padding-y:             $input-padding-y !default;
+$form-select-padding-x:             $input-padding-x !default;
+$form-select-font-family:           $input-font-family !default;
+$form-select-font-size:             $input-font-size !default;
+$form-select-indicator-padding:     $form-select-padding-x * 3 !default; // Extra padding for background-image
+$form-select-font-weight:           $input-font-weight !default;
+$form-select-line-height:           $input-line-height !default;
+$form-select-color:                 $input-color !default;
+$form-select-bg:                    $input-bg !default;
+$form-select-disabled-color:        $gray-700 !default;
+$form-select-disabled-bg:           $gray-300 !default;
+$form-select-disabled-border-color: $input-disabled-border-color !default;
+$form-select-bg-position:           right $form-select-padding-x top add(50%, 1px) !default;
+$form-select-bg-size:               .875rem 1rem !default; // In pixels because image dimensions
+$form-select-indicator:             url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 7'><path d='M7 7 0 0h14L7 7z'/></svg>") !default;
+$form-select-disabled-indicator:    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 7'><path fill='#{$form-select-disabled-color}' d='M7 7 0 0h14L7 7z'/></svg>") !default; // Boosted mod
+
+// Boosted mod: no icon for validated select
+
+$form-select-border-width:        $input-border-width !default;
+$form-select-border-color:        $input-border-color !default;
+$form-select-border-radius:       $input-border-radius !default;
+$form-select-box-shadow:          $box-shadow-inset !default;
+
+$form-select-focus-border-color:  $input-color !default; // Boosted mod: for border to show in Firefox
+$form-select-focus-box-shadow:    null !default;
+
+// Boosted mod: no .form-select-sm
+
+$form-select-padding-y-lg:        $spacer * .5 !default;
+$form-select-padding-x-lg:        $input-padding-x-lg !default;
+$form-select-font-size-lg:        $input-font-size-lg !default;
+$form-select-border-radius-lg:    $input-border-radius-lg !default;
+
+$form-select-transition:          $input-transition !default;
+// scss-docs-end form-select-variables
+
+// scss-docs-start form-range-variables
+$form-range-track-width:          100% !default;
+$form-range-track-height:         .375rem !default;
+$form-range-track-cursor:         pointer !default;
+$form-range-track-bg:             $gray-300 !default;
+$form-range-track-filled-bg:      $primary !default; // Boosted mod
+$form-range-track-border-radius:  null !default;
+$form-range-track-box-shadow:     inset 0 .25rem .25rem rgba($black, .1) !default;
+
+$form-range-thumb-width:                   1rem !default;
+$form-range-thumb-height:                  $form-range-thumb-width !default;
+$form-range-thumb-bg:                      $white !default;
+$form-range-thumb-border:                  $border-width solid $black !default;
+$form-range-thumb-border-radius:           50% !default;
+$form-range-thumb-box-shadow:              0 .1rem .25rem rgba($black, .1) !default;
+$form-range-thumb-focus-box-shadow:        null !default;
+$form-range-thumb-focus-box-shadow-width:  $input-focus-width !default; // For focus box shadow issue in Edge
+$form-range-thumb-active-bg:               null !default;
+$form-range-thumb-active-border:           $component-active-bg !default; // Boosted mod
+$form-range-thumb-disabled-bg:             $gray-500 !default;
+$form-range-thumb-transition:              background-color $transition-duration $transition-timing, border-color $transition-duration $transition-timing, box-shadow $transition-duration $transition-timing !default;
+// scss-docs-end form-range-variables
+
+// scss-docs-start form-file-variables
+$form-file-button-color:          $input-color !default;
+$form-file-button-bg:             $white !default;
+$form-file-button-hover-bg:       shade-color($form-file-button-bg, 5%) !default;
+// scss-docs-end form-file-variables
+
+// Boosted mod: no floating labels
+
+// Form validation
+
+// scss-docs-start form-feedback-variables
+$form-feedback-margin-top:          $form-text-margin-top !default;
+$form-feedback-font-size:           $small-font-size !default;
+$form-feedback-font-style:          null !default;
+$form-feedback-valid-color:         $success !default;
+$form-feedback-invalid-color:       $danger !default;
+
+$form-feedback-icon-valid:          var(--#{$boosted-prefix}success-icon) !default;
+$form-feedback-icon-invalid:        var(--#{$boosted-prefix}error-icon) !default;
+$form-feedback-icon-size:           add($spacer * .25, $spacer * .5) !default; // Boosted mod
+// scss-docs-end form-feedback-variables
+
+// scss-docs-start form-validation-states
+$form-validation-states: (
+    "valid": (
+        "color": $form-feedback-valid-color,
+        "icon": $form-feedback-icon-valid
+    ),
+    "invalid": (
+        "color": $form-feedback-invalid-color,
+        "icon": $form-feedback-icon-invalid
+    )
+) !default;
+// scss-docs-end form-validation-states
+
+// Z-index master list
+//
+// Warning: Avoid customizing these values. They're used for a bird's eye view
+// of components dependent on the z-axis and are designed to all work together.
+
+// scss-docs-start zindex-stack
+$zindex-dropdown:                   1000 !default;
+$zindex-sticky:                     1020 !default;
+$zindex-fixed:                      1030 !default;
+$zindex-back-to-top:                1035 !default; // Boosted mod
+$zindex-offcanvas-backdrop:         1040 !default;
+$zindex-offcanvas:                  1045 !default;
+$zindex-modal-backdrop:             1050 !default;
+$zindex-modal:                      1055 !default;
+$zindex-popover:                    1070 !default;
+$zindex-tooltip:                    1080 !default;
+$zindex-toast:                      1090 !default;
+// scss-docs-end zindex-stack
+
+// Navs
+
+// scss-docs-start nav-variables
+$nav-link-padding-y:                $spacer * .5 !default;
+$nav-link-padding-x:                $spacer !default;
+$nav-link-font-size:                null !default;
+$nav-link-font-weight:              $font-weight-bold !default;
+$nav-link-color:                    #000;
+$nav-link-hover-color:              var(--#{$prefix}link-hover-color) !default;
+$nav-link-transition:               null !default;
+$nav-link-disabled-color:           $gray-500 !default;
+
+$nav-tabs-border-color:             $black !default;
+$nav-tabs-border-width:             $border-width !default;
+$nav-tabs-border-radius:            $border-radius !default;
+$nav-tabs-link-padding-x:           1.8125rem !default; // Boosted mod
+$nav-tabs-link-hover-border-color:  $nav-tabs-border-color !default;
+$nav-tabs-link-active-color:        $black !default;
+$nav-tabs-link-active-bg:           $body-bg !default;
+$nav-tabs-link-active-border-color: $nav-tabs-link-active-color !default;
+
+$nav-pills-padding-x:               $nav-tabs-link-padding-x !default; // Boosted mod
+$nav-pills-border-radius:           $border-radius !default;
+$nav-pills-link-active-color:       $component-active-color !default;
+$nav-pills-link-active-bg:          $component-active-bg !default;
+// scss-docs-end nav-variables
+
+
+// Navbar
+
+// scss-docs-start navbar-variables
+$navbar-padding-y:                  .375rem !default; // Boosted mod
+$navbar-padding-x:                  null !default;
+
+$navbar-nav-link-padding-y:         1rem !default; // Boosted mod
+$navbar-nav-link-padding-x-xs:      $spacer * .25 !default; // Boosted mod
+$navbar-nav-link-padding-x:         $spacer * .5 !default; // Boosted mod
+
+$navbar-brand-font-size:                  2.1875rem !default; // Boosted mod
+// Boosted mod: no nav-link-height calculation
+$navbar-brand-padding-y:                  0 !default; // Boosted mod
+$navbar-brand-margin-end:                 $spacer * 1.5 !default; // Boosted mod
+
+$navbar-toggler-icon-close-bg:      $cross-icon !default; // Boosted mod
+$navbar-toggler-padding-y:          $spacer * .6 !default; // Boosted mod: same as $navbar-nav-icon-padding-y-xs
+$navbar-toggler-padding-x:          $spacer * .75 !default; // Boosted mod: same as $navbar-nav-icon-padding-x-xs
+$navbar-toggler-font-size-xs:       1.04166666rem !default; // Boosted mod
+$navbar-toggler-font-size:          1.25rem !default; // Boosted mod
+$navbar-toggler-border-radius:      $btn-border-radius !default;
+$navbar-toggler-focus-width:        null !default; // Boosted mod
+$navbar-toggler-transition:         $transition-focus !default; // Boosted mod
+// scss-docs-end navbar-variables
+
+// Boosted mod: Orange navbar
+// scss-docs-start orange-navbar-variables
+$navbar-transition-duration:              $transition-duration !default;
+$navbar-transition-timing-function:       $transition-timing !default;
+$navbar-transition:                       padding-top $navbar-transition-duration $navbar-transition-timing-function, padding-bottom $navbar-transition-duration $navbar-transition-timing-function, $transition-focus !default;
+$navbar-brand-transition:                 margin $navbar-transition-duration $navbar-transition-timing-function, $transition-focus !default;
+$navbar-brand-logo-transition:            width $navbar-transition-duration $navbar-transition-timing-function, height $navbar-transition-duration $navbar-transition-timing-function !default;
+$navbar-active-transition:                bottom $navbar-transition-duration $navbar-transition-timing-function !default;
+
+$navbar-border-width:                     $border-width * .5 !default;
+$navbar-border-color:                     $gray-700 !default;
+
+$navbar-brand-margin-y-xs:                $spacer * .5 !default;
+$navbar-brand-logo-size-xs:               $spacer * 1.5 !default;
+$navbar-brand-font-size-xs:               1.3125rem !default;
+$navbar-brand-letter-spacing-xs:          $letter-spacing-base * 5 !default;
+$navbar-brand-font-size-two-lined-xs:     1.0625rem !default;
+$navbar-brand-letter-spacing-two-lined-xs: $letter-spacing-base * 4 !default;
+
+$navbar-brand-margin-y:                   $spacer * .95 !default;
+$navbar-brand-logo-size:                  $spacer * 2.5 !default;
+$navbar-brand-letter-spacing:             $letter-spacing-base * 10 !default;
+$navbar-brand-font-size-two-lined:        1.8125rem !default;
+$navbar-brand-letter-spacing-two-lined:   $letter-spacing-base * 8 !default;
+
+$navbar-icon-size-xs:                     $spacer * 1.25 !default;
+$navbar-icon-size:                        $spacer * 1.5 !default;
+
+$navbar-nav-icon-padding-y-xs:            $spacer * .6 !default;
+$navbar-nav-icon-padding-x-xs:            $spacer * .75 !default;
+$navbar-nav-icon-padding-y:               $navbar-brand-margin-y !default;
+$navbar-nav-icon-padding-x:               $spacer !default;
+
+$navbar-supra-link-padding-y:             $spacer * .6 !default;
+$navbar-supra-link-padding-x:             .46875rem !default;
+$navbar-supra-icon-padding-y:             $spacer * .25 !default;
+$navbar-supra-icon-padding-x:             $navbar-nav-icon-padding-x-xs !default;
+$navbar-supra-icon-size:                  $navbar-icon-size-xs !default;
+
+$navbar-minimized-brand-margin-y:         $spacer * .75 !default;
+$navbar-minimized-nav-icon-padding-y:     $navbar-minimized-brand-margin-y !default;
+$navbar-minimized-toggler-padding-y:      $navbar-minimized-brand-margin-y !default;
+
+$navbar-badge-padding-y:                  .125rem !default;
+$navbar-badge-padding-x:                  .375rem !default;
+$navbar-badge-margin-top:                 .375rem !default;
+// scss-docs-end orange-navbar-variables
+// End mod
+
+// scss-docs-start navbar-theme-variables
+$navbar-dark-color:                  $white !default;
+$navbar-dark-hover-color:            $primary !default;
+$navbar-dark-active-color:           $primary !default;
+$navbar-dark-disabled-color:         $gray-400 !default;
+$navbar-dark-toggler-border-color:   transparent !default;
+// Boosted mod: no $navbar-dark-toggler-icon-bg since dark toggler are handled with filter
+
+$navbar-light-color:                 $black !default;
+$navbar-light-hover-color:           $accessible-orange !default;
+$navbar-light-active-color:          $accessible-orange !default;
+$navbar-light-disabled-color:        $gray-500 !default;
+$navbar-light-toggler-icon-bg:       $burger-icon !default;
+$navbar-light-toggler-icon-bg-small: $burger-icon-small !default; // Boosted mod: slightly different burger icon for small breakpoints
+$navbar-light-toggler-border-color:  null !default;
+
+$navbar-light-brand-color:          $navbar-light-active-color !default;
+$navbar-light-brand-hover-color:    $navbar-light-active-color !default;
+$navbar-dark-brand-color:           inherit !default;
+$navbar-dark-brand-hover-color:     $navbar-dark-active-color !default;
+// scss-docs-end navbar-theme-variables
+
+
+// Dropdowns
+//
+// Dropdown menu container and contents.
+
+// scss-docs-start dropdown-variables
+$dropdown-min-width:                10rem !default;
+$dropdown-padding-x:                $spacer * .5 !default;
+$dropdown-padding-y:                0 !default;
+$dropdown-spacer:                   $border-width * -1 !default;
+$dropdown-font-size:                $font-size-base !default;
+$dropdown-color:                    var(--#{$prefix}body-color) !default;
+$dropdown-bg:                       $white !default;
+$dropdown-border-color:             var(--#{$prefix}border-color-translucent) !default;
+$dropdown-border-radius:            $border-radius !default;
+$dropdown-border-width:             $border-width !default;
+$dropdown-inner-border-radius:      0 !default;
+$dropdown-divider-bg:               $dropdown-border-color !default;
+$dropdown-divider-margin-y:         $spacer * .25 !default;
+$dropdown-box-shadow:               $box-shadow !default;
+
+$dropdown-link-color:               $black !default; // Boosted mod
+$dropdown-link-hover-color:         $white !default; // Boosted mod
+$dropdown-link-hover-bg:            $black !default; // Boosted mod
+
+$dropdown-link-active-color:        color-contrast($component-active-color) !default; // Boosted mod
+$dropdown-link-active-bg:           $component-active-color !default;  // Boosted mod
+
+$dropdown-link-disabled-color:      $gray-500 !default;
+
+$dropdown-item-padding-y:           $spacer * .5 !default;
+$dropdown-item-padding-x:           $spacer * .5 !default;
+
+$dropdown-header-color:             $black !default;
+$dropdown-header-padding-x:         $dropdown-item-padding-x !default;
+$dropdown-header-padding-y:         $spacer !default; // Boosted mod
+// fusv-disable
+$dropdown-header-padding:           $dropdown-header-padding-y $dropdown-header-padding-x !default; // Deprecated in v5.2.0
+// fusv-enable
+// scss-docs-end dropdown-variables
+
+// scss-docs-start dropdown-dark-variables
+$dropdown-dark-color:               $white !default; // Boosted mod
+$dropdown-dark-bg:                  $black !default; // Boosted mod
+$dropdown-dark-border-color:        $gray-700 !default; // Boosted mod
+$dropdown-dark-divider-bg:          $dropdown-dark-border-color !default; // Boosted mod
+$dropdown-dark-
