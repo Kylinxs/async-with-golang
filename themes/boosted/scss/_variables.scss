@@ -1385,4 +1385,433 @@ $dropdown-dark-color:               $white !default; // Boosted mod
 $dropdown-dark-bg:                  $black !default; // Boosted mod
 $dropdown-dark-border-color:        $gray-700 !default; // Boosted mod
 $dropdown-dark-divider-bg:          $dropdown-dark-border-color !default; // Boosted mod
-$dropdown-dark-
+$dropdown-dark-box-shadow:          null !default;
+$dropdown-dark-link-color:          $dropdown-dark-color !default;
+$dropdown-dark-link-hover-color:    $black !default; // Boosted mod
+$dropdown-dark-link-hover-bg:       $white !default; // Boosted mod
+$dropdown-dark-link-active-color:   $black !default; // Boosted mod
+$dropdown-dark-link-active-bg:      $white !default; // Boosted mod
+$dropdown-dark-link-disabled-color: $gray-700 !default; // Boosted mod
+$dropdown-dark-header-color:        $white !default; // Boosted mod
+// scss-docs-end dropdown-dark-variables
+
+// Pagination
+
+// scss-docs-start pagination-variables
+$pagination-padding-y:              null !default;
+$pagination-padding-x:              null !default;
+
+$pagination-font-size:              $font-size-base !default;
+
+$pagination-color:                  null !default;
+$pagination-bg:                     $white !default;
+$pagination-border-radius:          null !default; // Boosted mod
+$pagination-border-width:           $border-width !default;
+$pagination-margin-y:               $spacer !default; // Boosted mod
+$pagination-margin-start:           0 !default; // Boosted mod
+$pagination-margin-x-first-last:    $spacer * .5 !default; // Boosted mod
+$pagination-border-color:           transparent !default; // Boosted mod
+
+$pagination-focus-box-shadow:       $input-btn-focus-box-shadow !default; // Boosted mod
+$pagination-focus-color:            var(--#{$prefix}link-color) !default;
+$pagination-focus-bg:               null !default;
+$pagination-focus-outline:          $pagination-border-width solid $pagination-focus-color !default;
+
+$pagination-hover-color:            var(--#{$prefix}link-color) !default; // Boosted mod
+$pagination-hover-bg:               null !default;
+$pagination-hover-border-color:     $gray-500 !default;
+
+$pagination-active-color:           $white !default;
+$pagination-active-bg:              $black !default;
+$pagination-active-border-color:    $pagination-active-bg !default;
+
+$pagination-disabled-color:         $gray-500 !default;
+$pagination-disabled-bg:            $white !default;
+$pagination-disabled-border-color:  $pagination-disabled-color !default;
+
+$pagination-transition:             $transition-focus !default;
+
+// Boosted mod
+$pagination-padding-end:            1.125rem !default;
+$pagination-icon:                   var(--#{$boosted-prefix}chevron-icon) !default;
+$pagination-icon-size:              subtract($spacer * 2, $border-width * 2) !default;
+$pagination-icon-width:             add(.5rem, 1px) !default;
+$pagination-icon-height:            subtract(1rem, 1px) !default;
+$pagination-active-item-bg:         $primary !default;
+$pagination-active-item-border:     $pagination-active-item-bg !default;
+// End mod
+// scss-docs-end pagination-variables
+
+
+// Placeholders
+
+// scss-docs-start placeholders
+$placeholder-opacity-max:           .5 !default;
+$placeholder-opacity-min:           .2 !default;
+// scss-docs-end placeholders
+
+// Cards
+
+// scss-docs-start card-variables
+$card-spacer-y:                     $spacer !default;
+$card-spacer-x:                     $spacer !default;
+$card-title-spacer-y:               $spacer * .5 !default;
+$card-border-width:                 $border-width !default;
+$card-border-color:                 var(--#{$prefix}border-color-translucent) !default;
+$card-border-radius:                $border-radius !default;
+$card-box-shadow:                   null !default;
+$card-inner-border-radius:          subtract($card-border-radius, $card-border-width) !default;
+$card-cap-padding-y:                $card-spacer-y * .5 !default;
+$card-cap-padding-x:                $card-spacer-x !default;
+$card-cap-bg:                       $black !default;
+$card-cap-color:                    $white !default;
+$card-cap-font-weight:              $font-weight-bold !default; // Boosted mod
+$card-height:                       null !default;
+$card-color:                        null !default;
+$card-bg:                           $white !default;
+$card-img-overlay-padding:          $spacer !default;
+$card-group-margin:                 $grid-gutter-width * .5 !default;
+$card-footer-color:                 $gray-700 !default; // Boosted mod
+// scss-docs-end card-variables
+
+// Accordion
+
+// scss-docs-start accordion-variables
+$accordion-padding-y:                     $spacer * .5 !default; // Boosted mod
+$accordion-padding-x:                     0 !default; // Boosted mod
+$accordion-color:                         var(--#{$prefix}body-color) !default;
+$accordion-bg:                            $body-bg !default;
+$accordion-border-width:                  $border-width * .5 !default; // Boosted mod
+$accordion-border-color:                  $gray-500 !default; // Boosted mod
+$accordion-border-radius:                 $border-radius !default;
+$accordion-inner-border-radius:           subtract($accordion-border-radius, #{$accordion-border-width}) !default;
+
+$accordion-body-padding-y:                $spacer !default; // Boosted mod
+$accordion-body-padding-x:                $spacer !default; // Boosted mod
+
+$accordion-button-padding-y:              $accordion-padding-y !default;
+$accordion-button-padding-x:              $accordion-padding-x !default;
+// fusv-disable
+$accordion-button-color:                  $accordion-color !default; // Deprecated in Boosted 5.2.0 for CSS variables
+// fusv-enable
+$accordion-button-bg:                     var(--#{$prefix}accordion-bg) !default;
+$accordion-transition:                    $btn-transition, border-radius .15s ease !default;
+$accordion-button-active-bg:              null !default; // Boosted mod
+$accordion-button-active-color:           $accessible-orange !default; // Boosted mod
+
+// Boosted mod: dark variant
+$accordion-dark-color:                    $white !default;
+$accordion-dark-bg:                       $black !default;
+$accordion-dark-border-color:             $gray-700 !default;
+$accordion-dark-button-color:             $accordion-dark-color !default;
+$accordion-dark-button-bg:                $accordion-dark-bg !default;
+$accordion-dark-button-active-color:      $brand-orange !default;
+// End mod
+
+// Boosted mod: no $accordion-button-focus-border-color
+// Boosted mod: no $accordion-button-focus-box-shadow
+
+// Boosted mod: no $accordion-icon-width
+// Boosted mod: no $accordion-icon-transition
+$accordion-icon-transform:                scaleY(-1) !default;
+
+// Boosted mod: no $accordion-button-icon
+// Boosted mod: no $accordion-button-active-icon
+
+// Boosted mod: accordion sizes
+$accordion-button-font-size:              $h3-font-size !default;
+$accordion-button-line-height:            null !default;
+$accordion-button-font-weight:            $font-weight-bold !default;
+$accordion-button-letter-spacing:         $h3-spacing !default;
+$accordion-button-font-size-sm:           $h5-font-size !default;
+$accordion-button-line-height-sm:         $h5-line-height !default;
+$accordion-button-letter-spacing-sm:      $h5-spacing !default;
+$accordion-button-font-size-lg:           $h2-font-size !default;
+$accordion-button-line-height-lg:         calc(40 / 30) !default; // stylelint-disable-line function-disallowed-list
+$accordion-button-letter-spacing-lg:      $h2-spacing !default;
+// End mod
+// scss-docs-end accordion-variables
+
+// Tooltips
+
+// scss-docs-start tooltip-variables
+$tooltip-font-size:                 $font-size-sm !default;
+$tooltip-font-weight:               $font-weight-bold !default; // Boosted mod
+$tooltip-max-width:                 $spacer * 10 !default;
+$tooltip-color:                     $black !default;
+$tooltip-bg:                        $gray-400 !default;
+$tooltip-border-radius:             $border-radius !default;
+$tooltip-opacity:                   1 !default;
+$tooltip-padding-y:                 $spacer * .5 !default;
+$tooltip-padding-x:                 $spacer * .5 !default;
+$tooltip-margin:                    null !default; // TODO: remove this in v6
+
+$tooltip-arrow-width:               $spacer * .5 !default;
+$tooltip-arrow-height:              $tooltip-arrow-width * .5 !default;
+// fusv-disable
+$tooltip-arrow-color:               null !default; // Deprecated in Boosted 5.2.0 for CSS variables
+// fusv-enable
+// scss-docs-end tooltip-variables
+
+// Boosted mod: no form tooltips
+
+
+// Popovers
+
+// scss-docs-start popover-variables
+$popover-font-size:                 $font-size-sm !default;
+$popover-font-weight:               $font-weight-bold !default; // Boosted mod
+$popover-bg:                        $gray-400 !default;
+$popover-max-width:                 17.25rem !default;
+$popover-border-width:              $border-width !default;
+$popover-border-color:              $popover-bg !default; // Boosted mod
+$popover-border-radius:             $border-radius-lg !default;
+$popover-inner-border-radius:       subtract($popover-border-radius, $popover-border-width) !default;
+$popover-box-shadow:                null !default;
+
+$popover-header-font-size:          $font-size-base !default;
+$popover-header-bg:                 $popover-bg !default; // Boosted mod
+$popover-header-color:              var(--#{$prefix}heading-color) !default;
+$popover-header-padding-y:          $spacer * .5 !default;
+$popover-header-padding-x:          $spacer * .5 !default;
+
+$popover-body-color:                var(--#{$prefix}body-color) !default;
+$popover-body-padding-y:            $popover-header-padding-y !default;
+$popover-body-padding-x:            $popover-header-padding-x !default;
+
+$popover-arrow-width:               $spacer * .5 !default;
+$popover-arrow-height:              $popover-arrow-width * .5 !default;
+// scss-docs-end popover-variables
+
+// fusv-disable
+// Deprecated in Boosted 5.2.0 for CSS variables
+$popover-arrow-color:               $popover-bg !default;
+$popover-arrow-outer-color:         $popover-border-color !default; // Boosted mod
+// fusv-enable
+
+// Toasts
+
+// scss-docs-start toast-variables
+$toast-max-width:                   21.875rem !default;
+$toast-padding-x:                   $spacer * .5 !default;
+$toast-padding-y:                   $spacer * .25 !default;
+$toast-font-size:                   .875rem !default;
+$toast-color:                       $black !default;
+$toast-background-color:            rgba($white, .85) !default;
+$toast-border-width:                $border-width !default;
+$toast-border-color:                var(--#{$prefix}border-color-translucent) !default; // Boosted mod
+$toast-border-radius:               $border-radius !default;
+$toast-box-shadow:                  $box-shadow !default;
+$toast-spacing:                     $container-padding-x !default;
+
+$toast-header-color:                null !default;
+$toast-header-background-color:     rgba($white, .85) !default;
+$toast-header-border-color:         rgba($black, .05) !default;
+// scss-docs-end toast-variables
+
+// Badges
+
+// scss-docs-start badge-variables
+$badge-font-size:                   .75em !default;
+$badge-font-weight:                 $font-weight-bold !default;
+$badge-color:                       $white !default;
+$badge-padding-y:                   .35em !default;
+$badge-padding-x:                   .65em !default;
+$badge-border-radius:               $border-radius !default;
+// scss-docs-end badge-variables
+
+// Modals
+
+// scss-docs-start modal-variables
+$modal-inner-padding:               $spacer * .5 $spacer !default;
+
+$modal-footer-margin-between:       $spacer * .5 !default;
+$modal-footer-padding:              $spacer * .5 subtract($spacer, $modal-footer-margin-between * .5) 0 !default; // Boosted mod
+
+$modal-dialog-margin:               $spacer * .5 !default;
+$modal-dialog-margin-y-sm-up:       $spacer * 1.5 !default;
+
+$modal-title-line-height:           $line-height-base !default;
+
+$modal-content-padding-y:           $spacer !default; // Boosted mod
+$modal-content-padding-x:           0 !default; // Boosted mod
+$modal-content-padding:             $modal-content-padding-y $modal-content-padding-x !default; // Boosted mod
+$modal-content-color:               null !default;
+$modal-content-bg:                  $white !default;
+$modal-content-border-color:        var(--#{$prefix}border-color-translucent) !default;
+$modal-content-border-width:        $border-width !default;
+$modal-content-border-radius:       $border-radius-lg !default;
+$modal-content-inner-border-radius: $border-radius !default; // Boosted mod
+$modal-content-box-shadow-xs:       $box-shadow-sm !default;
+$modal-content-box-shadow-sm-up:    $box-shadow !default;
+
+$modal-backdrop-bg:                 $black !default;
+$modal-backdrop-opacity:            .5 !default;
+
+$modal-header-border-color:         null !default; // Boosted mod
+$modal-header-border-width:         $modal-content-border-width !default;
+$modal-header-padding-y:            $spacer; // 0 !default; Changed for Tiki
+$modal-header-padding-x:            $spacer !default;
+$modal-header-padding:              $modal-header-padding-y $modal-header-padding-x !default; // Keep this for backwards compatibility
+
+$modal-footer-bg:                   null !default;
+$modal-footer-border-color:         null !default; // Boosted mod
+$modal-footer-border-width:         $modal-header-border-width !default;
+
+// Boosted mod
+//// Scrollable modal
+$modal-scrollable-inner-padding:    $spacer !default;
+$modal-scrollable-inner-margin:     $spacer 0 $spacer * .5 !default;
+
+//// Modal with top image
+$modal-img-margin:                  -$modal-content-padding-y 0 $modal-content-padding-y !default; // Boosted mod
+$modal-img-btn-close-offset:        $modal-content-padding-y !default;
+// End mod
+
+$modal-sm:                          300px !default;
+$modal-md:                          460px !default;
+$modal-lg:                          700px !default;
+$modal-xl:                          940px !default;
+
+$modal-fade-transform:              translate(0, -50px) !default;
+$modal-show-transform:              none !default;
+$modal-transition:                  transform .3s ease-out !default;
+$modal-scale-transform:             scale(1.02) !default;
+// scss-docs-end modal-variables
+
+// Alerts
+//
+// Define alert colors, border radius, and padding.
+
+// scss-docs-start alert-variables
+$alert-color:                       inherit !default; // Boosted mod
+$alert-padding-y:                   1rem !default;
+$alert-padding-x:                   $spacer !default;
+$alert-margin-bottom:               $spacer !default;
+$alert-border-radius:               $border-radius !default;
+$alert-link-font-weight:            null !default; // Boosted mod
+$alert-border-width:                $border-width !default;
+
+// Boosted mod
+$alert-padding-sm:                  $spacer * .5 !default;
+$alert-icons: (
+    "success": var(--#{$boosted-prefix}success-icon),
+    "info":    escape-svg($info-icon),
+    "warning": escape-svg($warning-icon),
+    "danger":  var(--#{$boosted-prefix}error-icon)
+) !default;
+$alert-logo-size:                   add($spacer * .5, 1rem) !default;
+$alert-logo-size-sm:                add(1rem, 1px) !default;
+$alert-icon-size:                   3rem !default;
+$alert-icon-margin-y:               $spacer * .1 !default;
+$alert-btn-close-offset:            .5rem !default;
+$alert-btn-close-offset-sm:         $spacer * .25 !default;
+// End mod
+
+$alert-dismissible-padding-r:       $alert-padding-y * 3 !default; // 3x covers width of x plus default padding on either side
+// scss-docs-end alert-variables
+
+// Progress bars
+
+// scss-docs-start progress-variables
+$progress-height:                   $spacer !default;
+$progress-font-size:                $font-size-base !default;
+$progress-bg:                       $gray-300 !default;
+$progress-border-radius:            $border-radius !default;
+$progress-box-shadow:               $box-shadow-inset !default;
+$progress-bar-color:                $black !default;
+$progress-bar-font-weight:          $font-weight-bold !default; // Boosted mod
+$progress-bar-text-indent:          map-get($spacers, 2) !default; // Boosted mod
+$progress-bar-bg:                   $primary !default;
+$progress-bar-animation-timing:     1s linear infinite !default;
+$progress-bar-transition:           width .6s ease !default;
+
+// Boosted mod
+$progress-height-sm:                $spacer * .5 !default;
+$progress-height-xs:                $spacer * .25 !default;
+// End mod
+// scss-docs-end progress-variables
+
+// List group
+
+// scss-docs-start list-group-variables
+$list-group-color:                  $gray-900 !default;
+$list-group-bg:                     $white !default;
+$list-group-border-color:           $gray-500 !default;
+$list-group-border-width:           $border-width !default;
+$list-group-border-radius:          $border-radius !default;
+
+$list-group-item-padding-y:         .875rem !default;
+$list-group-item-padding-x:         $spacer !default;
+
+$list-group-hover-bg:               null !default; // Boosted mod
+$list-group-active-color:           $white !default;
+$list-group-active-bg:              $black !default;
+$list-group-active-border-color:    $list-group-active-bg !default;
+
+$list-group-disabled-color:         #757575; // $gray-500 !default; Changed for Tiki for WCAG 2 compliance
+$list-group-disabled-bg:            $list-group-bg !default;
+
+$list-group-action-color:           $black !default;
+$list-group-action-hover-color:     $primary !default;
+
+$list-group-action-active-color:    $list-group-active-color !default; // Boosted mod
+$list-group-action-active-bg:       $list-group-active-bg !default; // Boosted mod
+// scss-docs-end list-group-variables
+
+
+// Image thumbnails
+
+// scss-docs-start thumbnail-variables
+$thumbnail-padding:                 $spacer * .5 !default;
+$thumbnail-bg:                      $body-bg !default;
+$thumbnail-border-width:            $border-width !default;
+$thumbnail-border-color:            var(--#{$prefix}border-color) !default;
+$thumbnail-border-radius:           $border-radius !default;
+$thumbnail-box-shadow:              $box-shadow-sm !default;
+// scss-docs-end thumbnail-variables
+
+// Figures
+
+// scss-docs-start figure-variables
+$figure-caption-font-size:          $small-font-size !default;
+$figure-caption-color:              $gray-900 !default;
+// scss-docs-end figure-variables
+
+// Boosted mod
+// Title bars
+
+// scss-docs-start title-bars-variables
+$title-bar-image-ratio:             1.8em !default;
+$title-bar-padding-y:               .3333333em !default;
+$title-bar-font-size:               $h2-font-size !default;
+$title-bar-line-height:             $display-line-height !default;
+$title-bar-letter-spacing:          $h2-spacing !default;
+$title-bar-border-width:            $border-width * .5 !default;
+$title-bar-border-color:            $gray-500 !default;
+
+$title-bar-font-size-md:            $display2-size !default;
+$title-bar-letter-spacing-md:       $display2-spacing !default;
+
+$title-bar-font-size-xl:            $display1-size !default;
+$title-bar-letter-spacing-xl:       $display1-spacing !default;
+
+$title-bar-border-color-dark:       $gray-700 !default;
+// scss-docs-end title-bars-variables
+// End mod
+
+
+// Breadcrumbs
+
+// scss-docs-start breadcrumb-variables
+$breadcrumb-font-size:              $font-size-sm !default;
+$breadcrumb-font-weight:            $font-weight-bold !default; // Boosted mod
+
+$breadcrumb-padding-y:              .5rem !default;
+$breadcrumb-padding-x:              0 !default;
+$breadcrumb-item-padding-x:         $spacer * .5 !default;
+$breadcrumb-margin-bottom:          1rem !default;
+$breadcrumb-bg:                     null !default;
+$breadcrumb-divider-color:          null !default;
+$breadcrumb-active-color:           null !default;
+$breadcrumb-divider:                url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 
