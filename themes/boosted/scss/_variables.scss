@@ -1814,4 +1814,271 @@ $breadcrumb-margin-bottom:          1rem !default;
 $breadcrumb-bg:                     null !default;
 $breadcrumb-divider-color:          null !default;
 $breadcrumb-active-color:           null !default;
-$breadcrumb-divider:                url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 
+$breadcrumb-divider:                url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 14' width='7' height='10'><path d='m-.4 12 2 2 7-7-7-7-2 2 5 5z'/></svg>") !default;
+$breadcrumb-divider-flipped:        $breadcrumb-divider !default;
+$breadcrumb-border-radius:          null !default;
+// scss-docs-end breadcrumb-variables
+
+
+// Carousel
+
+// scss-docs-start carousel-variables
+$carousel-control-color:             $black !default;
+$carousel-control-width:             $spacer * 3 !default;
+$carousel-control-opacity:           null !default;
+$carousel-control-hover-opacity:     null !default;
+$carousel-control-transition:        $transition-focus !default;
+
+$carousel-indicator-width:           .5rem !default;
+$carousel-indicator-height:          .5rem !default;
+$carousel-indicator-hit-area-height: $spacer * 1.5 !default;
+$carousel-indicator-spacer:          $spacer * .5 !default;
+$carousel-indicator-opacity:         null !default;
+$carousel-indicator-active-bg:       $white !default;
+$carousel-indicator-active-opacity:  null !default;
+$carousel-indicator-transition:      null !default;
+// Boosted mod
+$carousel-indicator-hover-scale:        1.5 !default;
+$carousel-indicator-active-scale:       calc(2 / 3) !default; // stylelint-disable-line function-disallowed-list
+$carousel-indicator-active-radius:      0 100% 100% 0 / 50% !default;
+$carousel-indicator-animation-duration: 5000ms !default;
+$carousel-indicator-animation-interval: var(--carousel-interval, #{$carousel-indicator-animation-duration}) !default;
+$carousel-indicators-padding-y:         $spacer * .5 !default;
+// End mod
+
+$carousel-caption-width:             70% !default;
+$carousel-caption-color:             $black !default;
+$carousel-caption-padding-y:         $spacer !default;
+$carousel-caption-padding-x:         $spacer !default; // Boosted mod
+$carousel-caption-spacer:            $spacer * 3 !default;
+
+$carousel-control-icon-width:        2.5rem !default;
+// Boosted mod
+$carousel-control-icon-size:         1rem 1.5rem !default;
+$carousel-control-icon-bg:           var(--#{$boosted-prefix}chevron-icon) !default;
+$carousel-control-icon-active-bg:    $component-active-bg !default;
+
+$carousel-control-pause-icon:        $pause-icon !default;
+$carousel-control-play-icon:         $play-icon !default;
+$carousel-control-pause-icon-size:   1.25rem 1.25rem !default;
+// End mod
+
+$carousel-transition-duration:       .6s !default;
+$carousel-transition:                transform $carousel-transition-duration $transition-timing !default; // Define transform transition first if using multiple transitions (e.g., `transform 2s ease, opacity .5s ease-out`)
+
+// Boosted mod: no dark carousel
+// scss-docs-end carousel-variables
+
+
+// Spinners
+
+// scss-docs-start spinner-variables
+$spinner-width:           $spacer * 2 !default;
+$spinner-height:          $spinner-width !default;
+$spinner-vertical-align:  -.125em !default;
+$spinner-border-width:    $border-width * 3 !default; // Boosted mod
+$spinner-animation-speed: .75s !default;
+
+$spinner-width-sm:        $spacer !default;
+$spinner-height-sm:       $spinner-width-sm !default;
+$spinner-border-width-sm: $border-width * 2 !default; // Boosted mod
+
+// Boosted mod
+$spinner-width-lg:        $spacer * 4 !default;
+$spinner-height-lg:       $spinner-width-lg !default;
+$spinner-border-width-lg: $border-width * 4 !default;
+// End mod
+// scss-docs-end spinner-variables
+
+
+// Close
+
+// scss-docs-start close-variables
+$btn-close-width:            $spacer !default;
+$btn-close-height:           $btn-close-width !default;
+$btn-close-padding:          var(--#{$boosted-prefix}icon-spacing, #{$btn-icon-padding-x}) !default;
+$btn-close-color:            $black !default;
+$btn-close-bg:               var(--#{$boosted-prefix}close-icon) !default;
+$btn-close-focus-shadow:     $btn-focus-box-shadow !default;
+
+// Boosted mod
+$btn-close-icon-size:        1rem auto !default;
+$btn-close-padding-sm:       subtract($btn-icon-padding-x, $spacer * .25) !default;
+// End mod
+// scss-docs-end close-variables
+
+// Offcanvas
+
+// scss-docs-start offcanvas-variables
+$offcanvas-padding-y:               $modal-inner-padding !default;
+$offcanvas-padding-x:               $modal-inner-padding !default;
+$offcanvas-horizontal-width:        400px !default;
+$offcanvas-vertical-height:         30vh !default;
+$offcanvas-transition-duration:     .3s !default;
+$offcanvas-border-color:            $modal-content-border-color !default;
+$offcanvas-border-width:            $modal-content-border-width !default;
+$offcanvas-title-line-height:       $modal-title-line-height !default;
+$offcanvas-bg-color:                $modal-content-bg !default;
+$offcanvas-color:                   $modal-content-color !default;
+$offcanvas-box-shadow:              $modal-content-box-shadow-xs !default;
+$offcanvas-backdrop-bg:             $modal-backdrop-bg !default;
+$offcanvas-backdrop-opacity:        $modal-backdrop-opacity !default;
+// scss-docs-end offcanvas-variables
+
+// Code
+// Boosted mod removed because it broke color contrast, maybe fix someday
+//$code-font-size:                    .875em !default;
+//$code-color:                        $gray-700 !default;
+//$code-color-dark:                   $gray-600 !default;
+
+//$kbd-padding-y:                     $spacer * .05 !default;
+//$kbd-padding-x:                     $spacer * .05 !default;
+//$kbd-font-size:                     $code-font-size !default;
+//$kbd-color:                         var(--#{$boosted-prefix}kbd-color, $black) !default;
+//$kbd-color-dark:                    $white !default;
+//$kbd-bg:                            var(--#{$boosted-prefix}kbd-bg, $gray-300) !default;
+//$kbd-bg-dark:                       $gray-900 !default;
+//$nested-kbd-font-weight:            null !default; // Deprecated in v5.2.0, removing in v6
+
+//$pre-color:                         var(--#{$boosted-prefix}pre-color, $gray-900) !default;
+//$pre-color-dark:                    $gray-300 !default;
+//$pre-line-height:                   1.25 !default;
+// End mod
+
+//
+// Boosted mod
+//
+
+//// Scroll margin
+$scroll-offset-top:              $spacer * 6 !default; // Matching .navbar computed height
+
+//// Back to top
+// scss-docs-start back-to-top
+$back-to-top-display-threshold:  100vh !default;
+$back-to-top-target-id:          "top" !default;
+$back-to-top-target-offset-top:  $scroll-offset-top !default;
+$back-to-top-offset:             $spacer * 1.5 !default;
+$back-to-top-offset-right:       $back-to-top-offset !default;
+$back-to-top-offset-bottom:      $back-to-top-offset !default;
+$back-to-top-link-offset-top:    subtract(100vh, $back-to-top-offset * 4) !default;
+$back-to-top-link-offset-top-xl: subtract(100vh, $spacer * 5) !default;
+$back-to-top-title-offset-right: add(100%, $border-width) !default;
+$back-to-top-title-padding:      subtract($btn-padding-y, 1px) $btn-padding-x add($btn-padding-y, 1px) !default;
+$back-to-top-title-bg-color:     $white !default;
+$back-to-top-icon:               var(--#{$boosted-prefix}chevron-icon) !default;
+$back-to-top-icon-width:         add(.5rem, 1px) !default;
+$back-to-top-icon-height:        subtract(1rem, 1px) !default;
+// scss-docs-end back-to-top
+
+//// Stepped process
+// scss-docs-start stepped-process
+$stepped-process-font-size:   $small-font-size !default;
+$stepped-process-font-weight: $font-weight-bold !default;
+$stepped-process-max-items:   5 !default;
+$stepped-process-counter:     step !default; // Used as a counter name
+
+$step-item-padding:           7px !default;
+// fusv-disable
+$step-item-padding-end:       $step-item-padding * 2 !default; // Deprecated in v5.2.0
+// fusv-enable
+$step-item-margin-end:        $border-width !default;
+$step-item-bg:                $black !default;
+$step-item-active-bg:         $primary !default;
+$step-item-next-bg:           $gray-400 !default;
+$step-item-shadow-size:       $border-width * 1.5 !default;
+$step-item-drop-shadow:       drop-shadow($step-item-shadow-size 0 0 $white) #{"/* rtl:"} drop-shadow(-$step-item-shadow-size 0 0 $white) #{"*/"} !default;
+
+$step-item-arrow-width:       1rem !default;
+$step-item-arrow-shape:       polygon(0% 0%, subtract(100%, $border-width) 50%, 0% 100%) #{"/* rtl:"} polygon(100% 0%, $border-width 50%, 100% 100%) #{"*/"} !default; // Used in clip-path
+
+$step-link-width:             1.25ch !default; // Matches width of a single number
+$step-link-color:             $white !default;
+$step-link-active-color:      $black !default;
+$step-link-line-height:       $line-height-sm !default;
+$step-link-marker:            counter(var(--bs-stepped-process-counter)) inspect("\A0") !default;
+$step-link-marker-lg:         counter(var(--bs-stepped-process-counter)) inspect(".\A0") !default;
+$step-link-text-decoration:   $link-decoration !default;
+// scss-docs-end stepped-process
+
+//// Sticker
+// scss-docs-start sticker
+$sticker-size-sm:                       $spacer * 7 !default;
+$sticker-size-md:                       $spacer * 9 !default;
+$sticker-size-lg:                       $spacer * 14 !default;
+
+// Considering @use "sass:math", math.sqrt(2) / 2 is approximated to 0.7071067812
+$sticker-content-max-width-sm:          $sticker-size-sm * .7071067812 !default;
+$sticker-content-max-width-md:          $sticker-size-md * .7071067812 !default;
+$sticker-content-max-width-lg:          $sticker-size-lg * .7071067812 !default;
+// scss-docs-end sticker
+
+//// Quantity selector
+// scss-docs-start quantity-selector
+$quantity-selector-width:                 7.5rem !default;
+$quantity-selector-sm-width:              5.5rem !default;
+
+$quantity-selector-btn-padding-x:         add($btn-icon-padding-x, 2px) !default;
+$quantity-selector-btn-padding-x-sm:      add($btn-icon-padding-x-sm, 2px) !default;
+
+$quantity-selector-icon-width:            .875rem !default;
+$quantity-selector-icon-sm-width:         .625rem !default;
+
+$quantity-selector-icon-add:              $add-icon !default;
+$quantity-selector-icon-add-sm:           $add-icon-sm !default;
+$quantity-selector-icon-add-height:       .875rem !default;
+$quantity-selector-icon-sm-add-height:    .625rem !default;
+
+$quantity-selector-icon-remove:           $remove-icon !default;
+$quantity-selector-icon-remove-sm:        $remove-icon-sm !default;
+$quantity-selector-icon-remove-height:    .125rem !default;
+$quantity-selector-icon-sm-remove-height: .125rem !default;
+
+$quantity-selector-input-max-width:       2.625rem !default;
+$quantity-selector-input-sm-max-width:    2.5rem !default;
+// scss-docs-end quantity-selector
+
+//// Footer
+// scss-docs-start footer
+$footer-font-size-sm:                     $font-size-sm !default;
+$footer-line-height-sm:                   $line-height-sm !default;
+$footer-font-size-md:                     $font-size-base !default;
+$footer-line-height-md:                   $line-height-base !default;
+$footer-title-font-weight:                $font-weight-bold !default;
+$footer-letter-spacing:                   $letter-spacing-base !default;
+$footer-accordion-line-height:            $spacer * 1.45 !default;
+$footer-nav-link-font-weight:             $font-weight-bold !default;
+
+$footer-title-content-padding-top:        $spacer * 1.25 !default;
+$footer-title-content-padding-bottom:     $spacer * 1.45 !default;
+$footer-title-content-padding-bottom-md:  $spacer * 1.95 !default;
+$footer-title-margin-bottom:              $spacer * .85 !default;
+
+$footer-social-padding-top:               $spacer * .85 !default;
+$footer-social-padding-top-md:            $spacer * 1.5 !default;
+$footer-social-padding-bottom:            $spacer * 1.45 !default;
+$footer-social-title-margin-bottom-md:    $spacer * .1 !default;
+
+$footer-title-margin-bottom-md:           $spacer * 1.05 !default;
+$footer-nav-padding-top:                  $spacer * 1.55 !default;
+$footer-nav-list-padding-top:             $spacer * .85 !default;
+$footer-nav-list-padding-top-md:          $spacer * .05 !default;
+$footer-nav-list-padding-bottom:          $spacer * 1.3 !default;
+$footer-nav-list-padding-bottom-md:       $spacer * 1.75 !default;
+$footer-nav-list-padding-bottom-lg:       $spacer * 2 !default;
+
+$footer-service-padding-y:                $spacer !default;
+$footer-service-padding-y-md:             $spacer * 1.2 !default;
+$footer-service-link-padding-top:         $spacer * .1 !default;
+
+$footer-terms-padding-top:                $spacer * .85 !default;
+$footer-terms-padding-bottom:             $spacer * 1.35 !default;
+$footer-terms-padding-y-md:               $spacer * 1.1 !default;
+
+$footer-gap:                              $spacer * .75 !default;
+$footer-gap-xl:                           $spacer * 1.7 !default;
+// scss-docs-end footer
+// End mod
+// End Orange-Boosted-Bootstrap-5.2.0/scss/_variables.scss
+
+//------- Tiki SCSS variables
+
