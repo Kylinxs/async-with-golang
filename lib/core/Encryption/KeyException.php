@@ -1,3 +1,4 @@
+
 <?php
 
 // (c) Copyright by authors of the Tiki Wiki CMS Groupware Project
@@ -6,6 +7,8 @@
 // Licensed under the GNU LESSER GENERAL PUBLIC LICENSE. See license.txt for details.
 // $Id$
 
-// This redirects to the sites root to prevent directory browsing
-header("location: ../../../tiki-index.php");
-die;
+namespace Tiki\Encryption;
+
+class KeyException extends Exception
+{
+}
