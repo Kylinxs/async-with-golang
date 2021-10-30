@@ -53,4 +53,13 @@ class Search_Formatter_AppendPagination implements Search_Formatter_Plugin_Inter
                 $filters[$key] = $val;
             }
         }
-        $url .= '?' . http_build_query(
+        $url .= '?' . http_build_query($filters);
+
+        $pagination = smarty_block_pagination_links($arguments, $url, $smarty, $tmp);
+
+        if ($this->getFormat() == Search_Formatter_Plugin_Interface::FORMAT_WIKI) {
+            $pagination = "~np~$pagination~/np~";
+        }
+        return $this->parent->renderEntries($entries) . $pagination;
+    }
+}

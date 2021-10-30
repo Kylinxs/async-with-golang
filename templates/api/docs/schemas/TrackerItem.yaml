@@ -1,0 +1,16 @@
+type: object
+properties:
+  itemId:
+    type: integer
+  trackerId:
+    type: integer
+  created:
+    type: integer
+  createdBy:
+    type: string
+  status:
+    type: string
+  lastModif:
+    type: integer
+  lastModifBy:
+    type: string
