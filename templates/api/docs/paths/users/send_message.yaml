@@ -1,0 +1,46 @@
+post:
+  description: Send user an internal message
+  requestBody:
+    required: true
+    content:
+      application/x-www-form-urlencoded:
+        schema:
+          type: object
+          properties:
+            to:
+              type: string
+              description: Username
+            priority:
+              type: string
+              enum:
+                - 1
+                - 2
+                - 3
+                - 4
+                - 5
+            subject:
+              type: string
+            body:
+              type: string
+            replytome:
+              type: boolean
+              description: Reply to my email
+            bccme:
+              type: boolean
+              description: Send me a copy
+  responses:
+    '200':
+      description: send message response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              feedback:
+                type: string
+    '404':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml

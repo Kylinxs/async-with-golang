@@ -1,0 +1,180 @@
+
+.tiki #conversejs, .tiki #conversejs.converse-embedded {
+    font-family: $font-family-base;
+    color: $body-color;
+    text-shadow: none;
+
+    a, a:visited {
+        color: $link-color;
+        &:hover { color: $link-hover-color; }
+    }
+
+    input[type=text], textarea, select {
+        background-color: $input-bg;
+        color: $input-color;
+        border-color: $input-border-color;
+    }
+
+    form {
+        input[type=text], textarea, select {
+            background-color: $input-bg;
+            color: $input-color;
+            border-color: $input-border-color;
+        }
+
+        &.converse-form {
+            background-color: inherit;
+            .form-help {
+                &, &:hover { color: $body-color; }
+            }
+        }
+    }
+
+    .toggle-controlbox {
+        background-color: $primary;
+        span { color: $primary; }
+    }
+
+    &.converse-overlayed #controlbox .controlbox-head .chatbox-btn {
+        color: $body-color;
+    }
+
+    .message.chat-msg:hover {
+        background-color: transparent;
+    }
+
+    #minimized-chats {
+        .chat-head-chatbox {
+            background-color: $primary;
+            .restore-chat, .chatbox-btn { color: $primary; }
+        }
+
+        .chat-head-chatroom {
+            background-color: $secondary;
+            .restore-chat, .chatbox-btn { color: $secondary; }
+        }
+    }
+
+
+// controlbox
+    #controlbox {
+        .box-flyout { background-color: $body-bg; }
+        .controlbox-head, .controlbox-panes, .controlbox-pane {
+            background-color: inherit;
+        }
+
+        #chatrooms {
+            .list-toggle { color: $body-color; }
+            .rooms-list .available-chatroom {
+                &:hover {
+                    background-color: inherit;
+                    a { color: $body-color; }
+                }
+            }
+        }
+
+        #converse-roster {
+            .group-toggle { color: $body-color; }
+
+            .roster-filter-form {
+                .roster-filter {
+                    background-color: $input-bg;
+                    color: $input-color;
+                    border-color: $input-border-color;
+                }
+            }
+        }
+    }
+
+
+// chatroom
+    .chatbox {
+        .box-flyout {
+            background-color: $body-bg;
+            border: 1px solid $input-border-color;
+        }
+
+        form.sendXMPPMessage {
+            background-color: $input-bg;
+
+            .chat-toolbar {
+                background-color: $primary;
+                border-top-color: $secondary;
+                ul, li .toolbar-menu { background-color: $primary; }
+
+                .fa-eye, .fa-paperclip, .toggle-smiley, .unencrypted, .toggle-occupants {
+                    color: $primary;
+                    &:hover { color: darken($primary, 7.5%)/*, 7.5%*/; }
+                }
+            }
+        }
+
+        .chat-head {
+            &.chat-head-chatbox { background-color: $primary; }
+            .chat-title, a.chatbox-btn.fa { color: $primary; }
+            a:hover.chatbox-btn.fa { color: darken($primary, 7.5%)/*, 7.5%*/; }
+        }
+
+        .chat-body {
+            background-color: inherit;
+
+            .chat-content {
+                color: $body-color;
+                background-color: inherit;
+
+                .chat-msg__author { color: $link-color; }
+                .chat-msg__text { color: $body-color; }
+            }
+        }
+    }
+
+    .chatroom {
+        .box-flyout {
+            .chat-head-chatroom {
+                background-color: $secondary;
+                border-bottom:1px solid $body-color;
+
+                .close-chatbox-button, .toggle-chatbox-button, .configure-chatroom-button,
+                .toggle-bookmark, .chat-title, .chatroom-description {
+                    color: $secondary;
+                }
+            }
+
+            .chatroom-body {
+                background-color: inherit;
+                p { color: $body-color; }
+
+                .occupants {
+                    background-color: inherit;
+                    border-left-color: $body-color;
+
+                    ul {
+                        padding: 0;
+                        li.occupant .occupant-status {
+                            margin-left: 1px;
+                            box-shadow: 0 0 1px 1px #444;
+                        }
+                    }
+                }
+
+                .chatroom-form-container {
+                    background-color: inherit;
+                    color: $body-color;
+                }
+
+                .chat-area .new-msgs-indicator {
+                    background-color: $info;
+                    color: $info;
+                }
+
+                .chat-info { color: $info; }
+                .message .separator { border-color: $info; }
+            }
+        }
+    }
+
+    &.converse-overlayed #minimized-chats #toggle-minimized-chats {
+        background-color: $info;
+        color: $info;
+    }
+}

@@ -1,0 +1,75 @@
+// scss-docs-start caret-mixins
+@mixin caret-down {
+  border-top: $caret-width solid;
+  border-right: $caret-width solid transparent;
+  border-bottom: 0;
+  border-left: $caret-width solid transparent;
+}
+
+@mixin caret-up {
+  border-top: 0;
+  border-right: $caret-width solid transparent;
+  border-bottom: $caret-width solid;
+  border-left: $caret-width solid transparent;
+}
+
+@mixin caret-end {
+  border-top: $caret-width solid transparent;
+  border-right: 0;
+  border-bottom: $caret-width solid transparent;
+  border-left: $caret-width solid;
+}
+
+@mixin caret-start {
+  border-top: $caret-width solid transparent;
+  border-right: $caret-width solid;
+  border-bottom: $caret-width solid transparent;
+}
+
+@mixin caret($direction: down, $accordion: false) {
+  @if $enable-caret {
+    &::after {
+      display: inline-block;
+      // Boosted mod: flexbox FTW!
+      align-self: $caret-vertical-align;
+      @if ($accordion == false) {
+        margin-left: $caret-spacing;
+      } @else {
+        margin: 0 $caret-spacing 0 auto;
+      }
+      // End mod
+      content: "";
+      @if $direction == down {
+        @include caret-down();
+        transform: translateY($border-width * .5); // Boosted mod
+      } @else if $direction == up {
+        @include caret-up();
+      } @else if $direction == end {
+        @include caret-end();
+      }
+    }
+
+    @if $direction == start {
+      &::after {
+        display: none;
+      }
+
+      &::before {
+        // stylelint-disable-next-line declaration-no-important
+        position: static !important; // Boosted mod: prevent custom split buttons to interfere
+        display: inline-block;
+        align-self: $caret-vertical-align; // Boosted mod: flexbox FTW!
+        margin-right: $caret-spacing;
+        // stylelint-disable-next-line declaration-no-important
+        color: unset !important; // Boosted mod: prevent custom split buttons to interfere
+        content: "";
+        @include caret-start();
+      }
+    }
+
+    &:empty::after {
+      margin-left: 0;
+    }
+  }
+}
+// scss-docs-end caret-mixins

@@ -1,0 +1,69 @@
+
+---
+post:
+  description: Update a comment.
+  parameters:
+    - name: threadId
+      in: path
+      required: true
+      schema:
+        type: integer
+  requestBody:
+    required: true
+    content:
+      application/x-www-form-urlencoded:
+        schema:
+          type: object
+          properties:
+            title:
+              type: string
+            data:
+              type: string
+  responses:
+    '200':
+      description: comment update response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comment:
+                $ref: schemas-Comment.yaml
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
+delete:
+  description: Remove a comment.
+  parameters:
+    - name: threadId
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: comment remove response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              threadId:
+                type: integer
+              status:
+                type: string
+              objectType:
+                type: string
+              objectId:
+                type: string
+              parsed:
+                type: string
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
