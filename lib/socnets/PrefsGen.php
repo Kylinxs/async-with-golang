@@ -387,3 +387,29 @@ class PrefsGen
                 //TODO does this array and hidden work? It looks like it is not...
                 ],
             self::$socPreffix . 'socLoginBaseUrl' => [
+                'name' => tra('socnets Login Base Url:'),
+                'description' => tra('this is for programmers - just add socnet Name for new socnet'),
+                'type' => 'text',
+                'default' => self::getSocLoginBaseUrl(),
+                ],
+            /*
+            self::$socPreffix . 'hybridauthConfig' => [
+                 'name' => tra('Hybridauth config- DO NOT USE in FORMS:'),
+                 'description' =>  tra('Hybridauth config'),
+                 'type' => 'array',
+                // 'options' => self::getHybridauthConfig(),
+                 'default' => self::getHybridauthConfig(),
+                 ],
+            */
+        ];
+
+
+        $prefs3 = array_merge($prefs1, self::getPrefsAllProviders());
+
+    //  Util::log2(' getSocPrefs enabledProvidersNames:', $prefs[self::$socPreffix . 'enabledProvidersNames'] );
+    //  Util::log2(' getSocPrefs enabledProviders:', $prefs[self::$socPreffix . 'enabledProviders'] );
+    //  Util::log2(' getSocPrefs prefs1:', $prefs1);
+
+        return $prefs3;
+    }
+}
