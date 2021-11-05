@@ -119,4 +119,411 @@ class Table_Plugin
                     '</code>'
                 ),
                 'since' => '12.0',
-                'doctype' =
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tsortcolumns' => [
+                'required' => false,
+                'name' => tra('Sort Settings by Column'),
+                'description' => tr(
+                    'Set %0 and %1 settings for each column, using %2 to separate columns. To show group headings upon
+                    page load, the Pre-sorted Columns parameter (%3) will need to be set for a column with a group
+                    setting. Group will not work in plugins where the Server Side Processing parameter (%4) is set to
+                    %5.',
+                    '<code>type</code>',
+                    '<code>group</code>',
+                    '<code>|</code>',
+                    '<code>0sortList</code>',
+                    '<code>server</code>',
+                    '<code>y</code>'
+                )
+                . '<br>' . tr('Set %0 to one of the following:', '<code>type</code>') . ' <code>text</code>,
+                    <code>digit</code>, <code>currency</code>, <code>percent</code>, <code>usLongDate</code>,
+                    <code>shortDate</code>, <code>isoDate</code>, <code>dateFormat-ddmmyyyy</code>,
+                    <code>ipAddress</code>, <code>url</code>, <code>time</code>, <code>nosort</code>'
+                . '<br>' . tr('Also handle strings in numeric columns with:') . ' <code>string-min</code>,
+                    </code>string-max</code>' . tr('Handle empty cells with:') . ' <code>empty-top<code>,
+                    <code>empty-bottom</code>,  <code>empty-zero</code>.<br>'
+                . tr(
+                    '%0 creates automatic row headings upon sort with the heading text determined by
+                    the setting as follows: %1 (first letter), %2 (first word)',
+                    '<code>group</code>',
+                    '<code>letter</code>',
+                    '<code>word</code>'
+                ) . ', <code>number</code>, <code>date</code>,
+                    <code>date-year</code>, <code>date-month</code>, <code>date-day</code>, <code>date-week</code>,
+                    <code>date-time</code>.' . tr(
+                    '%0 and %1 can be extended, e.g., %2 shows the first 2 words.
+                    %3 will group rows in blocks of ten. Group will not work in plugins where the Server Side Processing
+                    parameter (%4) is set to %5.',
+                    '<code>letter</code>',
+                    '<code>word</code>',
+                    '<code>word-2</code>',
+                    '<code>number-10</code>',
+                    '<code>server</code>',
+                    '<code>y</code>'
+                ),
+                'since' => '12.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tsfilters' => [
+                'required' => false,
+                'name' => tra('Column Filters'),
+                'description' =>
+                    tr(
+                        'Enter %0 for a blank text filter on all columns, or %1 for no filters. Or set custom column
+                        filters separated by %2 for each column for the following filter choices and parameters:',
+                        '<code>y</code>',
+                        '<code>n</code>',
+                        '<code>|</code>'
+                    )
+                    . '<br> <b>Text - </b><code>type:text;placeholder:xxxx</code><br>' .
+                    tra(
+                        '(For PluginTrackerlist this will be an exact search, for other plugins partial values will work.)'
+                    ) . '<br>' .
+                    tra(
+                        'From Tiki 18, you can add initial:t option to allow prefix search for text filter. E.g. <code>type:text;initial:t</code>'
+                    ) . '<br>
+                    <b>Dropdown - </b><code>type:dropdown;placeholder:****;empty:****;option:****;option:****;option:****</code> <br>' .
+                    tr(
+                        'Options generated automatically if not set and the %0server%1 parameter is not %0y%1.',
+                        '<code>',
+                        '</code>'
+                    ) . '<br>' .
+                    tr(
+                        'Use %0value=Display label%1 to have the option value be different than the displayed label in
+                    the dropdown.',
+                        '<code>',
+                        '</code>'
+                    ) . '<br>' .
+                    tr(
+                        'Use %0empty:Display label%1 to include an option with the specified label that will filter only empty rows.
+                    Only used if other options are not specified manually.',
+                        '<code>',
+                        '</code>'
+                    ) . '<br>
+                    <b>' . tra(
+                        'Date range - '
+                    ) . '</b><code>type:date;format:yy-mm-dd;from:2013-06-30;to:2020-12-31</code><br>' .
+                    tra('(from and to values set defaults for these fields when user clicks on the input field)') .
+                    tra(
+                        'Beware that items with empty date values will not be shown when default date range filters are applied.'
+                    ) . '<br>
+                    <b>' . tra('Numeric range - ') . '</b><code>type:range;from:0;to:50</code><br>
+                    <b>' . tra('No filter - ') . '</b><code>type:nofilter</code><br>' .
+                    tr(
+                        'For example: %0tsfilters="type:dropdown;placeholder:Type to filter..."%1 would result in a dropdown
+                        filter on the first column with all unique values in that column in the dropdown list.',
+                        '<code>',
+                        '</code>'
+                    ),
+                'since' => '12.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tsfilteroptions' => [
+                'required' => false,
+                'name' => tra('Filter Options'),
+                'description' => tr(
+                    'The following options are available: %0reset%1 (adds button to take off filters), and %0hide%1
+                    (Filters are revealed upon mouseover. Hide doesn\'t work when date and range filters are used.).
+                    To use both, set %0tsfilteroptions="type:reset;text:button text;style:hide"%1',
+                    '<code>',
+                    '</code>'
+                ),
+                'since' => '12.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tspaginate' => [
+                'required' => false,
+                'name' => tra('Paginate'),
+                'description' =>
+                    tr(
+                        'Enter %0y%1 to set default values based on the site setting for maximum records in listings (on the
+                        pagination table of the Look & Feel admin panel). Set to %0n%1 (and %0server%1 cannot be set to
+                        %0y%1) for no pagination. Set custom values as in the following example: ',
+                        '<code>',
+                        '</code>'
+                    ) .
+                    '<code>max:40;expand:60;expand:100;expand:140</code>',
+                'since' => '12.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tsoutput' => [
+                'required' => false,
+                'name' => tra('Output (export)'),
+                'description' =>
+                    tr(
+                        'Enter %0y%1 to set default values based on the site setting. Set custom values as in the following example: ',
+                        '<code>',
+                        '</code>'
+                    ) .
+                    '<code>delivery:d;saveFileName:exported_teblesorter.csv</code>',
+                'since' => '12.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tscolselect' => [
+                'required' => false,
+                'name' => tra('Column Select'),
+                'description' =>
+                    tr(
+                        'Add a button for hiding and re-showing columns. Also sets priority for dropping columns when
+                        browser is too narrow. Set each column to a number between 1 and 6 (1 is highest priority and last
+                        to be dropped) or to %0critical%1 to never hide or drop. An example with 4 columns:',
+                        '<code>',
+                        '</code>'
+                    ) .
+                    '<code>tscolselect="critical|4|5|6"</code>',
+                'since' => '14.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tstotals' => [
+                'required' => false,
+                'name' => tra('Totals'),
+                'description' =>
+                    tr(
+                        'Generate table, column or row totals and set labels, using either %0 or the following
+                        syntax for each total: %1.',
+                        '<code>y</code>',
+                        '<code>type:value;formula:value;filter:value;label:value</code>'
+                    )
+                    . '<br>' . tr(
+                        'Setting to %0 will add one column total row set as follows: %1.',
+                        '(<code>y</code>)',
+                        '<code>type:col;formula:sum;filter:visible;label:Totals</code>'
+                    )
+                    . '<br>' . tr(
+                        'Separate multiple total row or column settings with a pipe %0. Set %1 only to
+                    generate sums of visible values. In all cases, cells in columns set to be ignored in
+                    the %2 parameter will not be included in calculations.',
+                        '(<code>|</code>)',
+                        '<code>type</code>',
+                        '<code>tstotaloptions</code>'
+                    )
+                    . '<br>' . tr('Instructions for each total option follows:')
+                    . '<br><strong>type</strong> - ' . tr(
+                        'Choices are %0, for a row of columns totals, %1, for a
+                    column of row totals, and %2 to include amounts from all cells in the table body in a row total.',
+                        '<code>col</code>',
+                        '<code>row</code>',
+                        '<code>all</code>',
+                        '<code>tstotaloptions</code>'
+                    )
+                    . '<br><strong>formula</strong> - ' . tr('set what the calculation is. Choices are:')
+                    . ' <code>sum</code>, <code>count</code>, <code>max</code>, <code>min</code>, <code>mean</code>,
+                    <code>median</code>, <code>mode</code>, <code>range</code>, <code>varp</code>, <code>vars</code>,
+                    <code>stdevp</code>, <code>stdevs</code>. ' . tr(
+                        'Click %0 for a description of these options.',
+                        '<a href="http://mottie.github.io/tablesorter/docs/example-widget-math.html#attribute_settings">here</a>'
+                    )
+                    . '<br><strong>filter</strong> - ' . tr(
+                        'Determines the rows that will be included in the
+                    calculations (so no impact if %0). Also, when %1, only visible cells are included regardless of this
+                    setting. Choices are %2 (rows visible on the page), %3 (all rows not filtered out, even if not
+                    visible because of pagination), %4 (all rows, even if filtered or hidden), and %5 (rows filtered out
+                    and rows hidden due to pagination).',
+                        '<code>type:row</code>',
+                        '<code>server="y"</code>',
+                        '<code>visible</code>',
+                        '<code>unfiltered</code>',
+                        '<code>all</code>',
+                        '<code>hidden</code>'
+                    )
+                    . '<br><strong>label</strong> - ' . tr(
+                        'set the label for the total, which will appear in the header
+                    for row totals and in the first column for column totals.'
+                    ),
+                'since' => '15.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+            'tstotalformat' => [
+                'required' => false,
+                'name' => tra('Total Format'),
+                'description' =>
+                    tr(
+                        'Format for table totals (click %0 for patterns). Example:',
+                        '<a href="http://mottie.github.io/tablesorter/docs/example-widget-math.html#mask_examples">here</a>'
+                    )
+                    . ' <code>#,###.</code><br>',
+            ],
+            'tstotaloptions' => [
+                'required' => false,
+                'name' => tra('Total Options'),
+                'description' =>
+                    tr(
+                        'Pipe-separated options for totals for each column which are set in the %0 parameter:',
+                        '<code>tstotals</code>'
+                    ) . '<br><strong>format</strong> - '
+                    . tr('overrides the default number format set in %0', 'tstotalformat') . '<br>'
+                    . '<strong>ignore</strong> - ' . tr(
+                        'column will be excluded from total calculations set in the %0
+                    parameter. Remember to include any columns that will be added for row totals set in the %0
+                    parameter.',
+                        '<code>tstotals</code>'
+                    ) . '<br>' . tr('Example:') . '<code>ignore|ignore|#,###.</code>',
+                'since' => '15.0',
+                'doctype' => 'tablesorter',
+                'default' => '',
+                'filter' => 'striptags',
+                'advanced' => true,
+            ],
+        ];
+    }
+
+    /**
+     * To be used within plugin program to convert user parameter settings into the settings array
+     * that can be used by Table_Factory to generate the necessary jQuery
+     *
+     * @param null $id //html element id for table and surrounding div
+     * @param string $server //see params above
+     * @param string $sortable //see params above
+     * @param null $sortList //see params above
+     * @param null $tsortcolumns //see params above
+     * @param null $tsfilters //see params above
+     * @param null $tsfilteroptions //see params above
+     * @param null $tspaginate //see params above
+     * @param null $tscolselect //see params above
+     * @param null $ajaxurl //only needed if ajax will be used to pull partial record sets
+     * @param null $totalrows //only needed if ajax will be used to pull partial record sets
+     * @param null $tstotals //see params above
+     * @param null $tstotaloptions //see params above
+     */
+    public function setSettings(
+        $id = null,
+        $server = 'n',
+        $sortable = 'n',
+        $sortList = null,
+        $tsortcolumns = null,
+        $tsfilters = null,
+        $tsfilteroptions = null,
+        $tspaginate = null,
+        $tscolselect = null,
+        $ajaxurl = null,
+        $totalrows = null,
+        $tstotals = null,
+        $tstotalformat = null,
+        $tstotaloptions = null,
+        $showProcessing = 'y',
+        $ignoreCase = 'y',
+        $sortLocaleCompare = 'y',
+        $tsoutput = null
+    ) {
+        $s = [];
+
+        //id
+        if (! empty($id)) {
+            $s['id'] = $id;
+        }
+
+        //sortable
+        switch ($sortable) {
+            case 'y':
+            case 'server':
+                $s['sorts']['type'] = true;
+                break;
+            case 'n':
+                $s['sorts']['type'] = false;
+                break;
+            default:
+                $sp = Table_Check::parseParam($sortable);
+                if (isset($sp[0]['type'])) {
+                    $s['sorts']['type'] = $sp[0]['type'];
+                }
+        }
+
+        //sortlist
+        if (! empty($sortList) && (! isset($s['sorts']['type']) || $s['sorts']['type'] !== false)) {
+            $crop = substr($sortList, 1);
+            $crop = substr($crop, 0, -1);
+            $slarray = explode('],[', $crop);
+            if (is_array($slarray)) {
+                foreach ($slarray as $l) {
+                    $lpieces = explode(',', $l);
+                    if (isset($lpieces[1])) {
+                        switch ($lpieces[1]) {
+                            case '0':
+                                $dir = 'asc';
+                                break;
+                            case '1':
+                                $dir = 'desc';
+                                break;
+                            case 'y':
+                                $dir = true;
+                                break;
+                            case 'n':
+                                $dir = false;
+                                break;
+                            default:
+                                if ($s['sorts']['type'] !== false) {
+                                    $dir = true;
+                                } else {
+                                    $dir = false;
+                                }
+                        }
+                        if ($dir === false || $dir === true) {
+                            $s['columns'][$lpieces[0]]['sort']['type'] = $dir;
+                        } else {
+                            $s['columns'][$lpieces[0]]['sort']['dir'] = $dir;
+                        }
+                    }
+                }
+            }
+        }
+
+        //tsortcolumns
+        if (! empty($tsortcolumns)) {
+            $tsc = Table_Check::parseParam($tsortcolumns);
+            if (is_array($tsc)) {
+                foreach ($tsc as $col => $sortinfo) {
+                    if (isset($sortinfo['type']) && $sortinfo['type'] == 'nosort') {
+                        $sortinfo['type'] = false;
+                    }
+                    if (isset($s['columns'][$col]['sort'])) {
+                        $s['columns'][$col]['sort'] = $s['columns'][$col]['sort'] + $sortinfo;
+                    } else {
+                        $s['columns'][$col]['sort'] = $sortinfo;
+                    }
+                }
+                ksort($s['columns']);
+            }
+            if ($server === 'y') {
+                $s['sorts']['group'] = false;
+            }
+        } else {
+            $s['sorts']['group'] = false;
+        }
+
+        //tsfilters
+        if (! empty($tsfilters)) {
+            switch ($tsfilters) {
+                case 'y':
+                    $s['filters']['type'] = 'text';
+                    break;
+                case 'n':
+                    $s['filters']['type'] = false;
+                    break;
+                default:
+                    $tsf = Table_Check::parseParam($tsfilters);
+                    if (is_array
