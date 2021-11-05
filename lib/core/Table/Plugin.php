@@ -526,4 +526,182 @@ class Table_Plugin
                     break;
                 default:
                     $tsf = Table_Check::parseParam($tsfilters);
-                    if (is_array
+                    if (is_array($tsf)) {
+                        foreach ($tsf as $col => $filterinfo) {
+                            if (
+                                isset($filterinfo['type']) && $filterinfo['type'] === 'dropdown'
+                                && ! empty($filterinfo['options'])
+                            ) {
+                                foreach ($filterinfo['options'] as $key => $value) {
+                                    $filterinfo['options'][$key] = str_replace('=', '|', $value);
+                                }
+                            }
+                            if (isset($s['columns'][$col]['filter'])) {
+                                $s['columns'][$col]['filter'] = $s['columns'][$col]['filter'] + $filterinfo;
+                            } else {
+                                $s['columns'][$col]['filter'] = $filterinfo;
+                            }
+                        }
+                    }
+            }
+        }
+
+        //tsfilteroptions
+        if (! empty($tsfilteroptions) && ! empty($s['filters']['type'])) {
+            $tsfo = Table_Check::parseParam($tsfilteroptions);
+            switch ($tsfo[0]['type']) {
+                case 'reset':
+                    $s['filters']['type'] = 'reset';
+                    break;
+                case 'hide':
+                    $s['filters']['hide'] = true;
+                    break;
+            }
+        }
+
+        //tspaginate
+        if (empty($tspaginate)) {
+            $tspaginate = $server === 'y' ? 'y' : '';
+        }
+        if (! empty($tspaginate)) {
+            $tsp = Table_Check::parseParam($tspaginate);
+            //pagination must be on if server side processing is on ($server == 'y')
+            if (is_array($tsp[0]) || $tsp[0] !== 'n' || ($tsp[0] === 'n' && $server === 'y')) {
+                if (is_array($tsp[0])) {
+                    $s['pager'] = $tsp[0];
+                    if (isset($s['pager']['expand']) && is_array($s['pager']['expand'])) {
+                        if (isset($s['pager']['max']) && $s['pager']['max'] > 0) {
+                            $s['pager']['expand'] = array_merge([$s['pager']['max']], $s['pager']['expand']);
+                        } else {
+                            $s['pager']['max'] = min($s['pager']['expand']);
+                        }
+                        $s['pager']['expand'] = array_unique($s['pager']['expand']);
+                        sort($s['pager']['expand']);
+                    }
+                }
+                $s['pager']['type'] = true;
+            } elseif ($tsp[0] === 'n' && $server === 'n') {
+                $s['pager']['type'] = false;
+            }
+        }
+
+        //tspaginate
+        if (! empty($tsoutput)) {
+            $tsp = Table_Check::parseParam($tsoutput);
+            if (is_array($tsp[0]) || $tsp[0] !== 'n' || ($tsp[0] === 'n' && $server === 'y')) {
+                if (is_array($tsp[0])) {
+                    $s['output'] = $tsp[0];
+                }
+                $s['output']['type'] = true;
+            }
+        }
+
+        //tscolselect
+        if (! empty($tscolselect)) {
+            $tscs = Table_Check::parseParam($tscolselect);
+            if (is_array($tscs)) {
+                $s['colselect']['type'] = true;
+                foreach ($tscs as $col => $priority) {
+                    $s['columns'][$col]['priority'] = $priority;
+                }
+            }
+        }
+
+        //ajaxurl
+        if (! empty($ajaxurl) && $server === 'y') {
+            $url = $this->getAjaxurl($ajaxurl);
+            $s['ajax']['url']['file'] = $url['path'];
+            $s['ajax']['url']['query'] = $url['query'];
+            $s['ajax']['type'] = true;
+        } else {
+            $s['ajax']['type'] = false;
+        }
+
+        //totalrows
+        if (! empty($totalrows)) {
+            $s['total'] = $totalrows;
+        }
+
+        //tstotals
+        if (! empty($tstotals)) {
+            if (trim($tstotals) === 'y') {
+                $tstotals = 'type:col;formula:sum;label:' . tr('Page totals');
+            }
+            $tst = Table_Check::parseParam($tstotals);
+            if (is_array($tst)) {
+                foreach ($tst as $key => $tinfo) {
+                    if (! empty($tinfo['type'] && in_array($tinfo['type'], ['col', 'row', 'all']))) {
+                        $s['math']['totals'][$tinfo['type']][$key]['formula'] = ! empty($tinfo['formula'])
+                        && in_array($tinfo['formula'], $this->mathtypes) ? $tinfo['formula'] : 'sum';
+                        if (! empty($tinfo['filter']) && isset($this->totalfilters[$tinfo['filter']])) {
+                            if ($server === 'y') {
+                                $s['math']['totals'][$tinfo['type']][$key]['filter'] = '';
+                                $labelfilter = '';
+                            } else {
+                                $s['math']['totals'][$tinfo['type']][$key]['filter'] = $this->totalfilters[$tinfo['filter']];
+                                $labelfilter = $tinfo['filter'];
+                            }
+                        } else {
+                            $s['math']['totals'][$tinfo['type']][$key]['filter'] = '';
+                            $labelfilter = '';
+                        }
+                        if (isset($tinfo['label'])) {
+                            $s['math']['totals'][$tinfo['type']][$key]['label'] = $tinfo['label'];
+                        } else {
+                            $map = ['col' => 'Column', 'row' => 'Row', 'all' => 'Table'];
+                            $label = $map[$tinfo['type']] . ' '
+                                . $s['math']['totals'][$tinfo['type']][$key]['formula'] . ' ' . $labelfilter;
+                            $s['math']['totals'][$tinfo['type']][$key]['label'] = tr($label);
+                        }
+                    }
+                }
+            }
+        }
+
+        //tstotalformat
+        if (! empty($tstotalformat)) {
+            $s['math']['format'] = $tstotalformat;
+        }
+
+        //tstotaloptions
+        if (! empty($tstotaloptions)) {
+            $tsto = Table_Check::parseParam($tstotaloptions);
+            if (is_array($tsto)) {
+                foreach ($tsto as $col => $option) {
+                    if ($option === 'ignore') {
+                        $s['columns'][$col]['math']['ignore'] = true;
+                        //only other option is format
+                    } elseif (! empty($option['format'])) {
+                        $s['columns'][$col]['math']['format'] = $option['format'];
+                    }
+                }
+            }
+        }
+
+        // misc options
+        $s['showProcessing']    = $showProcessing ?? 'y';
+        $s['ignoreCase']        = $ignoreCase ?? 'y';
+        $s['sortLocaleCompare'] = $sortLocaleCompare ?? 'y';
+
+        $this->settings = $s;
+    }
+
+    /**
+     * Utility to add ajax parameters to URL
+     *
+     * @param $ajaxurl
+     *
+     * @return string
+     */
+    private function getAjaxurl($ajaxurl)
+    {
+        $str = '{sort:sort}&{filter:filter}';
+        $url = parse_url($ajaxurl);
+        if (isset($url['query'])) {
+            $url['query'] = '?' . $url['query'] . '&' . $str;
+        } else {
+            $url['query'] = '?' . $str;
+        }
+        return $url;
+    }
+}
