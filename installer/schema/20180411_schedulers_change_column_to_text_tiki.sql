@@ -1,0 +1,1 @@
+ALTER TABLE `tiki_scheduler` CHANGE  `params` `params` TEXT;

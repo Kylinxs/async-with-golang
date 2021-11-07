@@ -43,4 +43,115 @@
                 <th class="text-end"><a href="tiki-list_blogs.php?offset={$offset}&amp;sort_mode={if $sort_mode eq 'hits_desc'}hits_asc{else}hits_desc{/if}">{tr}Visits{/tr}</a></th>
             {/if}
             {if $prefs.blog_list_activity eq 'y'}
-                {assign var=numberco
+                {assign var=numbercol value=$numbercol+1}
+                <th><a href="tiki-list_blogs.php?offset={$offset}&amp;sort_mode={if $sort_mode eq 'activity_desc'}activity_asc{else}activity_desc{/if}">{tr}Activity{/tr}</a></th>
+            {/if}
+            {assign var=numbercol value=$numbercol+1}
+            <th></th>
+        </tr>
+        {section name=changes loop=$listpages}
+            <tr>
+                {if $prefs.blog_list_title eq 'y' or $prefs.blog_list_description eq 'y'}
+                    <td class="text">
+                        {if ($tiki_p_admin eq 'y') or ($listpages[changes].individual eq 'n') or ($listpages[changes].individual_tiki_p_read_blog eq 'y' )}
+                            <a class="blogname" href="{$listpages[changes].blogId|sefurl:blog}">
+                        {/if}
+                        {if $listpages[changes].title}
+                            {$listpages[changes].title|truncate:$prefs.blog_list_title_len:"...":true|escape}
+                        {else}
+                            &nbsp;
+                        {/if}
+                        {if ($tiki_p_admin eq 'y') or ($listpages[changes].individual eq 'n') or ($listpages[changes].individual_tiki_p_read_blog eq 'y' )}
+                            </a>
+                        {/if}
+                        {if $prefs.blog_list_description eq 'y'}
+                            <div class="form-text">{$listpages[changes].description|escape|nl2br}</div>
+                        {/if}
+                    </td>
+                {/if}
+                {if $prefs.blog_list_created eq 'y'}
+                    <td class="date">&nbsp;{$listpages[changes].created|tiki_short_date}&nbsp;</td>{*tiki_date_format:"%b %d"*}
+                {/if}
+                {if $prefs.blog_list_lastmodif eq 'y'}
+                    <td class="date">&nbsp;{$listpages[changes].lastModif|tiki_short_datetime}&nbsp;</td>{*tiki_date_format:"%d of %b [%H:%M]"*}
+                {/if}
+                {if $prefs.blog_list_user ne 'disabled'}
+                    {if $prefs.blog_list_user eq 'link'}
+                        <td class="username">&nbsp;{$listpages[changes].user|userlink}&nbsp;</td>
+                    {elseif $prefs.blog_list_user eq 'avatar'}
+                        <td>&nbsp;{$listpages[changes].user|avatarize}&nbsp;<br>
+                        &nbsp;{$listpages[changes].user|userlink}&nbsp;</td>
+                    {else}
+                        <td class="username">&nbsp;{$listpages[changes].user|escape}&nbsp;</td>
+                    {/if}
+                {/if}
+                {if $prefs.blog_list_posts eq 'y'}
+                    <td class="integer">{$listpages[changes].posts}</td>
+                {/if}
+                {if $prefs.blog_list_visits eq 'y'}
+                    <td class="integer">{$listpages[changes].hits}</td>
+                {/if}
+                {if $prefs.blog_list_activity eq 'y'}
+                    <td class="integer">{$listpages[changes].activity}</td>
+                {/if}
+                <td class="action">
+                    {actions}
+                        {strip}
+                            {if ($tiki_p_admin eq 'y') or ($listpages[changes].individual eq 'n') or ($listpages[changes].individual_tiki_p_read_blog eq 'y' )}
+                                <action>
+                                    <a href="{$listpages[changes].blogId|sefurl:blog}">
+                                        {icon name="view" _menu_text='y' _menu_icon='y' alt="{tr}View{/tr}"}
+                                    </a>
+                                </action>
+                            {/if}
+                            {if ($user and $listpages[changes].user eq $user) or ($tiki_p_blog_admin eq 'y')}
+                                {if ($tiki_p_admin eq 'y') or ($listpages[changes].individual eq 'n') or ($listpages[changes].individual_tiki_p_blog_create_blog eq 'y' )}
+                                    <action>
+                                        <a href="tiki-edit_blog.php?blogId={$listpages[changes].blogId}">
+                                            {icon name="edit" _menu_text='y' _menu_icon='y' alt="{tr}Edit{/tr}"}
+                                        </a>
+                                    </action>
+                                {/if}
+                            {/if}
+                            {if $tiki_p_blog_post eq 'y'}
+                                {if ($tiki_p_admin eq 'y') or ($listpages[changes].individual eq 'n') or ($listpages[changes].individual_tiki_p_blog_post eq 'y' )}
+                                    {if ($user and $listpages[changes].user eq $user) or ($tiki_p_blog_admin eq 'y') or ($listpages[changes].public eq 'y')}
+                                        <action>
+                                            <a href="tiki-blog_post.php?blogId={$listpages[changes].blogId}">
+                                                {icon name="post" _menu_text='y' _menu_icon='y' alt="{tr}Post{/tr}"}
+                                            </a>
+                                        </action>
+                                    {/if}
+                                {/if}
+                            {/if}
+                            {if $tiki_p_blog_admin eq 'y' and $listpages[changes].allow_comments eq 'y'}
+                                <action>
+                                    <a href='tiki-list_comments.php?types_section=blogs&amp;blogId={$listpages[changes].blogId}'>
+                                        {icon name="comments" _menu_text='y' _menu_icon='y' alt="{tr}Comments{/tr}"}
+                                    </a>
+                                </action>
+                            {/if}
+                            {if $tiki_p_admin eq 'y' || $tiki_p_assign_perm_blog eq 'y'}
+                                <action>
+                                    {permission_link mode=text type="blog" permType="blogs" id=$listpages[changes].blogId}
+                                </action>
+                            {/if}
+                            {if ($user and $listpages[changes].user eq $user) or ($tiki_p_blog_admin eq 'y')}
+                                {if ($tiki_p_admin eq 'y') or ($listpages[changes].individual eq 'n') or ($listpages[changes].individual_tiki_p_blog_create_blog eq 'y' )}
+                                    <action>
+                                        <a href="tiki-list_blogs.php?offset={$offset}&amp;sort_mode={$sort_mode}&amp;remove={$listpages[changes].blogId}">
+                                            {icon name="delete" _menu_text='y' _menu_icon='y' alt="{tr}Remove{/tr}"}
+                                        </a>
+                                    </action>
+                                {/if}
+                            {/if}
+                        {/strip}
+                    {/actions}
+                </td>
+            </tr>
+        {sectionelse}
+            {norecords _colspan=$numbercol}
+        {/section}
+    </table>
+</div>
+{pagination_links cant=$cant step=$maxRecords offset=$offset}{/pagination_links}
