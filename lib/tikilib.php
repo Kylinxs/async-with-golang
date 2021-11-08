@@ -1178,4 +1178,569 @@ class TikiLib extends TikiDb_Bridge
                             || $this->user_has_perm_on_object($res['user'], $object, 'topic', 'tiki_p_read_article');
                         break;
                     case 'calendar_changed':
-                        $res['perm'] = $this->user_has_perm_on_obje
+                        $res['perm'] = $this->user_has_perm_on_object($res['user'], $object, 'calendar', 'tiki_p_view_calendar');
+                        break;
+                    case 'category_changed':
+                        $categlib = TikiLib::lib('categ');
+                        $res['perm'] = $categlib->has_view_permission($res['user'], $object);
+                        break;
+                    case 'fgal_quota_exceeded':
+                        global $tiki_p_admin_file_galleries;
+                        $res['perm'] = ($tiki_p_admin_file_galleries == 'y');
+                        break;
+                    case 'article_commented':
+                    case 'wiki_comment_changes':
+                        $res['perm'] = $this->user_has_perm_on_object($res['user'], $object, 'comments', 'tiki_p_read_comments');
+                        break;
+                    case 'user_registers':
+                        $userlib = TikiLib::lib('user');
+                        $res['perm'] = $userlib->user_has_permission($res['user'], 'tiki_p_admin');
+                        break;
+                    case 'auth_token_called':
+                        $res['perm'] = true;
+                        break;
+                    case 'user_joins_group':
+                        $res['perm'] = $this->user_has_perm_on_object($res['user'], $object, 'group', 'tiki_p_group_view_members');
+                        break;
+                    case 'thread_comment_replied':
+                        $res['perm'] = true;
+                        break;
+                    default:
+                        // for security we deny all others.
+                        $res['perm'] = false;
+                        break;
+                }
+
+                if ($res['perm'] || empty($res['user']) && ! empty($res['email'])) {
+                    // Allow admin created email (non-user) watches
+                    $ret[] = $res;
+                }
+            }
+        }
+
+        // Also include users that are watching a category to which this object belongs to.
+        if ($event != 'category_changed') {
+            if ($prefs['feature_categories'] == 'y') {
+                $categlib = TikiLib::lib('categ');
+                $objectType = "";
+                switch ($event) {
+                    case 'wiki_page_changed':
+                        $objectType = "wiki page";
+                        break;
+                    case 'wiki_page_created':
+                        $objectType = "wiki page";
+                        break;
+                    case 'blog_post':
+                        $objectType = "blog";
+                        break;
+                    // Blog comment mail
+                    case 'blog_page_changed':
+                        $objectType = "blog page";
+                        break;
+                    case 'map_changed':
+                        $objectType = "map_changed";
+                        break;
+                    case 'forum_post_topic':
+                        $objectType = "forum";
+                        break;
+                    case 'forum_post_thread':
+                        $objectType = "forum";
+                        break;
+                    case 'file_gallery_changed':
+                        $objectType = "file gallery";
+                        break;
+                    case 'article_submitted':
+                        $objectType = "topic";
+                        break;
+                    case 'tracker_modified':
+                        $objectType = "tracker";
+                        break;
+                    case 'tracker_item_modified':
+                        $objectType = "tracker";
+                        break;
+                    case 'calendar_changed':
+                        $objectType = "calendar";
+                        break;
+                }
+                if ($objectType != "") {
+                    // If a forum post was changed, check the categories of the forum.
+                    if ($event == "forum_post_thread") {
+                        $commentslib = TikiLib::lib('comments');
+                        $object = $commentslib->get_comment_forum_id($object);
+                    }
+
+                    // If a tracker item was changed, check the categories of the tracker.
+                    if ($event == "tracker_item_modified") {
+                        $trklib = TikiLib::lib('trk');
+                        $object = $trklib->get_tracker_for_item($object);
+                    }
+
+                    $categs = $categlib->get_object_categories($objectType, $object);
+
+                    foreach ($categs as $category) {
+                        $watching_users = $this->get_event_watches('category_changed', $category, $info);
+
+                        // Add all users that are not already included
+                        foreach ($watching_users as $wu) {
+                            $included = false;
+                            foreach ($ret as $item) {
+                                if ($item['user'] == $wu['user']) {
+                                    $included = true;
+                                }
+                            }
+                            if (! $included) {
+                                $ret[] = $wu;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $ret;
+    }
+
+    /*shared*/
+    /**
+     * @return array
+     */
+    public function dir_stats()
+    {
+        $sites = $this->table('tiki_directory_sites');
+        $categories = $this->table('tiki_directory_categories');
+        $search = $this->table('tiki_directory_search');
+
+        $aux = [];
+        $aux["valid"] = $sites->fetchCount(['isValid' => 'y']);
+        $aux["invalid"] = $sites->fetchCount(['isValid' => 'n']);
+        $aux["categs"] = $categories->fetchCount([]);
+        $aux["searches"] = $search->fetchOne($search->sum('hits'), []);
+        $aux["visits"] = $search->fetchOne($sites->sum('hits'), []);
+        return $aux;
+    }
+
+    /*shared*/
+    /**
+     * @param $offset
+     * @param $maxRecords
+     * @param $sort_mode
+     * @param $find
+     * @return array
+     */
+    public function dir_list_all_valid_sites2($offset, $maxRecords, $sort_mode, $find)
+    {
+        $sites = $this->table('tiki_directory_sites');
+        $conditions = [
+            'isValid' => 'y',
+        ];
+
+        if ($find) {
+            $conditions['search'] = $sites->expr('(`name` like ? or `description` like ?)', ["%$find%", "%$find%"]);
+        }
+
+        return [
+            'data' => $sites->fetchAll($sites->all(), $conditions, $maxRecords, $offset, $sites->expr($this->convertSortMode($sort_mode))),
+            'cant' => $sites->fetchCount($conditions),
+        ];
+    }
+
+    /*shared*/
+    /**
+     * @param $categId
+     * @return mixed
+     */
+    public function get_directory($categId)
+    {
+        return $this->table('tiki_directory_categories')->fetchFullRow(['categId' => $categId]);
+    }
+
+    /*shared*/
+    /**
+     * @param $user
+     * @return mixed
+     */
+    public function user_unread_messages($user)
+    {
+        $messages = $this->table('messu_messages');
+        return $messages->fetchCount(
+            [
+                'user' => $user,
+                'isRead' => 'n',
+            ]
+        );
+    }
+
+    /*shared*/
+    /**
+     * @return array
+     */
+    public function get_online_users()
+    {
+        if (! isset($this->online_users_cache)) {
+            $this->update_session();
+            $this->online_users_cache = [];
+            $query = "select s.`user`, p.`value` as `realName`, `timestamp`, `tikihost` from `tiki_sessions` s left join `tiki_user_preferences` p on s.`user`<>? and s.`user` = p.`user` and p.`prefName` = 'realName' where s.`user` is not null;";
+            $result = $this->fetchAll($query, ['']);
+            foreach ($result as $res) {
+                $res['user_information'] = $this->get_user_preference($res['user'], 'user_information', 'public');
+                $res['allowMsgs'] = $this->get_user_preference($res['user'], 'allowMsgs', 'y');
+                $this->online_users_cache[$res['user']] = $res;
+            }
+        }
+        return $this->online_users_cache;
+    }
+
+    /*shared*/
+    /**
+     * @param $whichuser
+     * @return bool
+     */
+    public function is_user_online($whichuser)
+    {
+        if (! isset($this->online_users_cache)) {
+            $this->get_online_users();
+        }
+
+        return(isset($this->online_users_cache[$whichuser]));
+    }
+
+    /*
+     * Score methods begin
+     */
+    // All information about an event type
+    // shared
+    /**
+     * @param $event
+     * @return mixed
+     */
+    public function get_event($event)
+    {
+        return $this->table('tiki_score')->fetchFullRow(['event' => $event]);
+    }
+
+    // List users by best scoring
+    // shared
+    /**
+     * @param int $limit
+     * @param int $start
+     * @return mixed
+     */
+    public function rank_users($limit = 10, $start = 0)
+    {
+        global $prefs;
+        $score_expiry_days = $prefs['feature_score_expday'];
+
+        if (! $start) {
+            $start = "0";
+        }
+
+        if (empty($score_expiry_days)) {
+            // score does not expire
+            $query = "select `recipientObjectId` as `login`,
+                `pointsBalance` as `score`
+                from `tiki_object_scores` tos
+                where `recipientObjectType`='user'
+                and tos.`id` = (select max(id) from `tiki_object_scores` where `recipientObjectId` = tos.`recipientObjectId` and `recipientObjectType`='user' group by `recipientObjectId`)
+                group by `recipientObjectId`, `pointsBalance` order by `score` desc";
+
+            $result = $this->fetchAll($query, null, $limit, $start);
+        } else {
+            // score expires
+            $query = "select `recipientObjectId` as `login`,
+                `pointsBalance` - ifnull((select `pointsBalance` from `tiki_object_scores`
+                    where `recipientObjectId`=tos.`recipientObjectId`
+                    and `recipientObjectType`='user'
+                    and `date` < UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL ? DAY))
+                    order by id desc limit 1), 0) as `score`
+                from `tiki_object_scores` tos
+                where `recipientObjectType`='user'
+                and tos.`id` = (select max(id) from `tiki_object_scores` where `recipientObjectId` = tos.`recipientObjectId` and `recipientObjectType`='user' group by `recipientObjectId`)
+                group by `recipientObjectId`, `pointsBalance` order by `score` desc";
+
+            $result = $this->fetchAll($query, $score_expiry_days, $limit, $start);
+        }
+
+        foreach ($result as & $res) {
+            $res['position'] = ++$start;
+        }
+        return $result;
+    }
+
+    // Returns html <img> tag to star corresponding to user's score
+    // shared
+    /**
+     * @param $score
+     * @return string
+     */
+    public function get_star($score)
+    {
+        global $prefs;
+        $star = '';
+        $star_colors = [0 => 'grey',
+                100 => 'blue',
+                500 => 'green',
+                1000 => 'yellow',
+                2500 => 'orange',
+                5000 => 'red',
+                10000 => 'purple'];
+        foreach ($star_colors as $boundary => $color) {
+            if ($score >= $boundary) {
+                $star = 'star_' . $color . '.gif';
+            }
+        }
+        if (! empty($star)) {
+            $alt = sprintf(tra("%d points"), $score);
+            if ($prefs['theme_iconset'] === 'legacy') {
+                $star = "<img src='img/icons/$star' height='11' width='11' alt='$alt' />&nbsp;";
+            } else {
+                $smarty = TikiLib::lib('smarty');
+                $smarty->loadPlugin('smarty_function_icon');
+                $star = smarty_function_icon(['name' => 'star', 'istyle' => 'color:' . $color, 'iclass' => 'tips',
+                    'ititle' => ':' . $alt], $smarty->getEmptyInternalTemplate()) . "&nbsp;";
+            }
+        }
+        return $star;
+    }
+
+    /*
+     * Score methods end
+     */
+    //shared
+    // \todo remove all hardcoded html in get_user_avatar()
+    /**
+     * @param $user
+     * @param string $float
+     * @return string
+     */
+    public function get_user_avatar($user, $float = '')
+    {
+        global $prefs;
+
+        if (empty($user)) {
+            return '';
+        }
+
+        if (is_array($user)) {
+            $res = $user;
+            $user = $user['login'];
+        } else {
+            $res = $this->table('users_users')->fetchRow(['login', 'avatarType', 'avatarLibName', 'email'], ['login' => $user]);
+        }
+
+        if (! $res) {
+            return '';
+        }
+
+        if ($prefs['user_use_gravatar'] == 'y' && $res['email']) {
+            $https_mode = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on';
+            $hash = md5(strtolower(trim($res['email'])));
+
+            if ($https_mode) {
+                $url = "https://secure.gravatar.com/avatar/$hash?s=45";
+            } else {
+                $url = "http://www.gravatar.com/avatar/$hash?s=45";
+            }
+            $type = 'g';
+        } else {
+            $type = $res["avatarType"] ? $res["avatarType"] : 'u';
+            $libname = $res["avatarLibName"];
+            $ret = '';
+        }
+
+        $style = '';
+
+        if (strcasecmp($float, "left") == 0) {
+            $style = "style='float:left;margin-right:5px;'";
+        } elseif (strcasecmp($float, "right") == 0) {
+            $style = "style='float:right;margin-left:5px;'";
+        }
+
+        $username = htmlspecialchars(
+            TikiLib::lib('user')->clean_user($user),
+            ENT_COMPAT
+        );
+
+        switch ($type) {
+            case 'l':
+                if ($libname) {
+                    $ret = '<img class="user-profile-picture rounded" width="45" height="45" src="' . $libname . '" ' . $style . ' alt="' . $username . '">';
+                }
+                break;
+            case 'u':
+                $userprefslib = TikiLib::lib('userprefs');
+                $path = $userprefslib->get_public_avatar_path($user);
+
+                if ($path) {
+                    $url = $this->tikiUrlOpt($path);
+                    $ret = '<img class="user-profile-picture rounded" src="' . htmlspecialchars($url, ENT_NOQUOTES) . '" ' . $style . ' alt="' . $username . '">';
+                }
+                break;
+            case 'g':
+                $ret = '<img class="user-profile-picture rounded" src="' . htmlspecialchars($url, ENT_NOQUOTES) . '" ' . $style . ' alt="' . $username . '">';
+                break;
+            case 'n':
+            default:
+                $ret = '';
+                break;
+        }
+        return $ret;
+    }
+
+    /**
+     * Return user avatar as Base64 encoded inline image.
+     */
+    public function get_user_avatar_inline($user)
+    {
+        global $prefs;
+
+        if (empty($user)) {
+            return '';
+        }
+
+        if (is_array($user)) {
+            $res = $user;
+            $user = $user['login'];
+        } else {
+            $res = $this->table('users_users')->fetchRow(['login', 'avatarType', 'avatarFileType', 'avatarData', 'avatarLibName', 'email'], ['login' => $user]);
+        }
+
+        if (! $res) {
+            return '';
+        }
+
+        if ($prefs['user_use_gravatar'] == 'y' && $res['email']) {
+            $hash = md5(strtolower(trim($res['email'])));
+            $url = "https://secure.gravatar.com/avatar/$hash.jpg?s=45";
+            $data = file_get_contents($url);
+            $mime = 'image/jpeg';
+        } elseif ($res['avatarType'] == 'l') {
+            $url = $this->tikiUrlOpt($res['avatarLibName']);
+            $data = file_get_contents($url);
+            if (class_exists('finfo')) {
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->buffer($data);
+            } else {
+                $mime = 'image/jpeg';
+            }
+        } else {
+            $data = $res['avatarData'];
+            $mime = $res['avatarFileType'];
+        }
+
+        if ($data && $mime) {
+            return "data:$mime;base64," . base64_encode($data);
+        } else {
+            return '';
+        }
+    }
+
+    /*shared*/
+    /**
+     * @return array
+     */
+    public function get_forum_sections()
+    {
+        $query = "select distinct `section` from `tiki_forums` where `section`<>?";
+        $result = $this->fetchAll($query, ['']);
+        $ret = [];
+        foreach ($result as $res) {
+            $ret[] = $res["section"];
+        }
+        return $ret;
+    }
+
+    /* Referer stats */
+    /*shared*/
+    /**
+     * @param $referer
+     * @param $fullurl
+     */
+    public function register_referer($referer, $fullurl)
+    {
+        $refererStats = $this->table('tiki_referer_stats');
+
+        $cant = $refererStats->fetchCount(['referer' => $referer]);
+
+        if ($cant) {
+            $refererStats->update(
+                [
+                    'hits' => $refererStats->increment(1),
+                    'last' => $this->now,
+                    'lasturl' => $fullurl,
+                ],
+                ['referer' => $referer]
+            );
+        } else {
+            $refererStats->insert(
+                [
+                    'last' => $this->now,
+                    'referer' => $referer,
+                    'hits' => 1,
+                    'lasturl' => $fullurl,
+                ]
+            );
+        }
+    }
+
+    // File attachments functions for the wiki ////
+    /*shared*/
+    /**
+     * @param $id
+     * @return bool
+     */
+    public function add_wiki_attachment_hit($id)
+    {
+        global $prefs, $user;
+        if (StatsLib::is_stats_hit()) {
+            $wikiAttachments = $this->table('tiki_wiki_attachments');
+            $wikiAttachments->update(
+                ['hits' => $wikiAttachments->increment(1)],
+                ['attId' => (int) $id]
+            );
+        }
+        return true;
+    }
+
+    /*shared*/
+    /**
+     * @param $attId
+     * @return mixed
+     */
+    public function get_wiki_attachment($attId)
+    {
+        return $this->table('tiki_wiki_attachments')->fetchFullRow(['attId' => (int) $attId]);
+    }
+
+    // Last visit module ////
+    /*shared*/
+    /**
+     * @param $user
+     * @return array|bool
+     */
+    public function get_news_from_last_visit($user)
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $last = $this->table('users_users')->fetchOne('lastLogin', ['login' => $user]);
+
+        $ret = [];
+        if (! $last) {
+            $last = time();
+        }
+        $ret["lastVisit"] = $last;
+        $ret["pages"] = $this->getOne("select count(*) from `tiki_pages` where `lastModif`>?", [(int)$last]);
+        $ret["files"] = $this->getOne("select count(*) from `tiki_files` where `created`>?", [(int)$last]);
+        $ret["comments"] = $this->getOne("select count(*) from `tiki_comments` where `commentDate`>?", [(int)$last]);
+        $ret["users"] = $this->getOne("select count(*) from `users_users` where `registrationDate`>? and `provpass`=?", [(int)$last, '']);
+        $ret["trackers"] = $this->getOne("select count(*) from `tiki_tracker_items` where `lastModif`>?", [(int)$last]);
+        $ret["calendar"] = $this->getOne("select count(*) from `tiki_calendar_items` where `lastmodif`>?", [(int)$last]);
+        return $ret;
+    }
+
+    /**
+     * @return mixed|string
+     */
+    public function pick_cookie()
+    {
+        $cant 
