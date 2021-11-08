@@ -1743,4 +1743,574 @@ class TikiLib extends TikiDb_Bridge
      */
     public function pick_cookie()
     {
-        $cant 
+        $cant = $this->getOne("select count(*) from `tiki_cookies`", []);
+        if (! $cant) {
+            return '';
+        }
+
+        $bid = rand(0, $cant - 1);
+        //$cookie = $this->getOne("select `cookie`  from `tiki_cookies` limit $bid,1"); getOne seems not to work with limit
+        $result = $this->query("select `cookie`  from `tiki_cookies`", [], 1, $bid);
+        if ($res = $result->fetchRow()) {
+            $cookie = str_replace("\n", "", $res['cookie']);
+            return preg_replace('/^(.+?)(\s*--.+)?$/', '<em>"$1"</em>$2', $cookie);
+        } else {
+            return "";
+        }
+    }
+
+    public function get_usage_chart_data()
+    {
+        TikiLib::lib('quiz')->compute_quiz_stats();
+
+        $data['xdata'][] = tra('wiki');
+        $data['ydata'][] = $this->getOne('select sum(`hits`) from `tiki_pages`', []);
+
+        $data['xdata'][] = tra('file-g');
+        $data['ydata'][] = $this->getOne('select sum(`hits`) from `tiki_file_galleries`', []);
+
+        $data['xdata'][] = tra('FAQs');
+        $data['ydata'][] = $this->getOne('select sum(`hits`) from `tiki_faqs`', []);
+
+        $data['xdata'][] = tra('quizzes');
+        $data['ydata'][] = $this->getOne('select sum(`timesTaken`) from `tiki_quiz_stats_sum`', []);
+
+        $data['xdata'][] = tra('arts');
+        $data['ydata'][] = $this->getOne('select sum(`nbreads`) from `tiki_articles`', []);
+
+        $data['xdata'][] = tra('blogs');
+        $data['ydata'][] = $this->getOne('select sum(`hits`) from `tiki_blogs`', []);
+
+        $data['xdata'][] = tra('forums');
+        $data['ydata'][] = $this->getOne('select sum(`hits`) from `tiki_forums`', []);
+
+        return $data;
+    }
+
+    // User assigned modules ////
+    /*shared*/
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function get_user_login($id)
+    {
+        return $this->table('users_users')->fetchOne('login', ['userId' => (int) $id]);
+    }
+
+    /**
+     * @param $u
+     * @return int
+     */
+    public function get_user_id($u)
+    {
+        // Anonymous is not in db
+        if ($u == '') {
+            return -1;
+        }
+
+        // If we ask for the current user id and if we already know it in session
+        $current = ( isset($_SESSION['u_info']) && $u == $_SESSION['u_info']['login'] );
+        if (isset($_SESSION['u_info']['id']) && $current) {
+            return $_SESSION['u_info']['id'];
+        }
+
+        // In other cases, we look in db
+        $id = $this->table('users_users')->fetchOne('userId', ['login' => $u]);
+        $id = ($id === false) ? -1 : $id;
+        if ($current) {
+            $_SESSION['u_info']['id'] = $id;
+        }
+        return $id;
+    }
+
+    /*shared*/
+    /**
+     * @param $group
+     * @return array
+     */
+    public function get_groups_all($group)
+    {
+        $result = $this->table('tiki_group_inclusion')->fetchColumn('groupName', ['includeGroup' => $group]);
+        $ret = $result;
+        foreach ($result as $res) {
+            $ret = array_merge($ret, $this->get_groups_all($res));
+        }
+        return array_unique($ret);
+    }
+
+    /*shared*/
+    /**
+     * @param $group
+     * @return array
+     */
+    public function get_included_groups($group)
+    {
+        $result = $this->table('tiki_group_inclusion')->fetchColumn('includeGroup', ['groupName' => $group]);
+        $ret = $result;
+        foreach ($result as $res) {
+            $ret = array_merge($ret, $this->get_included_groups($res));
+        }
+        return array_unique($ret);
+    }
+
+    /*shared*/
+    /**
+     * @param string  $user              username
+     * @param bool    $included_groups   include inherited/included groups
+     *
+     * @return array
+     */
+    public function get_user_groups($user, $included_groups = true)
+    {
+        global $prefs;
+        $userlib = TikiLib::lib('user');
+        if (empty($user) || $user === 'Anonymous') {
+            $ret = [];
+            $ret[] = "Anonymous";
+            return $ret;
+        }
+        if ($prefs['feature_intertiki'] == 'y' and empty($prefs['feature_intertiki_mymaster']) and strstr($user, '@')) {
+            $realm = substr($user, strpos($user, '@') + 1);
+            if (isset($prefs['interlist'][$realm])) {
+                $user = substr($user, 0, strpos($user, '@'));
+                $groups = $prefs['interlist'][$realm]['groups'] . ',Anonymous';
+                return explode(',', $groups);
+            }
+        }
+        $cachekey = $user . ($included_groups ? '' : '_direct');
+        if (! isset($this->usergroups_cache[$cachekey])) {
+            $userid = $this->get_user_id($user);
+            $result = $this->table('users_usergroups')->fetchColumn('groupName', ['userId' => $userid]);
+            $ret = $result;
+            if ($included_groups) {
+                foreach ($result as $res) {
+                    $ret = array_merge($ret, $userlib->get_included_groups($res));
+                }
+            }
+            if ($ret) { // only in Registereed if the user exists
+                $ret[] = "Registered";
+            }
+
+            if (isset($_SESSION["groups_are_emulated"]) && $_SESSION["groups_are_emulated"] == "y") {
+                if (in_array('Admins', $ret)) {
+                    // Members of group 'Admins' can emulate being in any list of groups
+                    $ret = unserialize($_SESSION['groups_emulated']);
+                } else {
+                    // For security purposes, user can only emulate a subset of user's list of groups
+                    // This prevents privilege escalation
+                    $ret = array_intersect($ret, unserialize($_SESSION['groups_emulated']));
+                }
+            }
+            $ret = array_values(array_unique($ret));
+            if ($ret) {
+                $this->usergroups_cache[$cachekey] = $ret;
+            }
+            return $ret;
+        } else {
+            return $this->usergroups_cache[$cachekey];
+        }
+    }
+
+    /**
+     * @param $user
+     */
+    public function invalidate_usergroups_cache($user)
+    {
+        unset($this->usergroups_cache[$user]);
+        unset($this->usergroups_cache[$user . '_direct']);
+    }
+
+    /**
+     * @param $user
+     * @return string
+     */
+    public function get_user_cache_id($user)
+    {
+        $groups = $this->get_user_groups($user);
+        sort($groups, SORT_STRING);
+        $cacheId = implode(":", $groups);
+        if ($user == 'admin') {
+            // in this case user get permissions from no group
+            $cacheId = 'ADMIN:' . $cacheId;
+        }
+        return $cacheId;
+    }
+
+    /*shared*/
+    /**
+     * @return string
+     * @see UsersLib::genPass(), which generates passwords easier to remember
+     * TODO: Merge with above
+     */
+    public static function genPass()
+    {
+        global $prefs;
+        $length = max($prefs['min_pass_length'], 8);
+        $list = ['aeiou', 'AEIOU', 'bcdfghjklmnpqrstvwxyz', 'BCDFGHJKLMNPQRSTVWXYZ', '0123456789'];
+        $list[] = $prefs['pass_chr_special'] == 'y' ? '_*&+!*-=$@' : '_';
+        shuffle($list);
+        $r = '';
+        for ($i = 0; $i < $length; $i++) {
+            $ch = $list[$i % count($list)];
+            $r .= $ch[rand(0, strlen($ch) - 1)];
+        }
+        return $r;
+    }
+
+    // generate a random string (for unsubscription code etc.)
+    /**
+     * @param string $base
+     * @return string
+     */
+    public function genRandomString($base = "")
+    {
+        if ($base == "") {
+            $base = $this->genPass();
+        }
+        $base .= microtime();
+        return md5($base);
+    }
+
+    // This function calculates the pageRanks for the tiki_pages
+    // it can be used to compute the most relevant pages
+    // according to the number of links they have
+    // this can be a very interesting ranking for the Wiki
+    // More about this on version 1.3 when we add the pageRank
+    // column to tiki_pages
+    /**
+     * @param int $loops
+     * @return array
+     */
+    public function pageRank($loops = 16)
+    {
+        $pagesTable = $this->table('tiki_pages');
+
+        $ret = $pagesTable->fetchColumn('pageName', []);
+
+        // Now calculate the loop
+        $pages = [];
+
+        foreach ($ret as $page) {
+            $val = 1 / count($ret);
+
+            $pages[$page] = $val;
+
+            $pagesTable->update(['pageRank' => (int) $val], ['pageName' => $page]);
+        }
+
+        for ($i = 0; $i < $loops; $i++) {
+            foreach ($pages as $pagename => $rank) {
+                // Get all the pages linking to this one
+                // Fixed query.  -rlpowell
+                $query = "select `fromPage`  from `tiki_links` where `toPage` = ? and `fromPage` not like 'objectlink:%'";
+                // page rank does not count links from non-page objects TODO: full feature allowing this with options
+                $result = $this->fetchAll($query, [$pagename]);
+                $sum = 0;
+
+                foreach ($result as $res) {
+                    $linking = $res["fromPage"];
+
+                    if (isset($pages[$linking])) {
+                        // Fixed query.  -rlpowell
+                        $q2 = "select count(*) from `tiki_links` where `fromPage`= ? and `fromPage` not like 'objectlink:%'";
+                        // page rank does not count links from non-page objects TODO: full feature allowing this with options
+                        $cant = $this->getOne($q2, [$linking]);
+                        if ($cant == 0) {
+                            $cant = 1;
+                        }
+                        $sum += $pages[$linking] / $cant;
+                    }
+                }
+
+                $val = (1 - 0.85) + 0.85 * $sum;
+                $pages[$pagename] = $val;
+
+                $pagesTable->update(['pageRank' => (int) $val], ['pageName' => $pagename]);
+            }
+        }
+        arsort($pages);
+        return $pages;
+    }
+
+    /**
+     * @param $maxRecords
+     * @return array
+     */
+    public function list_recent_forum_topics($maxRecords)
+    {
+        $bindvars = ['forum', 0];
+
+        $query = 'select `threadId`, `forumId` from `tiki_comments`,`tiki_forums`'
+              . " where `object`=`forumId` and `objectType`=? and `tiki_comments`.`parentId`=? order by " . $this->convertSortMode('commentDate_desc');
+        $result = $this->fetchAll($query, $bindvars, $maxRecords * 3, 0); // Load a little more, for permission filters
+        $res = $ret = $retids = [];
+        $n = 0;
+
+        foreach ($result as $res) {
+            $objperm = $this->get_perm_object($res['threadId'], 'thread', '', false);
+            if ($objperm['tiki_p_forum_read'] == 'y') {
+                $retids[] = $res['threadId'];
+
+                $n++;
+
+                if ($n >= $maxRecords) {
+                    break;
+                }
+            }
+        }
+
+        if ($n > 0) {
+            $query = 'select * from `tiki_comments`'
+              . ' where `threadId` in (' . implode(',', $retids) . ') order by ' . $this->convertSortMode('commentDate_desc');
+            $ret = $this->fetchAll($query);
+        }
+
+        $retval = [];
+        $retval['data'] = $ret;
+        $retval['cant'] = $n;
+        return $retval;
+    }
+
+    /*shared*/
+    /**
+     * @param $forumId
+     * @param $offset
+     * @param $maxRecords
+     * @param $sort_mode
+     * @param $find
+     * @return array
+     */
+    public function list_forum_topics($forumId, $offset, $maxRecords, $sort_mode, $find)
+    {
+        $bindvars = [$forumId,$forumId,'forum',0];
+        if ($find) {
+            $findesc = '%' . $find . '%';
+            $mid = " and (`title` like ? or `data` like ?)";
+            $bindvars[] = $findesc;
+            $bindvars[] = $findesc;
+        } else {
+            $mid = "";
+        }
+
+        $query = "select * from `tiki_comments`,`tiki_forums` where ";
+        $query .= " `forumId`=? and `object`=? and `objectType`=? and `parentId`=? $mid order by " . $this->convertSortMode($sort_mode);
+        $query_cant = "select count(*) from `tiki_comments`,`tiki_forums` where ";
+        $query_cant .= " `forumId`=? and `object`=? and `objectType`=? and `parentId`=? $mid";
+        $ret = $this->fetchAll($query, $bindvars, $maxRecords, $offset);
+        $cant = $this->getOne($query_cant, $bindvars);
+
+        $retval = [];
+        $retval["data"] = $ret;
+        $retval["cant"] = $cant;
+        return $retval;
+    }
+
+    /*shared*/
+    /**
+     * @param $type
+     * @param $id
+     * @return bool
+     */
+    public function remove_object($type, $id)
+    {
+        global $prefs;
+        $categlib = TikiLib::lib('categ');
+        $objectlib = TikiLib::lib('object');
+        $categlib->uncategorize_object($type, $id);
+
+        // Now remove comments
+        $threads = $this->table('tiki_comments')->fetchColumn('threadId', ['object' => $id, 'objectType' => $type]);
+        if (! empty($threads)) {
+            $commentslib = TikiLib::lib('comments');
+
+            foreach ($threads as $threadId) {
+                $commentslib->remove_comment($threadId);
+            }
+        }
+
+        // Remove individual permissions for this object if they exist
+        $object = $type . $id;
+        $this->table('users_objectpermissions')->deleteMultiple(['objectId' => md5($object), 'objectType' => $type]);
+        // remove links from this object to pages
+        $linkhandle = "objectlink:$type:$id";
+        $this->table('tiki_links')->deleteMultiple(['fromPage' => $linkhandle]);
+        // remove fgal backlinks
+        if ($prefs['feature_file_galleries'] == 'y') {
+            $filegallib = TikiLib::lib('filegal');
+            $filegallib->deleteBacklinks(['type' => $type, 'object' => $id]);
+        }
+        // remove object
+        $objectlib->delete_object($type, $id);
+
+        $objectAttributes = $this->table('tiki_object_attributes');
+        $objectAttributes->deleteMultiple(['type' => $type,'itemId' => $id]);
+
+        $objectRelations = $this->table('tiki_object_relations');
+        $objectRelations->deleteMultiple(['source_type' => $type,   'source_itemId' => $id]);
+        $objectRelations->deleteMultiple(['target_type' => $type,   'target_itemId' => $id]);
+
+        return true;
+    }
+
+    /*shared*/
+    /**
+     * @param $offset
+     * @param $maxRecords
+     * @param $sort_mode
+     * @param string $find
+     * @param string $type
+     * @param string $structureName
+     * @return array
+     */
+    public function list_received_pages($offset, $maxRecords, $sort_mode, $find = '', $type = '', $structureName = '')
+    {
+        $bindvars = [];
+        if ($type == 's') {
+            $mid = ' `trp`.`structureName` is not null ';
+        }
+        if (! $sort_mode) {
+            $sort_mode = '`structureName_asc';
+        } elseif ($type == 'p') {
+            $mid = ' `trp`.`structureName` is null ';
+        }
+        if (! $sort_mode) {
+            $sort_mode = '`pageName_asc';
+        } else {
+            $mid = '';
+        }
+
+        if ($find) {
+            $findesc = '%' . $find . '%';
+            if ($mid) {
+                $mid .= ' and ';
+            }
+            $mid .= '(`trp`.`pageName` like ? or `trp`.`structureName` like ? or `trp`.`data` like ?)';
+            $bindvars[] = $findesc;
+            $bindvars[] = $findesc;
+            $bindvars[] = $findesc;
+        }
+        if ($structureName) {
+            if ($mid) {
+                $mid .= ' and ';
+            }
+            $mid .= ' `trp`.`structureName`=? ';
+            $bindvars[] = $structureName;
+        }
+        if ($mid) {
+            $mid = "where $mid";
+        }
+
+        $query = "select trp.*, tp.`pageName` as pageExists from `tiki_received_pages` trp left join `tiki_pages` tp on (tp.`pageName`=trp.`pageName`) $mid order by `structureName` asc, `pos` asc," . $this->convertSortMode($sort_mode);
+        $query_cant = "select count(*) from `tiki_received_pages` trp $mid";
+        $ret = $this->fetchAll($query, $bindvars, $maxRecords, $offset);
+        $cant = $this->getOne($query_cant, $bindvars);
+
+        $retval = [];
+        $retval["data"] = $ret;
+        $retval["cant"] = $cant;
+        return $retval;
+    }
+
+    // User voting system ////
+    // Used to vote everything (polls,comments,files,submissions,etc) ////
+    // Checks if a user has voted
+    /*shared*/
+    /**
+     * @param $user
+     * @param $id
+     * @return bool
+     */
+    public function user_has_voted($user, $id)
+    {
+        global $prefs;
+
+        $ret = false;
+
+        if (isset($_SESSION['votes'])) {
+            $votes = $_SESSION['votes'];
+            if (is_array($votes) && in_array($id, $votes)) { // has already voted in the session (logged or not)
+                return true;
+            }
+        }
+
+        if (! $user) {
+            if ($prefs['ip_can_be_checked'] != 'y' && ! isset($_COOKIE[ session_name() ])) {// cookie has not been activated too bad for him
+                $ret = true;
+            } elseif (isset($_COOKIE[md5("tiki_wiki_poll_$id")])) {
+                $ret = true;
+            }
+            // we have no idea if cookie was deleted  or if really he has not voted
+        } else {
+            $query = "select count(*) from `tiki_user_votings` where `user`=? and `id`=?";
+            if ($this->getOne($query, [$user,(string) $id]) > 0) {
+                $ret = true;
+            }
+        }
+        if ($prefs['ip_can_be_checked'] == 'y') {
+            $query = 'select count(*) from `tiki_user_votings` where `ip`=? and `id`=?';
+            if ($this->getOne($query, [$this->get_ip_address(), $id]) > 0) {
+                return true; // IP has already voted logged or not
+            }
+        }
+        return $ret;
+    }
+
+    // Registers a user vote
+    /*shared*/
+    /**
+     * @param $user
+     * @param $id
+     * @param bool $optionId
+     * @param array $valid_options
+     * @param bool $allow_revote
+     * @return bool
+     */
+    public function register_user_vote($user, $id, $optionId = false, array $valid_options = [], $allow_revote = false)
+    {
+        global $prefs;
+
+        // If an option is specified and the valid options are specified, skip the vote entirely if not valid
+        if (false !== $optionId && count($valid_options) > 0 && ! in_array($optionId, $valid_options)) {
+            return false;
+        }
+
+        if ($user && ! $allow_revote && $this->user_has_voted($user, $id)) {
+            return false;
+        }
+
+        $userVotings = $this->table('tiki_user_votings');
+
+        $ip = $this->get_ip_address();
+        $_SESSION['votes'][] = $id;
+        setcookie(md5("tiki_wiki_poll_$id"), $ip, time() + 60 * 60 * 24 * 300);
+        if (! $user) {
+            if ($prefs['ip_can_be_checked'] == 'y') {
+                $userVotings->delete(['ip' => $ip, 'id' => $id]);
+                if ($optionId !== false && $optionId != 'NULL') {
+                    $userVotings->insert(
+                        [
+                            'user' => '',
+                            'ip' => $ip,
+                            'id' => (string) $id,
+                            'optionId' => (int) $optionId,
+                            'time' => $this->now,
+                        ]
+                    );
+                }
+            } elseif (isset($_COOKIE[md5("tiki_wiki_poll_$id")])) {
+                Feedback::error(tr('You need to enable ip_can_be_checked feature before to change vote as anonymous. If you can\'t, please contact the administrator'));
+                return false;
+            } elseif ($optionId !== false && $optionId != 'NULL') {
+                $userVotings->insert(
+                    [
+                        'user' => '',
+                        'ip' => $ip,
+                        'id' => (string) $id,
+                        'optionId' => (int) $optionId,
+                        'time' => $this->now,
+                    ]
+                );
+            }
+        } else {
+            if ($prefs['ip_can_be_checked'] == '
