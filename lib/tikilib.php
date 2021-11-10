@@ -2313,4 +2313,535 @@ class TikiLib extends TikiDb_Bridge
                 );
             }
         } else {
-            if ($prefs['ip_can_be_checked'] == '
+            if ($prefs['ip_can_be_checked'] == 'y') {
+                $userVotings->delete(['user' => $user,'id' => $id]);
+                $userVotings->delete(['ip' => $ip,'id' => $id]);
+            } else {
+                $userVotings->delete(['user' => $user,'id' => $id]);
+            }
+            if ($optionId !== false  && $optionId !== 'NULL') {
+                $userVotings->insert(
+                    [
+                        'user' => $user,
+                        'ip' => $ip,
+                        'id' => (string) $id,
+                        'optionId' => (int) $optionId,
+                        'time' => $this->now,
+                    ]
+                );
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $id
+     * @param $user
+     * @return null
+     */
+    public function get_user_vote($id, $user)
+    {
+        global $prefs;
+        $vote = null;
+        if ($user) {
+            $vote = $this->getOne("select `optionId` from `tiki_user_votings` where `user` = ? and `id` = ? order by `time` desc", [ $user, $id]);
+        }
+        if ($vote == null && $prefs['ip_can_be_checked'] == 'y') {
+            $ip = $this->get_ip_address();
+            $vote = $this->getOne("select `optionId` from `tiki_user_votings` where `ip` = ? and `id` = ? order by `time` desc", [ $ip, $id]);
+        }
+        return $vote;
+    }
+    // end of user voting methods
+
+    /**
+     * @param int $offset
+     * @param $maxRecords
+     * @param string $sort_mode
+     * @param string $find
+     * @param bool $include_prefs
+     * @return array
+     */
+    public function list_users($offset = 0, $maxRecords = -1, $sort_mode = 'pref:realName', $find = '', $include_prefs = false)
+    {
+        global $user, $prefs;
+        $userprefslib = TikiLib::lib('userprefs');
+
+        $bindvars = [];
+        if ($find) {
+            $findesc = '%' . $find . '%';
+            $mid = 'where (`login` like ? or p1.`value` like ?)';
+            $mid_cant = $mid;
+            $bindvars[] = $findesc;
+            $bindvars[] = $findesc;
+            $bindvars2 = [$findesc, $findesc];
+            $find_join = " left join `tiki_user_preferences` p1 on (u.`login` = p1.`user` and p1.`prefName` = 'realName')";
+            $find_join_cant = $find_join;
+        } else {
+            $mid = '';
+            $bindvars2 = [];
+            $find_join = '';
+            $find_join_cant = '';
+            $mid_cant = '';
+        }
+
+        // This allows to use a sort_mode by prefs
+        // In this case, sort_mode must have this syntax :
+        //   pref:PREFERENCE_NAME[_asc|_desc]
+        // e.g. to sort on country :
+        //   pref:country  OR  pref:country_asc  OR  pref:country_desc
+
+        if ($ppos = strpos($sort_mode, ':')) {
+            $sort_value = substr($sort_mode, $ppos + 1);
+            $sort_way = 'asc';
+
+            if (preg_match('/^(.+)_(asc|desc)$/i', $sort_value, $regs)) {
+                $sort_value = $regs[1];
+                $sort_way = $regs[2];
+                unset($regs);
+            }
+
+            if ($find_join != '' && $sort_value == 'realName') {
+                // Avoid two joins if we can do only one
+                $find_join = '';
+                $mid = 'where (`login` like ? or p.`value` like ?)';
+            }
+            $sort_mode = "p.`value` $sort_way";
+            $pref_where = ( ( $mid == '' ) ? 'where' : $mid . ' and' ) . " p.`prefName` = '$sort_value'";
+            $pref_join = 'left join `tiki_user_preferences` p on (u.`login` = p.`user`)';
+            $pref_field = ', p.`value` as sf';
+        } else {
+            $sort_mode = $this->convertSortMode($sort_mode);
+            $pref_where = $mid;
+            $pref_join = '';
+            $pref_field = '';
+        }
+
+        if ($sort_mode != '') {
+            $sort_mode = 'order by ' . $sort_mode;
+        }
+
+        $query = "select u.* $pref_field  from `users_users` u $pref_join $find_join $pref_where $sort_mode";
+
+        $query_cant = "select count(distinct u.`login`) from `users_users` u $find_join_cant $mid_cant";
+        $result = $this->fetchAll($query, $bindvars, $maxRecords, $offset);
+        $cant = $this->getOne($query_cant, $bindvars2);
+
+        $ret = [];
+        foreach ($result as $res) {
+            if ($include_prefs) {
+                $res['preferences'] = $userprefslib->get_userprefs($res['login']);
+            }
+            $ret[] = $res;
+        }
+
+        return ['data' => $ret, 'cant' => $cant];
+    }
+
+    // CMS functions -ARTICLES- & -SUBMISSIONS- ////
+    /*shared*/
+    /**
+     * @param int $max
+     * @return mixed
+     */
+    public function get_featured_links($max = 10)
+    {
+        $query = "select * from `tiki_featured_links` where `position` > ? order by " . $this->convertSortMode("position_asc");
+        return  $this->fetchAll($query, [0], (int)$max, 0);
+    }
+
+    /**
+     * @param $sessionId
+     */
+    public function setSessionId($sessionId)
+    {
+        $this->sessionId = $sessionId;
+    }
+
+    /**
+     * @return null
+     */
+    public function getSessionId()
+    {
+        return $this->sessionId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function update_session()
+    {
+        static $uptodate = false;
+        if ($uptodate === true || $this->sessionId === null) {
+            return true;
+        }
+
+        global $user, $prefs;
+        $logslib = TikiLib::lib('logs');
+
+        if ($user === false) {
+            $user = '';
+        }
+        // If pref login_multiple_forbidden is set, length of tiki_sessions must match real session length to be up to date so we can detect concurrent logins of same user
+        if ($prefs['login_multiple_forbidden'] == 'y') {
+            $delay = ini_get('session.gc_maxlifetime');
+        } else {    // Low value so as to guess who actually is in front of the computer
+            $delay = 5 * 60; // 5 minutes
+        }
+        $oldy = $this->now - $delay;
+        if ($user != '') { // was the user timeout?
+            $query = "select count(*) from `tiki_sessions` where `sessionId`=?";
+            $cant = $this->getOne($query, [$this->sessionId]);
+            if ($cant == 0) {
+                if ($prefs['login_multiple_forbidden'] != 'y' || $user == 'admin') {
+                    // Recover after timeout
+                    $logslib->add_log("login", "back", $user, '', '', $this->now);
+                } else {
+                    // Prevent multiple sessions for same user
+                    // Must check any user session, not only timed out ones
+                    $query = "SELECT count(*) FROM `tiki_sessions` WHERE user = ?";
+                    $cant = $this->getOne($query, [$user]);
+                    if ($cant == 0) {
+                        // Recover after timeout (no other session)
+                        $logslib->add_log("login", "back", $user, '', '', $this->now);
+                    } else {
+                        // User has an active session on another browser
+                        $userlib = TikiLib::lib('user');
+                        $userlib->user_logout($user, false, '');
+                    }
+                }
+            }
+        }
+        $query = "select * from `tiki_sessions` where `timestamp`<?";
+        $result = $this->fetchAll($query, [$oldy]);
+        foreach ($result as $res) {
+            if ($res['user'] && $res['user'] != $user) {
+                $logslib->add_log('login', 'timeout', $res['user'], ' ', ' ', $res['timestamp'] + $delay);
+            }
+        }
+
+        $sessions = $this->table('tiki_sessions');
+
+        $sessions->delete(['sessionId' => $this->sessionId]);
+        $sessions->deleteMultiple(['timestamp' => $sessions->lesserThan($oldy)]);
+
+        if ($user) {
+            $sessions->delete(['user' => $user]);
+        }
+
+        $sessions->insert(
+            [
+                'sessionId' => $this->sessionId,
+                'timestamp' => $this->now,
+                'user' => $user,
+                'tikihost' => isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost',
+            ]
+        );
+        if ($prefs['session_storage'] == 'db') {
+            // clean up adodb sessions as well in case adodb session garbage collection not working
+            $sessions = $this->table('sessions');
+
+            $sessions->deleteMultiple(['expiry' => $sessions->lesserThan($oldy)]);
+        }
+
+        $uptodate = true;
+        return true;
+    }
+
+    // Returns the number of registered users which logged in or were active in the last 5 minutes.
+    /**
+     * @return mixed
+     */
+    public function count_sessions()
+    {
+        $this->update_session();
+        return $this->table('tiki_sessions')->fetchCount([]);
+    }
+
+    // Returns a string-indexed array with all the hosts/servers active in the last 5 minutes. Keys are hostnames. Values represent the number of registered users which logged in or were active in the last 5 minutes on the host.
+    /**
+     * @return array
+     */
+    public function count_cluster_sessions()
+    {
+        $this->update_session();
+        $query = "select `tikihost`, count(`tikihost`) as cant from `tiki_sessions` group by `tikihost`";
+        return $this->fetchMap($query, []);
+    }
+
+    /**
+     * @param $links
+     * @return bool
+     */
+    public function cache_links($links)
+    {
+        global $prefs;
+        if ($prefs['cachepages'] != 'y') {
+            return false;
+        }
+        foreach ($links as $link) {
+            if (! $this->is_cached($link)) {
+                $this->cache_url($link);
+            }
+        }
+    }
+
+    /**
+     * @param $data
+     * @return array
+     */
+    public function get_links($data, $is_markdown = false)
+    {
+        $links = [];
+
+        /// Prevent the substitution of link [] inside a <tag> ex: <input name="tracker[9]" ... >
+        $data = preg_replace("/<[^>]*>/", "", $data);
+
+        if ($is_markdown) {
+            // markdown syntax needs to ignore ^[] inline footnotes, [^footnotes] and [foo](link)
+            if (preg_match_all("/(?<![\[\^])\[([^\[\|\]\^]+)(?:\|?[^\[\|\]]*){0,2}\](?!\()/", $data, $r1)) {
+                $res = $r1[1];
+                $links = array_unique($res);
+            }
+        } else {
+            /// Match things like [...], but ignore things like [[foo].
+            // -Robin
+            if (preg_match_all("/(?<!\[)\[([^\[\|\]]+)(?:\|?[^\[\|\]]*){0,2}\]/", $data, $r1)) {
+                $res = $r1[1];
+                $links = array_unique($res);
+            }
+        }
+
+        return $links;
+    }
+
+    /**
+     * Convert internal links from absolute to relative
+     *
+     * @param string $data
+     * @return string
+     */
+    public function convertAbsoluteLinksToRelative($data)
+    {
+        global $prefs, $tikilib;
+
+        preg_match_all('/\[(([^|\]]+)(\|([^|\]]+))?)\]/', $data, $matches);
+
+        $counter = count($matches[0]);
+        for ($i = 0; $i < $counter; $i++) {
+            $label = ! empty($matches[3][$i]) ? ltrim($matches[3][$i], '|') : '';
+            if (! empty($label) && $matches[2][$i] == $label) {
+                $data = str_replace($matches[0][$i], '[' . $matches[2][$i] . ']', $data);
+            }
+
+            // Check if link part is valid url
+            if (filter_var($matches[2][$i], FILTER_VALIDATE_URL) === false) {
+                continue;
+            }
+
+            // Check if url matches tiki instance links
+            if ($url = $this->getMatchBaseUrlSchema($matches[2][$i]) && $matches[2][$i] == $matches[4][$i]) {
+                $newLink = '[' . $matches[2][$i] . ']';
+                $data = str_replace($matches[0][$i], $newLink, $data);
+            }
+        }
+
+        preg_match_all('/\(\((([^|)]+)(\|([^|)]+))?)\)\)/', $data, $matches);
+
+        $counter = count($matches[0]);
+        for ($i = 0; $i < $counter; $i++) {
+            if ($matches[0][$i]) {
+                $linkArray = explode('|', trim($matches[0][$i], '(())'));
+                if (count($linkArray) == 2 && $linkArray[0] == $linkArray[1]) {
+                    $newLink = '((' . $linkArray[0] . '))';
+                    $data = str_replace($matches[0][$i], $newLink, $data);
+                }
+            }
+        }
+
+        if ($prefs['feature_absolute_to_relative_links'] != 'y') {
+            return $data;
+        }
+
+        $notification = false;
+
+        $from = 0;
+        $to = strlen($data);
+        $replace = [];
+        foreach ($this->getWikiMarkers() as $marker) {
+            while (false !== $open = $this->findText($data, $marker[0], $from, $to)) {
+                // Wiki marker -+ begin should be proceeded by space or a newline
+                if ($marker[0] == '-+' && $open != 0 && ! preg_match('/\s/', $data[$open - 1])) {
+                    $from = $open + 1;
+                    continue;
+                }
+
+                if (false !== $close = $this->findText($data, $marker[1], $open, $to)) {
+                    $from = $close;
+                    $size = ($close - $open) + strlen($marker[1]);
+                    $markerBody = substr($data, $open, $size);
+                    $key = "§" . md5($tikilib->genPass()) . "§" ;
+                    $replace[$key] = $markerBody;
+                    $data = str_replace($markerBody, $key, $data);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // convert absolute to relative links
+        $pluginMatches = WikiParser_PluginMatcher::match($data);
+        foreach ($pluginMatches as $pluginMatch) {
+            $pluginBody = $pluginMatch->getBody();
+            if (empty($pluginBody)) {
+                $pluginBody = $pluginMatch->getArguments();
+            }
+
+            $key = "§" . md5($tikilib->genPass()) . "§" ;
+            $replace[$key] = $pluginBody;
+            $data = str_replace($pluginBody, $key, $data);
+        }
+
+        // Detect tiki internal links
+        preg_match_all('/\(\((([^|)]+)(\|([^|)]+))?)\)\)/', $data, $matches);
+
+        $counter = count($matches[0]);
+        for ($i = 0; $i < $counter; $i++) {
+            $linkArray = explode('|', trim($matches[0][$i], '(())'));
+            if (count($linkArray) == 2 && $linkArray[0] == $linkArray[1]) {
+                $newLink = '((' . $linkArray[0] . '))';
+                $data = str_replace($matches[0][$i], $newLink, $data);
+                $notification = true;
+            }
+
+            // Check if link part is valid url
+            if (filter_var($matches[2][$i], FILTER_VALIDATE_URL) === false) {
+                continue;
+            }
+
+            // Check if url matches tiki instance links
+            if ($url = $this->getMatchBaseUrlSchema($matches[2][$i])) {
+                $newPath = str_replace($url, '', $matches[2][$i]);
+                // In case of a tikibase instance point link to Homepage
+                if (empty($newPath) || $newPath == '/') {
+                    $newPath = 'Homepage';
+                }
+                $newLink = '((' . $newPath . $matches[3][$i] . '))';
+                $data = str_replace($matches[0][$i], $newLink, $data);
+                $notification = true;
+            }
+        }
+
+        // Detect external links
+        preg_match_all('/\[(([^|\]]+)(\|([^|\]]+))?)\]/', $data, $matches);
+
+        $counter = count($matches[0]);
+        for ($i = 0; $i < $counter; $i++) {
+            // Check if link part is valid url
+            if (filter_var($matches[2][$i], FILTER_VALIDATE_URL) === false) {
+                continue;
+            }
+
+            // Check if url matches tiki instance links
+            if ($url = $this->getMatchBaseUrlSchema($matches[2][$i])) {
+                $newPath = str_replace($url, '', $matches[2][$i]);
+                if (! empty($newPath)) {
+                    $newLink = '[' . $newPath . $matches[3][$i] . ']';
+
+                    $newLinkArray = explode('|', trim($newLink, '[]'));
+                    if (count($newLinkArray) === 2 && $newLinkArray[0] == str_replace($url, '', $newLinkArray[1])) {
+                        $newLink = '[' . $newLinkArray[0] . ']';
+                    }
+
+                    $data = str_replace($matches[0][$i], $newLink, $data);
+                    $notification = true;
+                }
+            }
+        }
+
+        // Detect links outside wikiplugin or wiki markers
+        preg_match_all('/(?<!==)(http|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])?/', $data, $matches);
+
+        $counter = count($matches[0]);
+        for ($i = 0; $i < $counter; $i++) {
+            // Check if link part is valid url
+            if (filter_var($matches[0][$i], FILTER_VALIDATE_URL) === false) {
+                continue;
+            }
+
+            // Check if url matches tiki instance links
+            if ($url = $this->getMatchBaseUrlSchema($matches[0][$i])) {
+                $newPath = str_replace($url, '', $matches[0][$i]);
+                $objectLink = $this->getObjectRelativeLink($newPath);
+                if (! empty($newPath) && ! empty($objectLink)) {
+                    $objStartPos = strpos($data, $matches[0][$i]);
+                    $objLength = strlen($matches[0][$i]);
+                    $data = substr_replace($data, $objectLink, $objStartPos, $objLength);
+                    $notification = true;
+                }
+            }
+        }
+
+        foreach ($replace as $key => $body) {
+            $data = str_replace($key, $body, $data);
+        }
+
+        if ($notification) {
+            Feedback::note(tr('Tiki links converted to relative links'));
+        }
+
+        return $data;
+    }
+
+    /**
+     * Return the base url in the matched link protocol (http or https)
+     *
+     * @param string $link The link to check
+     *
+     * @return string The tiki base url with the matched schema (http or https)
+     */
+    public function getMatchBaseUrlSchema($link)
+    {
+        global $base_url_http, $base_url_https;
+
+        if (strpos($link, $base_url_http) !== false) {
+            return $base_url_http;
+        } elseif (strpos($link, rtrim($base_url_http, '/')) !== false) {
+            return rtrim($base_url_http, '/');
+        } elseif (strpos($link, $base_url_https) !== false) {
+            return $base_url_https;
+        } elseif (strpos($link, rtrim($base_url_https, '/')) !== false) {
+            return rtrim($base_url_https, '/');
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the object internal link
+     *
+     * @param string $uri
+     * @return string
+     */
+    public function getObjectRelativeLink($uri)
+    {
+        global $prefs;
+        $objectLink = '';
+
+        if (! empty($prefs['feature_sefurl']) && $prefs['feature_sefurl'] === 'y') {
+            $slug = explode('-', $uri);
+            $slug = $slug[0];
+
+            switch ($slug) {
+                case (substr($slug, 0, 7) === 'article' || substr($slug, 0, 3) === 'art'):
+                    $articleId = substr($slug, 0, 7) === 'article' ? substr($slug, 7) : substr($slug, 3);
+                    $artlib = TikiLib::lib('art');
+                    $article = $artlib->get_article($articleId);
+                    $objectLink = ! empty($article['title']) ? '[' . $uri . '|' . $article['title'] . ']' : '';
+                    break;
+                case substr($slug, 0, 8) === 'blogpost':
+                    $blogPostId = substr($slug, 8);
+                    $bloglib = TikiLib::lib('blog');
+                    $blogPost = $bloglib->get_post($blogPostId);
+                    $objectLink = ! empty($blogPost['title']) ? '[' . $uri . '|' . $blogPost['title'] . ']' : 
