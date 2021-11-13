@@ -3209,4 +3209,529 @@ class TikiLib extends TikiDb_Bridge
                         '.doc',
                         '.exe',
                         '.hqx',
-                      
+                        '.mid',
+                        '.mov',
+                        '.mp3',
+                        '.mpg',
+                        '.ogg',
+                        '.pdf',
+                        '.ram',
+                        '.rar',
+                        '.rpm',
+                        '.rtf',
+                        '.sea',
+                        '.sit',
+                        '.tar',
+                        '.tgz',
+                        '.wav',
+                        '.wmv',
+                        '.xls',
+                        '.zip',
+                        'ar.Z', // .tar.Z
+                        'r.gz'  // .tar.gz
+                            ];
+                if (in_array($extension, $binary)) {
+                    $res[] = $parts[0];
+                }
+            }
+
+            $links = array_unique($res);
+        }
+
+        return $links;
+    }
+
+    /**
+     * @param $url
+     * @return bool
+     */
+    public function is_cacheable($url)
+    {
+        // simple implementation: future versions should analyse
+        // if this is a link to the local machine
+        if (strstr($url, 'tiki-')) {
+            return false;
+        }
+
+        if (strstr($url, 'messu-')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $url
+     * @return mixed
+     */
+    public function is_cached($url)
+    {
+        return $this->table('tiki_link_cache')->fetchCount(['url' => $url]);
+    }
+
+    /**
+     * @param $offset
+     * @param $maxRecords
+     * @param $sort_mode
+     * @param $find
+     * @return array
+     */
+    public function list_cache($offset, $maxRecords, $sort_mode, $find)
+    {
+
+        if ($find) {
+            $findesc = '%' . $find . '%';
+
+            $mid = " where (`url` like ?) ";
+            $bindvars = [$findesc];
+        } else {
+            $mid = "";
+            $bindvars = [];
+        }
+
+        $query = "select `cacheId` ,`url`,`refresh` from `tiki_link_cache` $mid order by " . $this->convertSortMode($sort_mode);
+        $query_cant = "select count(*) from `tiki_link_cache` $mid";
+        $ret = $this->fetchAll($query, $bindvars, $maxRecords, $offset);
+        $cant = $this->getOne($query_cant, $bindvars);
+
+        $retval = [];
+        $retval["data"] = $ret;
+        $retval["cant"] = $cant;
+        return $retval;
+    }
+
+    /**
+     * @param $cacheId
+     * @return bool
+     */
+    public function refresh_cache($cacheId)
+    {
+        $linkCache = $this->table('tiki_link_cache');
+
+        $url = $linkCache->fetchOne('url', ['cacheId' => $cacheId]);
+
+        $data = $this->httprequest($url);
+
+        $linkCache->update(['data' => $data,    'refresh' => $this->now], ['cacheId' => $cacheId]);
+        return true;
+    }
+
+    /**
+     * @param $cacheId
+     * @return bool
+     */
+    public function remove_cache($cacheId)
+    {
+        $linkCache = $this->table('tiki_link_cache');
+        $linkCache->delete(['cacheId' => $cacheId]);
+
+        return true;
+    }
+
+    /**
+     * @param $cacheId
+     * @return mixed
+     */
+    public function get_cache($cacheId)
+    {
+        return $this->table('tiki_link_cache')->fetchFullRow(['cacheId' => $cacheId]);
+    }
+
+    /**
+     * @param $url
+     * @return bool
+     */
+    public function get_cache_id($url)
+    {
+        $id = $this->table('tiki_link_cache')->fetchOne('cacheId', ['url' => $url]);
+        return $id ? $id : false;
+    }
+    /* cachetime = 0 => no cache, otherwise duration cache is valid */
+    /**
+     * @param $url
+     * @param $isFresh
+     * @param int $cachetime
+     * @return mixed
+     */
+    public function get_cached_url($url, &$isFresh, $cachetime = 0)
+    {
+        $linkCache = $this->table('tiki_link_cache');
+
+        $res = $linkCache->fetchFullRow(['url' => $url]);
+        $now = $this->now;
+
+        if (empty($res) || ($now - $res['refresh']) > $cachetime) { // no cache or need to refresh
+            $res['data'] = $this->httprequest($url);
+            $isFresh = true;
+            //echo '<br />Not cached:'.$url.'/'.strlen($res['data']);
+            $res['refresh'] = $now;
+            if ($cachetime > 0) {
+                if (empty($res['cacheId'])) {
+                    $linkCache->insert(['url' => $url, 'data' => $res['data'], 'refresh' => $res['refresh']]);
+
+                    $res = $linkCache->fetchFullRow(['url' => $url]);
+                } else {
+                    $linkCache->update(['data' => $res['data'], 'refresh' => $res['refresh']], ['cacheId' => $res['cacheId']]);
+                }
+            }
+        } else {
+            //echo '<br />Cached:'.$url;
+            $isFresh = false;
+        }
+        return $res;
+    }
+
+    // This funcion return the $limit most accessed pages
+    // it returns pageName and hits for each page
+    /**
+     * @param $limit
+     * @return array
+     */
+    public function get_top_pages($limit)
+    {
+        $query = "select `pageName` , `hits`
+            from `tiki_pages`
+            order by `hits` desc";
+
+        $result = $this->fetchAll($query, [], $limit);
+        $ret = [];
+
+        foreach ($result as $res) {
+            $aux["pageName"] = $res["pageName"];
+
+            $aux["hits"] = $res["hits"];
+            $ret[] = $aux;
+        }
+
+        return $ret;
+    }
+
+    // Returns the name of all pages
+
+    /**
+     * Get all tiki pages
+     * @param array $columns
+     * @return mixed
+     */
+    public function get_all_pages($columns = [])
+    {
+        return $this->table('tiki_pages')->fetchAll($columns, []);
+    }
+
+    /**
+     * \brief Cache given url
+     * If \c $data present (passed) it is just associated \c $url and \c $data.
+     * Else it will request data for given URL and store it in DB.
+     * Actualy (currently) data may be proviced by TIkiIntegrator only.
+     */
+    public function cache_url($url, $data = '')
+    {
+        // Avoid caching internal references... (only if $data not present)
+        // (cdx) And avoid other protocols than http...
+        // 03-Nov-2003, by zaufi
+        // preg_match("_^(mailto:|ftp:|gopher:|file:|smb:|news:|telnet:|javascript:|nntp:|nfs:)_",$url)
+        // was removed (replaced to explicit http[s]:// detection) bcouse
+        // I now (and actualy use in my production Tiki) another bunch of protocols
+        // available in my konqueror... (like ldap://, ldaps://, nfs://, fish://...)
+        // ... seems like it is better to enum that allowed explicitly than all
+        // noncacheable protocols.
+        if (
+            ((strstr($url, 'tiki-') || strstr($url, 'messu-')) && $data == '')
+                || (substr($url, 0, 7) != 'http://' && substr($url, 0, 8) != 'https://')
+        ) {
+            return false;
+        }
+        // Request data for URL if nothing given in parameters
+        // (reuse $data var)
+        if ($data == '') {
+            $data = $this->httprequest($url);
+        }
+
+        // If stuff inside [] is *really* malformatted, $data
+        // will be empty.  -rlpowell
+        if ($data) {
+            $linkCache = $this->table('tiki_link_cache');
+            $linkCache->insert(['url' => $url, 'data' => $data, 'refresh' => $this->now]);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // Removes all the versions of a page and the page itself
+    /*shared*/
+    /**
+     * @param $page
+     * @param string $comment
+     * @return bool
+     */
+    public function remove_all_versions($page, $comment = '')
+    {
+        $page_info = $this->get_page_info($page);
+        if (! $page_info) {
+            return false;
+        }
+        global $user, $prefs;
+        if ($prefs['feature_actionlog'] == 'y' && isset($page_info['data'])) {
+            $params = 'del=' . strlen($page_info['data']);
+        } else {
+            $params = '';
+        }
+        //  Deal with mail notifications.
+        include_once(__DIR__ . '/notifications/notificationemaillib.php');
+        $foo = parse_url($_SERVER["REQUEST_URI"]);
+        $machine = self::httpPrefix(true) . dirname($foo["path"]);
+        sendWikiEmailNotification('wiki_page_deleted', $page, $user, $comment, 1, $page_info['data'], $machine);
+
+        //Remove the bibliography references for this page
+        $this->removePageReference($page);
+
+        $wikilib = TikiLib::lib('wiki');
+        $multilinguallib = TikiLib::lib('multilingual');
+        $multilinguallib->detachTranslation('wiki page', $multilinguallib->get_page_id_from_name($page));
+        $this->invalidate_cache($page);
+        //Delete structure references before we delete the page
+        $query  = "select `page_ref_id` ";
+        $query .= "from `tiki_structures` ts, `tiki_pages` tp ";
+        $query .= "where ts.`page_id`=tp.`page_id` and `pageName`=?";
+        $result = $this->fetchAll($query, [$page]);
+        foreach ($result as $res) {
+            $this->remove_from_structure($res["page_ref_id"]);
+        }
+
+        $this->table('tiki_pages')->delete(['pageName' => $page]);
+        if ($prefs['feature_contribution'] == 'y') {
+            $contributionlib = TikiLib::lib('contribution');
+            $contributionlib->remove_page($page);
+        }
+        $this->table('tiki_history')->deleteMultiple(['pageName' => $page]);
+        $this->table('tiki_links')->deleteMultiple(['fromPage' => $page]);
+        $logslib = TikiLib::lib('logs');
+        $logslib->add_action('Removed', $page, 'wiki page', $params);
+        //get_strings tra("Removed");
+        $this->table('users_groups')->updateMultiple(['groupHome' => null], ['groupHome' => $page]);
+
+        $this->table('tiki_theme_control_objects')->deleteMultiple(['name' => $page,'type' => 'wiki page']);
+        $this->table('tiki_copyrights')->deleteMultiple(['page' => $page]);
+
+        $this->remove_object('wiki page', $page);
+
+        $this->table('tiki_user_watches')->deleteMultiple(['event' => 'wiki_page_changed', 'object' => $page]);
+        $this->table('tiki_group_watches')->deleteMultiple(['event' => 'wiki_page_changed', 'object' => $page]);
+
+        $atts = $wikilib->list_wiki_attachments($page, 0, -1, 'created_desc', '');
+        foreach ($atts["data"] as $at) {
+            $wikilib->remove_wiki_attachment($at["attId"]);
+        }
+
+        $wikilib->remove_footnote('', $page);
+        $this->refresh_index('wiki page', $page);
+
+        return true;
+    }
+
+    /*shared*/
+    /**
+     * @param $page_ref_id
+     * @return bool
+     */
+    public function remove_from_structure($page_ref_id)
+    {
+        // Now recursively remove
+        $query  = "select `page_ref_id` ";
+        $query .= "from `tiki_structures` as ts, `tiki_pages` as tp ";
+        $query .= "where ts.`page_id`=tp.`page_id` and `parent_id`=?";
+        $result = $this->fetchAll($query, [$page_ref_id]);
+
+        foreach ($result as $res) {
+            $this->remove_from_structure($res["page_ref_id"]);
+        }
+
+        $structlib = TikiLib::lib('struct');
+        $page_info = $structlib->s_get_page_info($page_ref_id);
+
+        $structures = $this->table('tiki_structures');
+
+        $structures->updateMultiple(
+            ['pos' => $structures->decrement(1)],
+            ['pos' => $structures->greaterThan((int) $page_info['pos']),    'parent_id' => (int) $page_info['parent_id'],]
+        );
+
+        $structures->delete(['page_ref_id' => $page_ref_id]);
+        return true;
+    }
+
+    // Deprecated in favor of list_pages
+    /**
+     * @param $maxRecords
+     * @param string $categories
+     * @return array
+     */
+    public function last_pages($maxRecords = -1, $categories = '')
+    {
+        if (is_array($categories)) {
+            $filter = ["categId" => $categories];
+        } else {
+            $filter = [];
+        }
+
+        return $this->list_pages(0, $maxRecords, "lastModif_desc", '', '', true, true, false, false, $filter);
+    }
+
+    // Broken. Equivalent to last_pages($maxRecords)
+    /**
+     * @param $maxRecords
+     * @return array
+     */
+    public function last_major_pages($maxRecords = -1)
+    {
+        return $this->list_pages(0, $maxRecords, "lastModif_desc");
+    }
+    // use this function to speed up when pagename is only needed (the 3 getOne can killed tikiwith more that 3000 pages)
+    /**
+     * @param int $offset
+     * @param $maxRecords
+     * @param string $sort_mode
+     * @param string $find
+     * @return array
+     */
+    public function list_pageNames($offset = 0, $maxRecords = -1, $sort_mode = 'pageName_asc', $find = '')
+    {
+        return $this->list_pages($offset, $maxRecords, $sort_mode, $find, '', true, true);
+    }
+
+    /**
+     * @param int $offset
+     * @param $maxRecords
+     * @param string $sort_mode
+     * @param string $find
+     * @param string $initial
+     * @param bool $exact_match
+     * @param bool $onlyName
+     * @param bool $forListPages
+     * @param bool $only_orphan_pages
+     * @param string $filter
+     * @param bool $onlyCant
+     * @param string $ref
+     * @return array
+     */
+    public function list_pages($offset = 0, $maxRecords = -1, $sort_mode = 'pageName_desc', $find = '', $initial = '', $exact_match = true, $onlyName = false, $forListPages = false, $only_orphan_pages = false, $filter = '', $onlyCant = false, $ref = '', $exclude_pages = '')
+    {
+        global $prefs, $tiki_p_wiki_view_ratings;
+
+        $loadCategories = (isset($prefs['wiki_list_categories']) && $prefs['wiki_list_categories'] == 'y') || (isset($prefs['wiki_list_categories_path']) && $prefs['wiki_list_categories_path'] == 'y');
+        $loadCategories = $loadCategories && $forListPages;
+
+        $join_tables = '';
+        $join_bindvars = [];
+        $old_sort_mode = '';
+        if ($sort_mode == 'size_desc') {
+            $sort_mode = 'page_size_desc';
+        }
+        if ($sort_mode == 'size_asc') {
+            $sort_mode = 'page_size_asc';
+        }
+        $select = '';
+
+        // If sort mode is versions, links or backlinks then offset is 0, maxRecords is -1 (again) and sort_mode is nil
+        $need_everything = false;
+        if (in_array($sort_mode, ['versions_desc', 'versions_asc', 'links_asc', 'links_desc', 'backlinks_asc', 'backlinks_desc'])) {
+            $old_sort_mode = $sort_mode;
+            $sort_mode = 'user_desc';
+            $need_everything = true;
+        }
+
+        if (is_array($find)) { // you can use an array of pages
+            $mid = " where LOWER(`pageName`) IN (" . implode(',', array_fill(0, count($find), 'LOWER(?)')) . ")";
+            $bindvars = $find;
+        } elseif (is_string($find) && ! empty($find)) { // or a string
+            if (! $exact_match && $find) {
+                $find = preg_replace("/([^\s]+)/", "%\\1%", $find);
+                $f = preg_split("/[\s]+/", $find, -1, PREG_SPLIT_NO_EMPTY);
+                if (empty($f)) {//look for space...
+                    $mid = " where LOWER(`pageName`) like LOWER('%$find%')";
+                } else {
+                    $findop = $forListPages ? ' AND' : ' OR';
+                    $mid = " where LOWER(`pageName`) like " . implode($findop . ' LOWER(`pageName`) like ', array_fill(0, count($f), 'LOWER(?)'));
+                    $bindvars = $f;
+                }
+            } else {
+                $mid = " where LOWER(`pageName`) like LOWER(?) ";
+                $bindvars = [$find];
+            }
+        } else {
+            $bindvars = [];
+            $mid = '';
+        }
+
+        //check if exclude page is array and then add its values in bindvars and
+        if ($exclude_pages && is_array($exclude_pages)) { // you can use an array of pages
+            if (! empty($mid)) {
+                $mid .= " AND (LOWER(`pageName`) NOT IN (" . implode(',', array_fill(0, count($exclude_pages), 'LOWER(?)')) . "))";
+            } else {
+                $mid = " where LOWER(`pageName`) NOT IN (" . implode(',', array_fill(0, count($exclude_pages), 'LOWER(?)')) . ")";
+            }
+
+            foreach ($exclude_pages as $epKey => $epVal) {
+                $bindvars[] = $epVal;
+            }
+        }
+
+        $categlib = TikiLib::lib('categ');
+        $category_jails = $categlib->get_jail();
+
+        if (! isset($filter['andCategId']) && ! isset($filter['categId']) && empty($filter['noCateg']) && ! empty($category_jails)) {
+            $filter['categId'] = $category_jails;
+        }
+
+        // If language is set to '', assume that no language filtering should be done.
+        if (isset($filter['lang']) && $filter['lang'] == '') {
+            unset($filter['lang']);
+        }
+
+        $distinct = '';
+        if (! empty($filter)) {
+            $tmp_mid = [];
+            foreach ($filter as $type => $val) {
+                if ($type == 'andCategId') {
+                    $categories = $categlib->get_jailed((array) $val);
+                    $join_tables .= " inner join `tiki_objects` as tob on (tob.`itemId`= tp.`pageName` and tob.`type`= ?) ";
+                    $join_bindvars[] = 'wiki page';
+                    foreach ($categories as $i => $categId) {
+                        $join_tables .= " inner join `tiki_category_objects` as tc$i on (tc$i.`catObjectId`=tob.`objectId` and tc$i.`categId` =?) ";
+                        $join_bindvars[] = $categId;
+                    }
+                } elseif ($type == 'categId') {
+                    $categories = $categlib->get_jailed((array) $val);
+                    $categories[] = -1;
+
+                    $cat_count = count($categories);
+                    $join_tables .= " inner join `tiki_objects` as tob on (tob.`itemId`= tp.`pageName` and tob.`type`= ?) inner join `tiki_category_objects` as tc on (tc.`catObjectId`=tob.`objectId` and tc.`categId` IN(" . implode(', ', array_fill(0, $cat_count, '?')) . ")) ";
+
+                    if ($cat_count > 1) {
+                        $distinct = ' DISTINCT ';
+                    }
+
+                    $join_bindvars = array_merge(['wiki page'], $categories);
+                } elseif ($type == 'noCateg') {
+                    $join_tables .= ' left join `tiki_objects` as tob on (tob.`itemId`= tp.`pageName` and tob.`type`= ?) left join `tiki_categorized_objects` as tcdo on (tcdo.`catObjectId`=tob.`objectId`) left join `tiki_category_objects` as tco on (tcdo.`catObjectId`=tco.`catObjectId`)';
+                    $join_bindvars[] = 'wiki page';
+                    $tmp_mid[] = '(tco.`categId` is null)';
+                } elseif ($type == 'notCategId') {
+                    foreach ($val as $v) {
+                        $tmp_mid[] = '(tp.`pageName` NOT IN(SELECT itemId FROM tiki_objects INNER JOIN tiki_category_objects ON catObjectId = objectId WHERE type = "wiki page" AND categId = ?))';
+                        $bindvars[] = $v;
+                    }
+                } elseif ($type == 'lang') {
+                    $tmp_mid[] = 'tp.`lang`=?';
+                    $bindvars[] = $val;
+                } elseif ($type == 'structHead') {
+                    $join_tables .= " inner join `tiki_structures` as ts on (ts.`page_id` = tp.`page_id` and ts.`parent_id` = 0) ";
+                    $select .= ',ts.`page_alias`';
+                } elseif ($type == 'langOrphan') {
+                    $join_tables .= " left join `tiki_translated_objects` tro on (tro.`type` = 'wiki page' AND tro.`objId` = tp.`page_id`) ";
+                    $tmp_mid[] = "( (tro.`traId` IS NULL AND tp.`lang` != ?) OR tro.`traId` NOT IN(SELECT `traId` FROM `tiki_translated_objects` WHERE `lang` = ?))";
+                    $bindvars[] = $val;
+                    $bindvars[] = $val;
+                } elseif ($type == 'structure_orphans') {
+                    $join_tables .= " left join `tiki_structu
