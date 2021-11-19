@@ -3734,4 +3734,485 @@ class TikiLib extends TikiDb_Bridge
                     $bindvars[] = $val;
                     $bindvars[] = $val;
                 } elseif ($type == 'structure_orphans') {
-                    $join_tables .= " left join `tiki_structu
+                    $join_tables .= " left join `tiki_structures` as tss on (tss.`page_id` = tp.`page_id`) ";
+                    $tmp_mid[] = "(tss.`page_ref_id` is null)";
+                } elseif ($type == 'translationOrphan') {
+                    $multilinguallib = TikiLib::lib('multilingual');
+                    $multilinguallib->sqlTranslationOrphan('wiki page', 'tp', 'page_id', $val, $join_tables, $midto, $bindvars);
+                    $tmp_mid[] = $midto;
+                }
+            }
+            if (! empty($tmp_mid)) {
+                $mid .= empty($mid) ? ' where (' : ' and (';
+                $mid .= implode(' and ', $tmp_mid) . ')';
+            }
+        }
+        if (! empty($initial)) {
+            $mid .= empty($mid) ? ' where (' : ' and (';
+            $tmp_mid = '';
+            if (is_array($initial)) {
+                foreach ($initial as $i) {
+                    if (! empty($tmp_mid)) {
+                        $tmp_mid .= ' or ';
+                    }
+                    $tmp_mid .= ' `pageName` like ? ';
+                    $bindvars[] = $i . '%';
+                }
+            } else {
+                $tmp_mid = " `pageName` like ? ";
+                $bindvars[] = $initial . '%';
+            }
+            $mid .= $tmp_mid . ')';
+        }
+
+        if ($only_orphan_pages) {
+            $join_tables .= ' left join `tiki_links` as tl on tp.`pageName` = tl.`toPage` left join `tiki_structures` as tsoo on tp.`page_id` = tsoo.`page_id`';
+            $mid .= ( $mid == '' ) ? ' where ' : ' and ';
+            $mid .= 'tl.`toPage` IS NULL and tsoo.`page_id` IS NULL';
+        }
+
+        if ($prefs['rating_advanced'] == 'y') {
+            $ratinglib = TikiLib::lib('rating');
+            $join_tables .= $ratinglib->convert_rating_sort($sort_mode, 'wiki page', '`page_id`');
+        }
+
+        if ($tiki_p_wiki_view_ratings === 'y' && $prefs['feature_polls'] == 'y' && $prefs['feature_wiki_ratings'] == 'y') {
+            $select .= ', (select sum(`tiki_poll_options`.`title`*`tiki_poll_options`.`votes`) as rating ' . // Multiply the option's label (title) by the number of votes for that option. Titles can be numbers but even then, this computation has doubtful relevance. A page with 5 ratings of "1" (on a scale of 5) would obtain a higher rating than a page with 1 rating of "4". This is most particular and apparently undocumented. Chealer 2017-05-22
+                'from `tiki_objects` as tobt, `tiki_poll_objects` as tpo, `tiki_poll_options` where tobt.`itemId`= tp.`pageName` and tobt.`type`=\'wiki page\' and tobt.`objectId`=tpo.`catObjectId` and `tiki_poll_options`.`pollId`=tpo.`pollId` group by `tiki_poll_options`.`pollId`) as rating';
+        }
+
+        if (! empty($join_bindvars)) {
+            $bindvars = empty($bindvars) ? $join_bindvars : array_merge($join_bindvars, $bindvars);
+        }
+
+        $query = "select $distinct"
+            . ( $onlyCant ? "tp.`pageName`" : "tp.* " . $select )
+            . " from `tiki_pages` as tp $join_tables $mid order by " . $this->convertSortMode($sort_mode);
+        $countquery = "select count($distinct tp.`pageName`) from `tiki_pages` as tp $join_tables $mid";
+        $pageCount = $this->getOne($countquery, $bindvars);
+
+
+        // HOTFIX (svn Rev. 22969 or near there)
+        // Chunk loading. Because we cannot know what pages are visible, we load chunks of pages
+        // and use Perms::filter to see what remains. Stop, if we have enough.
+        $cant = 0;
+        $n = -1;
+        $ret = [];
+        $raw = [];
+
+        $offset_tmp = 0;
+        $haveEnough = false;
+        $filterPerms = empty($ref) ? 'view' : ['view', 'wiki_view_ref'];
+        while (! $haveEnough) {
+            $rawTemp = $this->fetchAll($query, $bindvars, $maxRecords, $offset_tmp);
+            $offset_tmp += $maxRecords; // next offset
+
+            if (count($rawTemp) == 0) {
+                $haveEnough = true; // end of table
+            }
+
+            $rawTemp = Perms::filter([ 'type' => 'wiki page' ], 'object', $rawTemp, ['object' => 'pageName', 'creator' => 'creator'], $filterPerms);
+
+            $raw = array_merge($raw, $rawTemp);
+            if ((count($raw) >= $offset + $maxRecords) || $maxRecords == -1) {
+                $haveEnough = true; // now we have enough records
+            }
+        } // prbably this brace has to include the next foreach??? I am unsure.
+        // but if yes, the next lines have to be reviewed.
+
+
+        $history = $this->table('tiki_history');
+        $links = $this->table('tiki_links');
+
+        foreach ($raw as $res) {
+            if ($initial) {
+                $valid = false;
+                $verified = self::take_away_accent($res['pageName']);
+                foreach ((array) $initial as $candidate) {
+                    if (stripos($verified, $candidate) === 0) {
+                        $valid = true;
+                        break;
+                    }
+                }
+
+                if (! $valid) {
+                    continue;
+                }
+            }
+            //WYSIWYCA
+            $res['perms'] = $this->get_perm_object($res['pageName'], 'wiki page', $res, false);
+
+            $n++;
+            if (! $need_everything && $offset != -1 && $n < $offset) {
+                continue;
+            }
+
+            if (! $onlyCant && ( $need_everything || $maxRecords == -1 || $cant < $maxRecords )) {
+                if ($onlyName) {
+                    $res = ['pageName' => $res['pageName']];
+                } else {
+                    $page = $res['pageName'];
+                    $res['len'] = $res['page_size'];
+                    unset($res['page_size']);
+                    $res['flag'] = $res['flag'] == 'L' ? 'locked' : 'unlocked';
+                    if ($forListPages && $prefs['wiki_list_versions'] == 'y') {
+                        $res['versions'] = $history->fetchCount(['pageName' => $page]);
+                    }
+                    if ($forListPages && $prefs['wiki_list_links'] == 'y') {
+                        $res['links'] = $links->fetchCount(['fromPage' => $page]);
+                    }
+                    if ($forListPages && $prefs['wiki_list_backlinks'] == 'y') {
+                        $res['backlinks'] = $links->fetchCount(['toPage' => $page, 'fromPage' => $links->unlike('objectlink:%')]);
+                    }
+                    // backlinks do not include links from non-page objects TODO: full feature allowing this with options
+                }
+
+                if ($loadCategories) {
+                    $cats = $categlib->get_object_categories('wiki page', $res['pageName']);
+                    $res['categpath'] = [];
+                    $res['categname'] = [];
+                    foreach ($cats as $cat) {
+                        $res['categpath'][] = $cp = $categlib->get_category_path_string($cat);
+                        if ($s = strrchr($cp, ':')) {
+                            $res['categname'][] = substr($s, 1);
+                        } else {
+                            $res['categname'][] = $cp;
+                        }
+                    }
+                }
+                $ret[] = $res;
+            }
+            $cant++;
+        }
+        if (! $need_everything) {
+            $cant += $offset;
+        }
+
+        // If sortmode is versions, links or backlinks sort using the ad-hoc function and reduce using old_offset and old_maxRecords
+        if ($need_everything) {
+            switch ($old_sort_mode) {
+                case 'versions_asc':
+                    usort($ret, 'compare_versions');
+                    break;
+                case 'versions_desc':
+                    usort($ret, 'r_compare_versions');
+                    break;
+                case 'links_desc':
+                    usort($ret, 'compare_links');
+                    break;
+                case 'links_asc':
+                    usort($ret, 'r_compare_links');
+                    break;
+                case 'backlinks_desc':
+                    usort($ret, 'compare_backlinks');
+                    break;
+                case 'backlinks_asc':
+                    usort($ret, 'r_compare_backlinks');
+                    break;
+            }
+        }
+
+        $retval = [];
+        $retval['data'] = $ret;
+        $retval['cant'] = $pageCount; // this is not exact. Workaround.
+        return $retval;
+    }
+
+
+    // Function that checks for:
+    // - tiki_p_admin
+    // - the permission itself
+    // - individual permission
+    // - category permission
+    // if O.K. this function shall replace similar constructs in list_pages and other functions above.
+    // $categperm is the category permission that should grant $perm. if none, pass 0
+    // If additional perm arguments are specified, the user must have all the perms to pass the test
+    /**
+     * @param $usertocheck
+     * @param $object
+     * @param $objtype
+     * @param $perm1
+     * @param null $perm2
+     * @param null $perm3
+     * @return bool
+     */
+    public function user_has_perm_on_object($usertocheck, $object, $objtype, $perm1, $perm2 = null, $perm3 = null)
+    {
+        $accessor = $this->get_user_permission_accessor($usertocheck, $objtype, $object);
+
+        $chk1 = $perm1 != null ? $accessor->$perm1 : true;
+        $chk2 = $perm2 != null ? $accessor->$perm2 : true;
+        $chk3 = $perm3 != null ? $accessor->$perm3 : true;
+
+        return $chk1 && $chk2 && $chk3;
+    }
+
+    public function get_user_permission_accessor($usertocheck, $type = null, $object = null)
+    {
+        global $user;
+        if ($type && $object) {
+            $context = [ 'type' => $type, 'object' => $object ];
+            $accessor = Perms::get($context);
+        } else {
+            $accessor = Perms::get();
+        }
+
+        // Do not override perms for current users otherwise security tokens won't work
+        if ($usertocheck != $user) {
+            $groups = $this->get_user_groups($usertocheck);
+            $accessor->setGroups($groups);
+        }
+
+        return $accessor;
+    }
+
+    /* get all the perm of an object either in a table or global+smarty set
+     * OPTIMISATION: better to test tiki_p_admin outside for global=false
+     * TODO: all the objectTypes
+     * TODO: replace switch with object
+     * global = true set the global perm and smarty var, otherwise return an array of perms
+     */
+    /**
+     * @param $objectId
+     * @param $objectType
+     * @param string $info
+     * @param bool $global
+     * @return array|bool
+     */
+    public function get_perm_object($objectId, $objectType, $info = '', $global = true, $parentId = null)
+    {
+        global $user;
+        $smarty = TikiLib::lib('smarty');
+        $userlib = TikiLib::lib('user');
+
+        $perms = Perms::get([ 'type' => $objectType, 'object' => $objectId, 'parentId' => $parentId ]);
+        if (empty($perms->getGroups())) {
+            $perms->setGroups($this->get_user_groups($user));
+        }
+        $permNames = $userlib->get_permission_names_for($this->get_permGroup_from_objectType($objectType));
+
+        $ret = [];
+        foreach ($permNames as $perm) {
+            $ret[$perm] = $perms->$perm ? 'y' : 'n';
+
+            if ($global) {
+                $smarty->assign($perm, $ret[$perm]);
+                $GLOBALS[ $perm ] = $ret[$perm];
+            }
+        }
+
+        // Skip those 'local' permissions for admin users and when global is not requested.
+        if ($global && ! Perms::get()->admin) {
+            $ret2 = $this->get_local_perms($user, $objectId, $objectType, $info, true);
+            if ($ret2) {
+                $ret = $ret2;
+            }
+        }
+
+        return $ret;
+    }
+
+    /**
+     * @param $objectType
+     * @return string
+     */
+    public function get_permGroup_from_objectType($objectType)
+    {
+
+        switch ($objectType) {
+            case 'tracker':
+            case 'trackeritem':
+                return 'trackers';
+            case 'file gallery':
+            case 'file':
+                return 'file galleries';
+            case 'article':
+            case 'submission':
+            case 'topic':
+                return 'cms';
+            case 'forum':
+            case 'thread':
+                return 'forums';
+            case 'blog':
+            case 'blog post':
+                return 'blogs';
+            case 'wiki page':
+            case 'history':
+                return 'wiki';
+            case 'faq':
+                return 'faqs';
+            case 'survey':
+                return 'surveys';
+            case 'newsletter':
+                return 'newsletters';
+            case 'calendaritem':
+                return 'calendar';
+                /* TODO */
+            default:
+                return $objectType;
+        }
+    }
+
+    /**
+     * @param $objectType
+     * @return string
+     */
+    public function get_adminPerm_from_objectType($objectType)
+    {
+
+        switch ($objectType) {
+            case 'tracker':
+                return 'tiki_p_admin_trackers';
+            case 'image gallery':
+            case 'image':
+                return 'tiki_p_admin_galleries';
+            case 'file gallery':
+            case 'file':
+                return 'tiki_p_admin_file_galleries';
+            case 'article':
+            case 'submission':
+                return 'tiki_p_admin_cms';
+            case 'forum':
+                return 'tiki_p_admin_forum';
+            case 'blog':
+            case 'blog post':
+                return 'tiki_p_blog_admin';
+            case 'wiki page':
+            case 'history':
+                return 'tiki_p_admin_wiki';
+            case 'faq':
+                return 'tiki_p_admin_faqs';
+            case 'survey':
+                return 'tiki_p_admin_surveys';
+            case 'newsletter':
+                return 'tiki_p_admin_newsletters';
+                /* TODO */
+            default:
+                return "tiki_p_admin_$objectType";
+        }
+    }
+
+    /* deal all the special perm */
+    /**
+     * @param $user
+     * @param $objectId
+     * @param $objectType
+     * @param $info
+     * @param $global
+     * @return array|bool
+     */
+    public function get_local_perms($user, $objectId, $objectType, $info, $global)
+    {
+        global $prefs;
+        $smarty = TikiLib::lib('smarty');
+        $userlib = TikiLib::lib('user');
+        $ret = [];
+        switch ($objectType) {
+            case 'wiki page':
+            case 'wiki':
+                if ($prefs['wiki_creator_admin'] == 'y' && ! empty($user) && ! empty($info) && $info['creator'] == $user) { //can admin his page
+                    $perms = $userlib->get_permission_names_for($this->get_permGroup_from_objectType($objectType));
+                    foreach ($perms as $perm) {
+                        $ret[$perm] = 'y';
+                        if ($global) {
+                            $GLOBALS[$perm] = 'y';
+                            $smarty->assign($perm, 'y');
+                        }
+                    }
+                    return $ret;
+                }
+                // Enabling userpage is not enough, the prefix must be present, otherwise, permissions will be messed-up on new page creation
+                if ($prefs['feature_wiki_userpage'] == 'y' && ! empty($prefs['feature_wiki_userpage_prefix']) && ! empty($user) && strcasecmp($prefs['feature_wiki_userpage_prefix'], substr($objectId, 0, strlen($prefs['feature_wiki_userpage_prefix']))) == 0) {
+                    if (strcasecmp($objectId, $prefs['feature_wiki_userpage_prefix'] . $user) == 0) { //can edit his page
+                        if (! $global) {
+                            $perms = $userlib->get_permission_names_for($this->get_permGroup_from_objectType($objectType));
+                            foreach ($perms as $perm) {
+                                if ($perm == 'tiki_p_view' || $perm == 'tiki_p_edit') {
+                                    $ret[$perm] = 'y';
+                                } else {
+                                    $ret[$perm] = $GLOBALS[$perm];
+                                }
+                            }
+                        } else {
+                            global $tiki_p_edit, $tiki_p_view;
+                            $tiki_p_view = 'y';
+                            $smarty->assign('tiki_p_view', 'y');
+                            $tiki_p_edit = 'y';
+                            $smarty->assign('tiki_p_edit', 'y');
+                        }
+                    } else {
+                        if (! $global) {
+                            $ret['tiki_p_edit'] = 'n';
+                        } else {
+                                global $tiki_p_edit;
+                                $tiki_p_edit = 'n';
+                                $smarty->assign('tiki_p_edit', 'n');
+                        }
+                    }
+                    if (! $global) {
+                        $ret['tiki_p_rename'] = 'n';
+                        $ret['tiki_p_rollback'] = 'n';
+                        $ret['tiki_p_lock'] = 'n';
+                        $ret['tiki_p_assign_perm_wiki_page'] = 'n';
+                    } else {
+                        global $tiki_p_rename, $tiki_p_rollback, $tiki_p_lock, $tiki_p_assign_perm_wiki_page;
+                        $tiki_p_rename = $tiki_p_rollback = $tiki_p_lock = $tiki_p_assign_perm_wiki_page = 'n';
+                        $smarty->assign('tiki_p_rename', 'n');
+                        $smarty->assign('tiki_p_rollback', 'n');
+                        $smarty->assign('tiki_p_lock', 'n');
+                        $smarty->assign('tiki_p_assign_perm_wiki_page', 'n');
+                    }
+                }
+                break;
+            case 'file gallery':
+            case 'file':
+                global $tiki_p_userfiles;
+
+                if ($objectType === 'file') {
+                    $gal_info = TikiLib::lib('filegal')->get_file_gallery_info($info['galleryId']);
+                    if ($gal_info['user'] === $user) {
+                        $info['type'] = 'user';         // show my files as mine
+                    } else {
+                        $info['type'] = '';
+                    }
+                }
+                if (
+                    $prefs['feature_use_fgal_for_user_files'] === 'y' &&
+                        $info['type'] === 'user' && $info['user'] === $user && $tiki_p_userfiles === 'y'
+                ) {
+                    foreach (
+                        ['tiki_p_download_files',
+                                    'tiki_p_upload_files',
+                                    'tiki_p_view_file_gallery',
+                                    'tiki_p_remove_files',
+                                    'tiki_p_create_file_galleries',
+                                    'tiki_p_edit_gallery_file',
+                                ] as $perm
+                    ) {
+                        $GLOBALS[$perm] = 'y';
+                        $smarty->assign($perm, 'y');
+                        $ret[$perm] = 'y';
+                    }
+                    return $ret;
+                }
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
+
+    // Returns a string-indexed array of modified preferences (those with a value other than the default). Keys are preference names. Values are preference values.
+    // NOTE: prefslib contains a similar method now called getModifiedPrefsForExport
+    /**
+     * @return array
+     */
+    public function getModifiedPreferences()
+    {
+        $defaults = get_default_prefs();
+        $modified = [];
+
+        $results = $this->table('tiki_preferences')->fetchAll(['name', 'value'], []);
+
+        foreach ($results as $result) {
+            $name = $resul
