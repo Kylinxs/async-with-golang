@@ -4215,4 +4215,552 @@ class TikiLib extends TikiDb_Bridge
         $results = $this->table('tiki_preferences')->fetchAll(['name', 'value'], []);
 
         foreach ($results as $result) {
-            $name = $resul
+            $name = $result['name'];
+            $value = $result['value'];
+
+            $strDef = "";
+            if (isset($defaults[$name]) && is_array($defaults[$name])) {
+                $strDef = implode(" ", $defaults[$name]);
+            } else {
+                $strDef = isset($defaults[$name]) ? $defaults[$name] : "";
+            }
+            if (empty($strDef) || ($strDef != (string) $value)) {
+                $modified[$name] = $value;
+            }
+        }
+        return $modified;
+    }
+
+    /**
+     * @param $names
+     * @param bool $exact_match
+     * @param bool $no_return
+     * @return array|bool
+     */
+    public function get_preferences($names, $exact_match = false, $no_return = false)
+    {
+        global $prefs;
+
+        $preferences = [];
+        if ($exact_match) {
+            if (is_array($names)) {
+                $this->_get_values('tiki_preferences', 'name', $names, $prefs);
+                if (! $no_return) {
+                    foreach ($names as $name) {
+                        $preferences[$name] = $prefs[$name];
+                    }
+                }
+            } else {
+                $this->get_preference($names);
+                if (! $no_return) {
+                    $preferences = [ $names => $prefs[$names] ];
+                }
+            }
+        } else {
+            if (is_array($names)) {
+                //Only handle $filtername as array with exact_matches
+                return false;
+            } else {
+                $tikiPreferences = $this->table('tiki_preferences');
+                $preferences = $tikiPreferences->fetchMap('name', 'value', ['name' => $tikiPreferences->like($names)]);
+            }
+        }
+        return $preferences;
+    }
+
+    /**
+     * @param $name
+     * @param string $default
+     * @param bool $expectArray
+     * @return mixed|string
+     */
+    public function get_preference($name, $default = '', $expectArray = false)
+    {
+        global $prefs;
+
+        $value = isset($prefs[$name]) ? $prefs[$name] : $default;
+
+        if (empty($value)) {
+            if ($expectArray) {
+                return [];
+            } else {
+                return $value;
+            }
+        }
+
+        if ($expectArray && is_string($value)) {
+            return unserialize($value);
+        } else {
+            return $value;
+        }
+    }
+
+    /**
+     * @param $name
+     */
+    public function delete_preference($name)
+    {
+        global $user_overrider_prefs, $user_preferences, $user, $prefs;
+        $prefslib = TikiLib::lib('prefs');
+
+        $this->table('tiki_preferences')->delete(['name' => $name]);
+        $cachelib = TikiLib::lib('cache');
+        $cachelib->invalidate('global_preferences');
+
+        $definition = $prefslib->getPreference($name);
+        $value = $definition['default'];
+        if (isset($prefs)) {
+            if (in_array($name, $user_overrider_prefs)) {
+                $prefs['site_' . $name] = $value;
+            } elseif (isset($user_preferences[$user][$name])) {
+                $prefs[$name] = $user_preferences[$user][$name];
+            } else {
+                $prefs[$name] = $value;
+            }
+        }
+    }
+
+    /**
+     * @param $name
+     * @param $value
+     * @return bool
+     */
+    public function set_preference($name, $value)
+    {
+        global $user_overrider_prefs, $user_preferences, $user, $prefs;
+
+        $prefslib = TikiLib::lib('prefs');
+
+        $definition = $prefslib->getPreference($name);
+
+        if ($definition && ! $definition['available']) {
+            return false;
+        }
+
+        $preferences = $this->table('tiki_preferences');
+        $preferences->insertOrUpdate(['value' => is_array($value) ? serialize($value) : $value], ['name' => $name]);
+
+        if (isset($prefs)) {
+            if (in_array($name, $user_overrider_prefs)) {
+                $prefs['site_' . $name] = $value;
+            } elseif (isset($user_preferences[$user][$name])) {
+                $prefs[$name] = $user_preferences[$user][$name];
+            } else {
+                $prefs[$name] = $value;
+            }
+        }
+
+        // Invalidate cache only after writing to DB to avoid other processes to cache the old info
+        $menulib = TikiLib::lib('menu');
+        $menulib->empty_menu_cache();
+
+        $cachelib = TikiLib::lib('cache');
+        $cachelib->invalidate('global_preferences');
+
+        return true;
+    }
+
+    /**
+     * @param $table
+     * @param $field_name
+     * @param null $var_names
+     * @param $global_ref
+     * @param string $query_cond
+     * @param null $bindvars
+     * @return bool
+     */
+    public function _get_values($table, $field_name, $var_names = null, &$global_ref = [], $query_cond = '', $bindvars = null)
+    {
+        if (empty($table) || empty($field_name)) {
+            return false;
+        }
+
+        $needed = [];
+        $defaults = null;
+
+        if (is_array($var_names)) {
+            // Detect if var names are specified as keys (then values are considered as var defaults)
+            //   by looking at the type of the first key
+            $defaults = ! is_integer(key($var_names));
+
+            // Check if we need to get the value from DB by looking in the global $user_preferences array
+            // (this is able to handle more than one var at a time)
+            //   ... and store the default values as well, just in case we needs them later
+            if ($defaults) {
+                foreach ($var_names as $var => $default) {
+                    if (! isset($global_ref[$var])) {
+                        $needed[$var] = $default;
+                    }
+                }
+            } else {
+                foreach ($var_names as $var) {
+                    if (! isset($global_ref[$var])) {
+                        $needed[$var] = null;
+                    }
+                }
+            }
+        } elseif ($var_names !== null) {
+            return false;
+        }
+
+        $where = $query_cond;
+        if (empty($where)) {
+            $where = '1';
+        }
+        if (is_null($bindvars)) {
+            $bindvars = [];
+        }
+        if (count($needed) > 0) {
+            $where .= ' AND (0';
+            foreach ($needed as $var => $def) {
+                $where .= " or `$field_name`=?";
+                $bindvars[] = $var;
+            }
+            $where .= ')';
+        }
+        $query = "select `$field_name`, `value` from `$table` where $where";
+        $result = $this->fetchAll($query, $bindvars);
+
+        foreach ($result as $res) {
+            // store the db value in the global array
+            $global_ref[$res[$field_name]] = $res['value'];
+            // remove vars that have a value in db from the $needed array to avoid affecting them a default value
+            unset($needed[$res[$field_name]]);
+        }
+
+        // set defaults values if needed and if there is no value in database and if it's default was not null
+        if ($defaults) {
+            foreach ($needed as $var => $def) {
+                if (! is_null($def)) {
+                    $global_ref[$var] = $def;
+                }
+            }
+        }
+        return true;
+    }
+
+    public function clear_cache_user_preferences()
+    {
+        global $user_preferences;
+        unset($user_preferences);
+    }
+
+    /**
+     * @param $my_user
+     * @param null $names
+     * @return bool
+     */
+    public function get_user_preferences($my_user, $names = null)
+    {
+        global $user_preferences;
+
+        // $my_user must be specified
+        if (! is_string($my_user) || $my_user == '') {
+            return false;
+        }
+
+        global $user_preferences;
+        if (! is_array($user_preferences) || ! array_key_exists($my_user, $user_preferences)) {
+            $user_preferences[$my_user] = [];
+        }
+        $global_ref =& $user_preferences[$my_user];
+        $return = $this->_get_values('tiki_user_preferences', 'prefName', $names, $global_ref, '`user`=?', [$my_user]);
+
+        // Handle special display_timezone values
+        if (
+            isset($user_preferences[$my_user]['display_timezone']) && $user_preferences[$my_user]['display_timezone'] != 'Site' && $user_preferences[$my_user]['display_timezone'] != 'Local'
+                && ! TikiDate::TimezoneIsValidId($user_preferences[$my_user]['display_timezone'])
+        ) {
+            unset($user_preferences[$my_user]['display_timezone']);
+        }
+        return $return;
+    }
+
+    // Returns a boolean indicating whether the specified user (anonymous or not, the current user by default) has the specified preference set
+    /**
+     * @param $preference
+     * @param bool $username
+     * @return bool
+     */
+    public function userHasPreference($preference, $username = false)
+    {
+        global $user, $user_preferences;
+        if ($username === false) {
+            $username = $user;
+        }
+        if ($username) {
+            if (! isset($user_preferences[$username])) {
+                $this->get_user_preferences($username);
+            }
+            return isset($user_preferences[$username][$preference]);
+        } else { // If $username is empty, we must be Anonymous looking up one of our own preferences
+            return isset($_SESSION['preferences'][$preference]);
+        }
+    }
+
+    /**
+     * @param $my_user
+     * @param $name
+     * @param null $default
+     * @return null
+     */
+    public function get_user_preference($my_user, $name, $default = null)
+    {
+        global $user_preferences, $user;
+        if ($my_user) {
+            if ($user != $my_user && ! isset($user_preferences[$my_user])) {
+                $this->get_user_preferences($my_user);
+            }
+            if (isset($user_preferences) && isset($user_preferences[$my_user]) && isset($user_preferences[$my_user][$name])) {
+                return $user_preferences[$my_user][$name];
+            }
+        } else { // If $my_user is empty, we must be Anonymous getting one of our own preferences
+            if (isset($_SESSION['preferences'][$name])) {
+                return $_SESSION['preferences'][$name];
+            }
+        }
+        return $default;
+    }
+
+    /**
+     * @param $my_user
+     * @param $name
+     * @param $value
+     *
+     * @return bool|TikiDb_Pdo_Result|TikiDb_Adodb_Result
+     * @throws Exception
+     */
+    public function set_user_preference($my_user, $name, $value)
+    {
+        global $user_preferences, $prefs, $user, $user_overrider_prefs;
+
+        if ($my_user) {
+            $cachelib = TikiLib::lib('cache');
+            $cachelib->invalidate('user_details_' . $my_user);
+
+            if ($name == "realName") {
+                // attempt to invalidate userlink cache (does not cover all options - only the default)
+                $cachelib->invalidate('userlink.' . $user . '.' . $my_user . '0');
+                $cachelib->invalidate('userlink.' . $my_user . '0');
+            }
+
+            $userPreferences = $this->table('tiki_user_preferences', false);
+            $userPreferences->delete(['user' => $my_user, 'prefName' => $name]);
+            $result = $userPreferences->insert(['user' => $my_user, 'prefName' => $name,    'value' => $value]);
+
+            $user_preferences[$my_user][$name] = $value;
+
+            if ($my_user == $user) {
+                $prefs[$name] = $value;
+                if ($name == 'theme' && $prefs['change_theme'] == 'y') {
+                    $prefs['users_prefs_theme'] = $value;
+                    if ($value == '') {
+                        $userPreferences->delete(['user' => $my_user, 'prefName' => $name]);
+                    }
+                } elseif ($name == 'theme_option' && $prefs['change_theme'] == 'y') {
+                    $prefs['users_prefs_theme-option'] = $value;
+                    if ($value == '') {
+                        $userPreferences->delete(['user' => $my_user, 'prefName' => $name]);
+                    }
+                } elseif ($value == '') {
+                    if (in_array($name, $user_overrider_prefs)) {
+                        $prefs[$name] = $prefs['site_' . $name];
+                        $userPreferences->delete(['user' => $my_user, 'prefName' => $name]);
+                    }
+                }
+                return $result;
+            }
+        } else { // If $my_user is empty, we must be Anonymous updating one of our own preferences
+            if ($name == 'theme' && $prefs['change_theme'] == 'y') {
+                $prefs['theme'] = $value;
+                $_SESSION['preferences']['theme'] = $value;
+                if ($value == '') {
+                    unset($_SESSION['preferences']['theme']);
+                    unset($_SESSION['preferences']['theme_option']);
+                }
+            } elseif ($name == 'theme_option' && $prefs['change_theme'] == 'y' && ! empty($_SESSION['preferences']['theme'])) {
+                $prefs['theme_option'] = $value;
+                $_SESSION['preferences']['theme_option'] = $value;
+            } elseif ($value == '') {
+                if (in_array($name, $user_overrider_prefs)) {
+                    $prefs[$name] = $prefs['site_' . $name];
+                    unset($_SESSION['preferences'][$name]);
+                }
+            } else {
+                $prefs[$name] = $value;
+                $_SESSION['preferences'][$name] = $value;
+            }
+            return true;
+        }
+    }
+
+    // similar to set_user_preference, but set all at once.
+    /**
+     * @param $my_user
+     * @param $preferences
+     * @return bool
+     */
+    public function set_user_preferences($my_user, &$preferences)
+    {
+        global $user_preferences, $prefs, $user;
+
+        $cachelib = TikiLib::lib('cache');
+        $cachelib->invalidate('user_details_' . $my_user);
+
+        $userPreferences = $this->table('tiki_user_preferences', false);
+        $userPreferences->deleteMultiple(['user' => $my_user]);
+
+        foreach ($preferences as $prefName => $value) {
+            $userPreferences->insert(['user' => $my_user, 'prefName' => $prefName, 'value' => $value]);
+        }
+        $user_preferences[$my_user] =& $preferences;
+
+        if ($my_user == $user) {
+            $prefs = array_merge($prefs, $preferences);
+            $_SESSION['s_prefs'] = array_merge($_SESSION['s_prefs'], $preferences);
+        }
+        return true;
+    }
+
+    // This implements all the functions needed to use Tiki
+    /*shared*/
+    // Returns whether a page named $pageName exists. Unless $casesensitive is set to true, the check is case-insensitive.
+    /**
+     * @param $pageName
+     * @param bool $casesensitive
+     * @return int
+     */
+    public function page_exists($pageName, $casesensitive = false)
+    {
+        $page_info = $this->get_page_info($pageName, false);
+        return ( $page_info !== false && ( ! $casesensitive || $page_info['pageName'] == $pageName ) ) ? 1 : 0;
+    }
+
+    /**
+     * @param $pageName
+     * @return mixed
+     */
+    public function page_exists_desc(&$pageName)
+    {
+
+        $page_info = $this->get_page_info($pageName, false);
+
+        return empty($page_info['description']) ? $pageName : $page_info['description'];
+    }
+
+    /**
+     * @param $pageName
+     * @return bool|int
+     */
+    public function page_exists_modtime($pageName)
+    {
+        $page_info = $this->get_page_info($pageName, false);
+        if ($page_info === false) {
+            return false;
+        }
+        return empty($page_info['lastModif']) ? 0 : $page_info['lastModif'];
+    }
+
+    /**
+     * @param $pageName
+     * @return bool
+     */
+    public function add_hit($pageName)
+    {
+        global $prefs;
+        if (StatsLib::is_stats_hit()) {
+            $pages = $this->table('tiki_pages');
+            $pages->update(['hits' => $pages->increment(1)], ['pageName' => $pageName]);
+        }
+        return true;
+    }
+
+    /** Create a wiki page
+        @param array $hash- lock_it,contributions, contributors
+     **/
+    public function create_page($name, $hits, $data, $lastModif, $comment, $user = 'admin', $ip = '0.0.0.0', $description = '', $lang = '', $is_html = false, $hash = null, $wysiwyg = null, $wiki_authors_style = '', $minor = 0, $created = '')
+    {
+        global $prefs, $tracer;
+        $parserlib = TikiLib::lib('parser');
+
+        $tracer->trace('tikilib.create_page', "** invoked");
+
+        if (! $is_html) {
+            $data = str_replace('<x>', '', $data);
+        }
+        $name = trim($name); // to avoid pb with trailing space http://dev.mysql.com/doc/refman/5.1/en/char.html
+
+        if (! $user) {
+            $user = 'anonymous';
+        }
+        if (empty($wysiwyg)) {
+            $wysiwyg = ($prefs['feature_wysiwyg'] === 'y' && $prefs['wysiwyg_default'] === 'y') ? 'y' : 'n';
+            if ($wysiwyg === 'y') {
+                $is_html = $prefs['wysiwyg_htmltowiki'] !== 'y';
+            }
+        }
+        // Collect pages before modifying data
+        $pointedPages = $parserlib->get_pages($data, true);
+
+        if (! isset($_SERVER["SERVER_NAME"])) {
+            $_SERVER["SERVER_NAME"] = $_SERVER["HTTP_HOST"] ?? '';
+        }
+
+        if ($this->page_exists($name)) {
+            Feedback::error(tr('TikiLib::create_page: Cannot create page "%0", it already exists.)', $name));
+            return false;
+        }
+
+        $tracer->trace('tikilib.create_page', "** TikiLib::lib...");
+        $tracer->trace('tikilib.create_page', "** invoking process_save_plugins, \$parserlib=" . get_class($parserlib));
+        $data = $parserlib->process_save_plugins(
+            $data,
+            [
+                'type' => 'wiki page',
+                'itemId' => $name,
+                'user' => $user,
+            ]
+        );
+
+        $html = $is_html ? 1 : 0;
+        if ($html && $prefs['feature_purifier'] != 'n') {
+            $noparsed = [];
+            $parserlib->plugins_remove($data, $noparsed);
+
+            require_once('lib/htmlpurifier_tiki/HTMLPurifier.tiki.php');
+            $data = HTMLPurifier($data);
+
+            $parserlib->plugins_replace($data, $noparsed, true);
+        }
+
+        $insertData = [
+            'pageName' => $name,
+            'pageSlug' => TikiLib::lib('slugmanager')->generate($prefs['wiki_url_scheme'] ?: 'dash', $name, $prefs['url_only_ascii'] === 'y'),
+            'hits' => (int) $hits,
+            'data' => $data,
+            'description' => $description,
+            'lastModif' => (int) $lastModif,
+            'comment' => $comment,
+            'version' => 1,
+            'version_minor' => $minor,
+            'user' => $user,
+            'ip' => $ip,
+            'creator' => $user,
+            'page_size' => strlen($data),
+            'is_html' => $html,
+            'created' => empty($created) ? $this->now : $created,
+            'wysiwyg' => $wysiwyg,
+            'wiki_authors_style' => $wiki_authors_style,
+        ];
+        if ($lang) {
+            $insertData['lang'] = $lang;
+        }
+        if (! empty($hash['lock_it']) && ($hash['lock_it'] == 'y' || $hash['lock_it'] == 'on')) {
+            $insertData['flag'] = 'L';
+            $insertData['lockedby'] = $user;
+        } elseif (empty($hash['lock_it']) || $hash['lock_it'] == 'n') {
+            $insertData['flag'] = '';
+            $insertData['lockedby'] = '';
+        }
+        if ($prefs['wiki_comments_allow_per_page'] != 'n') {
+            if (! empty($hash['comments_enabled']) && $hash['
