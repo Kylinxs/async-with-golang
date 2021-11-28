@@ -5284,4 +5284,528 @@ class TikiLib extends TikiDb_Bridge
         //update status, page storage was updated in tiki 9 to be non html encoded
         $wikilib = TikiLib::lib('wiki');
         $converter = new convertToTiki9();
-        $converter->saveObjectStatus($this->getOne("SELECT page_id FROM tiki_pages WHERE
+        $converter->saveObjectStatus($this->getOne("SELECT page_id FROM tiki_pages WHERE pageName = ?", [$pageName]), 'tiki_pages');
+
+        // Parse edit_data updating the list of links from this page
+        $this->clear_links($pageName);
+
+        // Pages collected above
+        foreach ($pages as $page => $types) {
+            $this->replace_link($pageName, $page, $types);
+        }
+
+        $wikilib->update_wikicontent_relations($edit_data, 'wiki page', $pageName);
+
+        if (strtolower($pageName) != 'sandbox' && ! $edit_minor) {
+            $maxversions = $prefs['maxVersions'];
+
+            if ($maxversions && ($nb = $histlib->get_nb_history($pageName)) > $maxversions) {
+                // Select only versions older than keep_versions days
+                $keep = $prefs['keep_versions'];
+
+                $oktodel = $saveLastModif - ($keep * 24 * 3600) + 1;
+
+                $history = $this->table('tiki_history');
+                $result = $history->fetchColumn(
+                    'version',
+                    ['pageName' => $pageName,'lastModif' => $history->lesserThan($oktodel)],
+                    $nb - $maxversions,
+                    0,
+                    ['lastModif' => 'ASC']
+                );
+                foreach ($result as $toRemove) {
+                    $histlib->remove_version($pageName, $toRemove);
+                }
+            }
+        }
+
+        // This if no longer checks for minor-ness of the change; sendWikiEmailNotification does that.
+        if ($willDoHistory) {
+            $this->replicate_page_to_history($pageName);
+            if (strtolower($pageName) != 'sandbox') {
+                if ($prefs['feature_contribution'] == 'y') {// transfer page contributions to the history
+                    $contributionlib = TikiLib::lib('contribution');
+                    $history = $this->table('tiki_history');
+                    $historyId = $history->fetchOne($history->max('historyId'), ['pageName' => $pageName, 'version' => (int) $old_version]);
+                    $contributionlib->change_assigned_contributions($pageName, 'wiki page', $historyId, 'history', '', $pageName . '/' . $old_version, "tiki-pagehistory.php?page=$pageName&preview=$old_version");
+                }
+            }
+            include_once('lib/diff/difflib.php');
+            if (strtolower($pageName) != 'sandbox' && ! $autoupdate) {
+                $logslib = TikiLib::lib('logs');
+                $bytes = diff2($data, $edit_data, 'bytes');
+                $logslib->add_action('Updated', $pageName, 'wiki page', $bytes, $edit_user, $edit_ip, '', $saveLastModif, $hash['contributions'], $hash2);
+                if ($prefs['feature_contribution'] == 'y') {
+                    $contributionlib = TikiLib::lib('contribution');
+                    $contributionlib->assign_contributions($hash['contributions'], $pageName, 'wiki page', $edit_description, $pageName, "tiki-index.php?page=" . urlencode($pageName));
+                }
+            }
+
+            if ($prefs['feature_multilingual'] == 'y' && $lang) {
+                // Need to update the translated objects table when an object's language changes.
+                $this->table('tiki_translated_objects')->update(['lang' => $lang], ['type' => 'wiki page', 'objId' => $info['page_id']]);
+            }
+
+            if (($prefs['wiki_watch_minor'] != 'n' || ! $edit_minor) && ! $autoupdate) {
+                //  Deal with mail notifications.
+                include_once(__DIR__ . '/notifications/notificationemaillib.php');
+                $histlib = TikiLib::lib('hist');
+                $old = $histlib->get_version($pageName, $old_version);
+                $foo = parse_url($_SERVER["REQUEST_URI"]);
+                $machine = self::httpPrefix(true) . dirname($foo["path"]);
+
+                $oldPagePlugins = WikiParser_PluginMatcher::match($old["data"]);
+                $editedPagePlugins = WikiParser_PluginMatcher::match($edit_data);
+
+                // Diagram data can be too big to diff, convert the content to md5 that will help to check for differences
+                $replacedOldPagePlugins = DiagramHelper::md5WikiPluginDiagramContent($oldPagePlugins);
+                $replacedEditedPagePlugins = DiagramHelper::md5WikiPluginDiagramContent($editedPagePlugins);
+
+                $oldPagePlugins->rewind();
+                $editedPagePlugins->rewind();
+
+                $parsedOldPage = $oldPagePlugins->getText();
+                $parsedNewPage = $editedPagePlugins->getText();
+
+                TikiLib::lib('smarty')->assign('has_md5_content_diagrams', $replacedOldPagePlugins || $replacedEditedPagePlugins);
+
+                $diff = diff2($parsedOldPage, $parsedNewPage, "unidiff"); // TODO: Only compute if we have at least one notification to send
+                sendWikiEmailNotification('wiki_page_changed', $pageName, $edit_user, $edit_comment, $old_version, $edit_data, $machine, $diff, $edit_minor, $hash['contributions'], 0, 0, $lang);
+            }
+        }
+
+        if (! $autoupdate) {
+            $tx = $this->begin();
+
+            TikiLib::events()->trigger(
+                'tiki.wiki.update',
+                [
+                    'type' => 'wiki page',
+                    'object' => $pageName,
+                    'namespace' => $wikilib->get_namespace($pageName),
+                    'reply_action' => 'comment',
+                    'user' => $GLOBALS['user'],
+                    'page_id' => $info['page_id'],
+                    'version' => $version,
+                    'old_version' => $old_version,
+                    'data' => $edit_data,
+                    'old_data' => $info['data'],
+                    'edit_comment' => $edit_comment,
+                ]
+            );
+
+            $tx->commit();
+        }
+    }
+
+    /**
+     * @param $context
+     * @param $data
+     */
+    public function object_post_save($context, $data)
+    {
+        global $prefs;
+
+        if (is_array($data)) {
+            if (isset($data['content']) && $prefs['feature_file_galleries'] == 'y') {
+                $filegallib = TikiLib::lib('filegal');
+                $filegallib->syncFileBacklinks($data['content'], $context);
+            }
+
+            if (isset($data['content'])) {
+                $this->plugin_post_save_actions($context, $data);
+            }
+        } else {
+            if (isset($context['content']) && $prefs['feature_file_galleries'] == 'y') {
+                $filegallib = TikiLib::lib('filegal');
+                $filegallib->syncFileBacklinks($context['content'], $context);
+            }
+
+            $this->plugin_post_save_actions($context);
+        }
+    }
+
+    /**
+     * Foreach plugin used in a object content call its save handler,
+     * if one exist, and send email notifications when it has pending
+     * status, if preference is enabled.
+     *
+     * A plugin save handler is a function defined on the plugin file
+     * with the following format: wikiplugin_$pluginName_save()
+     *
+     * This function is called from object_post_save. Do not call directly.
+     *
+     * @param array $context object type and id
+     * @param array $data
+     * @return void
+     */
+    private function plugin_post_save_actions($context, $data = null)
+    {
+        global $prefs;
+        $parserlib = TikiLib::lib('parser');
+
+        if (is_null($data)) {
+            $content = [];
+            if (isset($context['values'])) {
+                $content = $context['values'];
+            }
+            if (isset($context['data'])) {
+                $content[] = $context['data'];
+            }
+            $data['content'] = implode(' ', $content);
+        }
+
+        $argumentParser = new WikiParser_PluginArgumentParser();
+
+        $matches = WikiParser_PluginMatcher::match($data['content']);
+
+        foreach ($matches as $match) {
+            $plugin_name = $match->getName();
+            $body = $match->getBody();
+            $arguments = $argumentParser->parse($match->getArguments());
+
+            $dummy_output = '';
+            if ($parserlib->plugin_enabled($plugin_name, $dummy_output)) {
+                $status = $parserlib->plugin_can_execute($plugin_name, $body, $arguments, true);
+
+                // when plugin status is pending, $status equals plugin fingerprint
+                if ($prefs['wikipluginprefs_pending_notification'] == 'y' && $status !== true && $status != 'rejected') {
+                    $this->plugin_pending_notification($plugin_name, $body, $arguments);
+                }
+
+                WikiPlugin_Negotiator_Wiki_Alias::findImplementation($plugin_name, $body, $arguments);
+
+                $func_name = 'wikiplugin_' . $plugin_name . '_save';
+
+                if (function_exists($func_name)) {
+                    $func_name($context, $body, $arguments);
+                }
+            }
+        }
+    }
+
+    /**
+     * Send notification by email that a plugin is waiting to be
+     * approved to everyone with permission to approve it.
+     *
+     * @param string $plugin_name
+     * @param string $body plugin body
+     * @param array $arguments plugin arguments
+     * @param array $context object type and id
+     * @return void
+     */
+    private function plugin_pending_notification($plugin_name, $body, $arguments)
+    {
+        $parserlib = TikiLib::lib('parser');
+
+        $meta = $parserlib->plugin_info($plugin_name, $arguments);
+        $fingerprint = $parserlib->plugin_fingerprint($plugin_name, $meta, $body, $arguments);
+
+        $runTime = strtotime('+10 minutes');
+        $mm = date('i', $runTime);
+        $hh = date('H', $runTime);
+
+        Scheduler_Manager::queueJob("Plugin approval $fingerprint", 'ConsoleCommandTask', ['console_command' => "plugin:pending -f $fingerprint"], "$mm $hh * * *");
+    }
+
+    public function sendPluginApprovalNotificationEmail($pluginInfo)
+    {
+        global $prefs;
+
+        $mail = new TikiMail(null, $prefs['sender_email'], $prefs['sender_name']);
+        $mail->setSubject(tr("Plugin %0 pending approval", $pluginInfo['name']));
+
+        $smarty = TikiLib::lib('smarty');
+        $smarty->assign('plugin_name', $pluginInfo['name']);
+        $smarty->assign('type', $pluginInfo['last_objectType']);
+        $smarty->assign('objectId', $pluginInfo['last_objectId']);
+        $smarty->assign('arguments', unserialize($pluginInfo['arguments']));
+        $smarty->assign('body', $pluginInfo['body']);
+
+        $mail->setHtml(nl2br($smarty->fetch('mail/plugin_pending_notification.tpl')));
+
+        $recipients = $this->plugin_get_email_users_with_perm();
+
+        return $mail->send($recipients);
+    }
+
+    /**
+     * Return a list of e-mails from the users with permission
+     * to approve a plugin.
+     *
+     * @return array
+     */
+    private function plugin_get_email_users_with_perm()
+    {
+        global $prefs;
+        $userlib = TikiLib::lib('user');
+
+        $allGroups = $userlib->get_groups();
+        $accessor = Perms::get();
+
+        // list of groups with permission to approve plugin on this object
+        $groups = [];
+
+        foreach ($allGroups['data'] as $group) {
+            $accessor->setGroups([$group['groupName']]);
+            if ($accessor->plugin_approve) {
+                $groups[] = $group['groupName'];
+            }
+        }
+
+        $recipients = [];
+
+        foreach ($groups as $group) {
+            $recipients = array_merge($recipients, $userlib->get_group_users($group, 0, -1, 'email'));
+        }
+
+        $recipients = array_filter($recipients);
+        $recipients = array_unique($recipients);
+
+        if ($prefs['user_plugin_approval_watch_editor'] === 'y') {
+            # Do not self-notify, therefore, remove user's email from the list of recipients
+            $useremail = TikiLib::lib('user')->get_user_email($user);
+            $recipients = array_diff($recipients, [$useremail]);
+        }
+
+        return $recipients;
+    }
+
+    /**
+     * @param bool $_user
+     * @return null|string
+     */
+    public function get_display_timezone($_user = false)
+    {
+        global $prefs, $user;
+
+        if ($_user === false || $_user == $user) {
+            // If the requested timezone is the current user timezone
+            $tz = $prefs['display_timezone'];
+        } elseif ($_user) {
+            // ... else, get the user timezone preferences from DB
+            $tz = $this->get_user_preference($_user, 'display_timezone');
+        }
+        if (! TikiDate::TimezoneIsValidId($tz)) {
+            $tz = $prefs['server_timezone'];
+        }
+        if (! TikiDate::TimezoneIsValidId($tz)) {
+            $tz = 'UTC';
+        }
+        return $tz;
+    }
+
+    public function set_display_timezone($user)
+    {
+        global $prefs, $user_preferences;
+
+        if (
+            $prefs['users_prefs_display_timezone'] == 'Site' ||
+            (isset($user_preferences[$user]['display_timezone']) && $user_preferences[$user]['display_timezone'] == 'Site')
+        ) {
+            // Stay in the time zone of the server
+            $prefs['display_timezone'] = $prefs['server_timezone'];
+        } elseif (empty($user_preferences[$user]['display_timezone']) || $user_preferences[$user]['display_timezone'] == 'Local') {
+            // If the display timezone is not known ...
+            if (isset($_COOKIE['local_tz'])) {
+                //   ... we try to use the timezone detected by javascript and stored in cookies
+                if (TikiDate::TimezoneIsValidId($_COOKIE['local_tz'])) {
+                    $prefs['display_timezone'] = $_COOKIE['local_tz'];
+                } elseif (in_array(strtolower($_COOKIE['local_tz']), TikiDate::getTimezoneAbbreviations())) {   // abbreviation like BST or CEST
+                    // timezone_offset in seconds
+                    $prefs['timezone_offset'] = isset($_COOKIE['local_tzoffset']) ? (int) $_COOKIE['local_tzoffset'] * 60 * 60 : -1;
+                    $tzname = timezone_name_from_abbr($_COOKIE['local_tz'], $prefs['timezone_offset']);
+
+                    if (TikiDate::TimezoneIsValidId($tzname)) { // double check
+                        $prefs['display_timezone'] = $tzname;
+                    } else {
+                        $prefs['display_timezone'] = $_COOKIE['local_tz'];
+                    }
+                } elseif ($_COOKIE['local_tz'] == 'HAEC') {
+                    // HAEC, returned by Safari on Mac, is not recognized as a DST timezone (with daylightsavings)
+                    //  ... So use one equivalent timezone name
+                    $prefs['display_timezone'] = 'Europe/Paris';
+                } else {
+                    $prefs['display_timezone'] = $prefs['server_timezone'];
+                }
+            } else {
+                // ... and we fallback to the server timezone if the cookie value is not available
+                $prefs['display_timezone'] = $prefs['server_timezone'];
+            }
+        }
+    }
+
+    public function get_long_date_format()
+    {
+        global $prefs;
+        return $prefs['long_date_format'];
+    }
+
+    public function get_short_date_format()
+    {
+        global $prefs;
+        return $prefs['short_date_format'];
+    }
+
+    public function get_long_time_format()
+    {
+        global $prefs;
+        return $prefs['long_time_format'];
+    }
+
+    public function get_short_time_format()
+    {
+        global $prefs;
+        return $prefs['short_time_format'];
+    }
+
+    /**
+     * @return string
+     */
+    public function get_long_datetime_format()
+    {
+        static $long_datetime_format = false;
+
+        if (! $long_datetime_format) {
+            $t = trim($this->get_long_time_format());
+            if (! empty($t)) {
+                $t = ' ' . $t;
+            }
+            $long_datetime_format = $this->get_long_date_format() . $t;
+        }
+
+        return $long_datetime_format;
+    }
+
+    /**
+     * @return string
+     */
+    public function get_short_datetime_format()
+    {
+        static $short_datetime_format = false;
+
+        if (! $short_datetime_format) {
+            $t = trim($this->get_short_time_format());
+            if (! empty($t)) {
+                $t = ' ' . $t;
+            }
+            $short_datetime_format = $this->get_short_date_format() . $t;
+        }
+
+        return $short_datetime_format;
+    }
+
+    /**
+     * @param $format
+     * @param bool $timestamp
+     * @param bool $_user
+     * @param int $input_format
+     * @return string
+     */
+    public static function date_format2($format, $timestamp = false, $_user = false, $input_format = 5/*DATE_FORMAT_UNIXTIME*/)
+    {
+        return TikiLib::date_format($format, $timestamp, $_user, $input_format, false);
+    }
+
+    /**
+     * @param $format
+     * @param bool $timestamp
+     * @param bool $_user
+     * @param int $input_format
+     * @param bool $is_strftime_format
+     * @return string
+     */
+    public static function date_format($format, $timestamp = false, $_user = false, $input_format = 5/*DATE_FORMAT_UNIXTIME*/, $is_strftime_format = true, $use_display_tz = true)
+    {
+        $tikilib = TikiLib::lib('tiki');
+        static $currentUserDateByFormat = [];
+
+        if (! $timestamp) {
+            $timestamp = $tikilib->now;
+        }
+
+        if ($_user === false && $is_strftime_format && $timestamp == $tikilib->now && isset($currentUserDateByFormat[ $format . $timestamp ])) {
+            return $currentUserDateByFormat[ $format . $timestamp ];
+        }
+
+        $tikidate = TikiLib::lib('tikidate');
+        try {
+            $tikidate->setDate($timestamp, 'UTC');
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
+
+        $tz = $tikilib->get_display_timezone($_user);
+
+        // If user timezone is not also in UTC, convert the date
+        if ($tz != 'UTC' && $use_display_tz) {
+            $tikidate->setTZbyID($tz);
+        }
+
+        $return = $tikidate->format($format, $is_strftime_format);
+        if ($is_strftime_format) {
+            $currentUserDateByFormat[ $format . $timestamp ] = $return;
+        }
+        return $return;
+    }
+
+    /**
+     * @param $hour
+     * @param $minute
+     * @param $second
+     * @param $month
+     * @param $day
+     * @param $year
+     * @return int
+     */
+    public function make_time($hour, $minute, $second, $month, $day, $year)
+    {
+        $tikilib = TikiLib::lib('tiki');
+        $tikidate = TikiLib::lib('tikidate');
+        $display_tz = $tikilib->get_display_timezone();
+        if ($display_tz == '') {
+            $display_tz = 'UTC';
+        }
+        $tikidate->setTZbyID($display_tz);
+        $tikidate->setLocalTime($day, $month, $year, $hour, $minute, $second, 0);
+        return $tikidate->getTime();
+    }
+
+    /**
+     * @param $timestamp
+     * @param bool $user
+     * @return string
+     */
+    public function get_long_date($timestamp, $user = false)
+    {
+        return $this->date_format($this->get_long_date_format(), $timestamp, $user);
+    }
+
+    /**
+     * @param $timestamp
+     * @param bool $user
+     * @return string
+     */
+    public function get_short_date($timestamp, $user = false)
+    {
+        return $this->date_format($this->get_short_date_format(), $timestamp, $user);
+    }
+
+    /**
+     * @param $timestamp
+     * @param bool $user
+     * @return string
+     */
+    public function get_long_time($timestamp, $user = false)
+    {
+        return $this->date_format($this->get_long_time_format(), $timestamp, $user);
+    }
+
+    /**
+     * @param $timestamp
+     * @param bool $user
+     * @return string
+     */
+    public function get_short_time($timestamp, $user = false)
+    {
+        return $this->date_format($this->get_short_time_format(), $timestamp, 
