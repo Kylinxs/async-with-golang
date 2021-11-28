@@ -4763,4 +4763,525 @@ class TikiLib extends TikiDb_Bridge
             $insertData['lockedby'] = '';
         }
         if ($prefs['wiki_comments_allow_per_page'] != 'n') {
-            if (! empty($hash['comments_enabled']) && $hash['
+            if (! empty($hash['comments_enabled']) && $hash['comments_enabled'] == 'y') {
+                $insertData['comments_enabled'] = 'y';
+            } elseif (empty($hash['comments_enabled']) || $hash['comments_enabled'] == 'n') {
+                $insertData['comments_enabled'] = 'n';
+            }
+        }
+        if (empty($hash['contributions'])) {
+            $hash['contributions'] = '';
+        }
+        if (empty($hash['contributors'])) {
+            $hash2 = '';
+        } else {
+            foreach ($hash['contributors'] as $c) {
+                $hash3['contributor'] = $c;
+                $hash2[] = $hash3;
+            }
+        }
+        $pages = $this->table('tiki_pages');
+        $page_id = $pages->insert($insertData);
+
+        //update status, page storage was updated in tiki 9 to be non html encoded
+        $wikilib = TikiLib::lib('wiki');
+        $converter = new convertToTiki9();
+        $converter->saveObjectStatus($page_id, 'tiki_pages');
+
+        $this->replicate_page_to_history($name);
+
+        $this->clear_links($name);
+
+        // Pages are collected before adding slashes
+        foreach ($pointedPages as $pointedPage => $types) {
+            $this->replace_link($name, $pointedPage, $types);
+        }
+
+        $wikilib->update_wikicontent_relations($data, 'wiki page', $name);
+
+        // Update the log
+        if (strtolower($name) != 'sandbox') {
+            $logslib = TikiLib::lib('logs');
+            $logslib->add_action("Created", $name, 'wiki page', 'add=' . strlen($data), $user, '', '', $created, $hash['contributions'], $hash2);
+            //get_strings tra("Created");
+
+            // Need to categorize new pages before sending mail notifications to make sure category permissions are considered
+            if (! empty($_REQUEST['cat_categories']) && ! empty($_REQUEST["page"])) {
+                // these variables are used in categorize.php
+                $cat_type = 'wiki page';
+                $cat_objid = $_REQUEST["page"];
+                include_once("categorize.php");
+            }
+
+            //  Deal with mail notifications.
+            include_once(__DIR__ . '/notifications/notificationemaillib.php');
+
+            $foo = parse_url($_SERVER["REQUEST_URI"] ?? '');
+            $machine = self::httpPrefix(true) . dirname($foo["path"]);
+            sendWikiEmailNotification('wiki_page_created', $name, $user, $comment, 1, $data, $machine, '', false, $hash['contributions']);
+            if ($prefs['feature_contribution'] == 'y') {
+                $contributionlib = TikiLib::lib('contribution');
+                $contributionlib->assign_contributions($hash['contributions'], $name, 'wiki page', $description, $name, "tiki-index.php?page=" . urlencode($name));
+            }
+        }
+
+        //if there are links to this page, clear cache to avoid linking to edition
+        $toInvalidate = $this->table('tiki_links')->fetchColumn('fromPage', ['toPage' => $name]);
+        foreach ($toInvalidate as $res) {
+            $this->invalidate_cache($res);
+        }
+
+        TikiLib::events()->trigger(
+            'tiki.wiki.create',
+            [
+                'type' => 'wiki page',
+                'object' => $name,
+                'namespace' => $wikilib->get_namespace($name),
+                'user' => $GLOBALS['user'],
+                'page_id' => $page_id,
+                'version' => 1,
+                'data' => $data,
+                'old_data' => '',
+            ]
+        );
+
+        // Update links to the URL of the new page from HTML wiki pages (when wysiwyg is in use).
+        // This is not an elegant fix but will do for now until the "use wiki syntax in WYSIWYG" feature is ready (if that ever replaces HTML-mode WYSIWYG completely).
+        if ($prefs['feature_wysiwyg'] == 'y' && $prefs['wysiwyg_htmltowiki'] != 'y') {
+            $wikilib = TikiLib::lib('wiki');
+            $temppage = md5($this->now . $name);
+            $wikilib->wiki_rename_page($name, $temppage, false, $user);
+            $wikilib->wiki_rename_page($temppage, $name, false, $user);
+        }
+
+        $tracer->trace('tikilib.create_page', "** Returning");
+
+        return true;
+    }
+
+    /**
+     * @param $pageName
+     * @return bool|mixed
+     */
+    protected function replicate_page_to_history($pageName)
+    {
+        if (strtolower($pageName) == 'sandbox') {
+            return false;
+        }
+
+        $query = "INSERT IGNORE INTO `tiki_history`(`pageName`, `version`, `version_minor`, `lastModif`, `user`, `ip`, `comment`, `data`, `description`,`is_html`)
+            SELECT `pageName`, `version`, `version_minor`, `lastModif`, `user`, `ip`, `comment`, `data`, `description`,`is_html`
+            FROM tiki_pages
+            WHERE pageName = ?
+            LIMIT 1";
+
+        $this->query($query, [$pageName]);
+
+        $id = $this->lastInsertId();
+
+        //update status, we don't want the page to be decoded later
+        $wikilib = TikiLib::lib('wiki');
+        $converter = new convertToTiki9();
+        $converter->saveObjectStatus($id, 'tiki_history');
+
+        return $id;
+    }
+
+    /**
+     * @param $pageName
+     * @return bool|mixed
+     */
+    public function restore_page_from_history($pageName, $version = null)
+    {
+        if (strtolower($pageName) == 'sandbox') {
+            return false;
+        }
+
+        $query = "SELECT `version`, `version_minor`, `lastModif`, `user`, `ip`, `comment`, `data`, `description`,`is_html`
+            FROM tiki_history
+            WHERE pageName = ? ";
+
+        $bindvars = [$pageName];
+
+        if ($version === null) {
+            $query .= "ORDER BY version DESC";
+        } else {
+            $query .= "AND `version`=?";
+            $bindvars[] = $version;
+        }
+
+        $result = $this->query($query, $bindvars, 1);
+        if ($res = $result->fetchRow()) {
+            $query = "UPDATE `tiki_pages`
+            SET `version` = ?, `version_minor` = ?, `lastModif` = ?, `user` = ?, `ip` = ?, `comment` = ?, `data` = ?, `description` = ?,`is_html` = ?
+            WHERE pageName = ?";
+            $bindvars = [$res['version'], $res['version_minor'], $res['lastModif'], $res['user'], $res['ip'], $res['comment'], $res['data'], $res['description'], $res['is_html'], $pageName];
+            $this->query($query, $bindvars);
+        }
+
+        $bindvars = [$pageName];
+        $query = "SELECT `page_id` from `tiki_pages` WHERE pageName = ?";
+        $this->query($query, $bindvars);
+
+        if ($res = $result->fetchRow()) {
+            $id = $res['version'];
+        }
+
+        // FIXME: Are these lines necessary? If so, what is the proper status to use?
+        //$converter = new convertToTiki9();
+        //$converter->saveObjectStatus($id, 'tiki_pages', 'conv9.0');
+
+        return $id;
+    }
+
+    /**
+     * @param $user
+     * @param $max
+     * @param string $who
+     * @return mixed
+     */
+    public function get_user_pages($user, $max, $who = 'user')
+    {
+        return $this->table('tiki_pages')->fetchAll(['pageName'], [$who => $user], $max);
+    }
+
+    /**
+     * @param $pageName
+     * @return bool
+     */
+    public function get_page_print_info($pageName)
+    {
+        $query = "SELECT `pageName`, `data` as `parsed`, `is_html` FROM `tiki_pages` WHERE `pageName`=?";
+        $result = $this->query($query, [$pageName]);
+        if (! $result->numRows()) {
+            return false;
+        } else {
+            $page_info = $result->fetchRow();
+            $page_info['parsed'] = TikiLib::lib('parser')->parse_data($page_info['parsed'], ['is_html' => $page_info['is_html'], 'print' => 'y', 'page' => $pageName]);
+            $page_info['h'] = 1;
+        }
+        return $page_info;
+    }
+
+    /**
+     * @param $pageName
+     * @param bool $retrieve_datas
+     * @param bool $skipCache
+     * @return bool
+     */
+    public function get_page_info($pageName, $retrieve_datas = true, $skipCache = false)
+    {
+        global $prefs;
+        $pageNameEncode = urlencode($pageName);
+        if (
+            ! $skipCache && isset($this->cache_page_info[$pageNameEncode])
+            && (! $retrieve_datas || ! empty($this->cache_page_info[$pageNameEncode]['data']))
+        ) {
+            return $this->cache_page_info[$pageNameEncode];
+        }
+
+        if ($retrieve_datas) {
+            $query = "SELECT * FROM `tiki_pages` WHERE `pageName`=?";
+        } else {
+            $query = "SELECT `page_id`, `pageName`, `hits`, `description`, `lastModif`, `comment`, `version`, `version_minor`, `user`, `ip`, `flag`, `points`, `votes`, `wiki_cache`, `cache_timestamp`, `pageRank`, `creator`, `page_size`, `lang`, `lockedby`, `is_html`, `created`, `wysiwyg`, `wiki_authors_style`, `comments_enabled` FROM `tiki_pages` WHERE `pageName`=?";
+        }
+        $result = $this->query($query, [$pageName]);
+
+        if (! $result->numRows()) {
+            return false;
+        } else {
+            $row = $result->fetchRow();
+            $row['baseName'] = TikiLib::lib('wiki')->get_without_namespace($row['pageName']);
+            $row['prettyName'] = TikiLib::lib('wiki')->get_readable($row['pageName']);
+            $row['namespace'] = TikiLib::lib('wiki')->get_namespace($row['pageName']);
+            $row['namespace_parts'] = TikiLib::lib('wiki')->get_namespace_parts($row['pageName']);
+
+            // Be sure to have the correct character case (because DB is caseinsensitive)
+            $pageNameEncode = urlencode($row['pageName']);
+
+            // Limit memory usage of the page cache.  No
+            // intelligence is attempted here whatsoever.  This was
+            // done because a few thousand ((page)) links would blow
+            // up memory, even with the limit at 128MiB.
+            // Information on 128 pages really should be plenty.
+            while (count($this->cache_page_info) >= 128) {
+                // Need to delete something; pick at random
+                $keys = array_keys($this->cache_page_info);
+                $num = rand(0, count($keys));
+                if (isset($keys[$num])) {
+                    unset($this->cache_page_info[$keys[$num]]);
+                }
+            }
+            $row['outputType'] = '';    // TODO remove as redundant?
+
+            $this->cache_page_info[$pageNameEncode] = $row;
+            return $this->cache_page_info[$pageNameEncode];
+        }
+    }
+
+    /**
+     * @param $page_id
+     * @return mixed
+     */
+    public function get_page_info_from_id($page_id)
+    {
+        return $this->table('tiki_pages')->fetchFullRow(['page_id' => $page_id]);
+    }
+
+
+    /**
+     * @param $page_id
+     * @return mixed
+     */
+    public function get_page_name_from_id($page_id)
+    {
+        return $this->table('tiki_pages')->fetchOne('pageName', ['page_id' => $page_id]);
+    }
+
+    /**
+     * @param $page
+     * @return mixed
+     */
+    public function get_page_id_from_name($page)
+    {
+        return $this->table('tiki_pages')->fetchOne('page_id', ['pageName' => $page]);
+    }
+
+    /**
+     * @param $str
+     * @param $car
+     * @return int
+     */
+    public static function how_many_at_start($str, $car)
+    {
+        $cant = 0;
+        $i = 0;
+        while (($i < strlen($str)) && (isset($str[$i])) && ($str[$i] == $car)) {
+            $i++;
+            $cant++;
+        }
+        return $cant;
+    }
+
+    /**
+     * @param $name
+     * @param $domain
+     * @param string $sep
+     * @return string
+     */
+    public static function protect_email($name, $domain, $sep = '@')
+    {
+        TikiLib::lib('header')->add_jq_onready(
+            '$(".convert-mailto").removeClass("convert-mailto").each(function () {
+                var address = $(this).data("encode-name") + "@" + $(this).data("encode-domain");
+                $(this).attr("href", "mailto:" + address).text(address);
+            });'
+        );
+        return "<a class=\"convert-mailto\" href=\"mailto:nospam@example.com\" data-encode-name=\"$name\" data-encode-domain=\"$domain\">$name " . tra("at", "", true) . " $domain</a>";
+    }
+
+    //Updates a dynamic variable found in some object
+    /*Shared*/
+    /**
+     * @param $name
+     * @param $value
+     * @param null $lang
+     * @return bool
+     */
+    public function update_dynamic_variable($name, $value, $lang = null)
+    {
+        $dynamicVariables = $this->table('tiki_dynamic_variables');
+        $dynamicVariables->delete(['name' => $name, 'lang' => $lang]);
+        $dynamicVariables->insert(['name' => $name, 'data' => $value, 'lang' => $lang]);
+        return true;
+    }
+
+    /**
+     * @param $page
+     */
+    public function clear_links($page)
+    {
+        $this->table('tiki_links')->deleteMultiple(['fromPage' => $page]);
+
+        $objectRelations = $this->table('tiki_object_relations');
+        $objectRelations->deleteMultiple(
+            [
+                'source_type' => 'wiki page',
+                'source_itemId' => $page,
+                'target_type' => 'wiki page',
+                'relation' => $objectRelations->like('tiki.link.%'),
+            ]
+        );
+    }
+
+    /**
+     * @param $pageFrom
+     * @param $pageTo
+     * @param array $types
+     */
+    public function replace_link($pageFrom, $pageTo, $types = [])
+    {
+        global $prefs;
+        if (
+            $prefs['namespace_enabled'] == 'y' && $prefs['namespace_force_links'] == 'y'
+            && TikiLib::lib('wiki')->get_namespace($pageFrom)
+            && ! TikiLib::lib('wiki')->get_namespace($pageTo)
+        ) {
+                $namespace = TikiLib::lib('wiki')->get_namespace($pageFrom);
+                $pageTo = $namespace . $prefs['namespace_separator'] . $pageTo;
+        }
+        // The max pagename length is 160 characters ( tiki_pages.pageName varchar(160) ).
+        //  However, wiki_rename_page stores a page in the format: $tmpName = "~".$newName."~";
+        //  So, actual max page name length is 160 - 2 = 158
+        //  Strip excess characters (silently) and proceed.
+        $pageTo = substr($pageTo, 0, 158);
+
+        $links = $this->table('tiki_links');
+        $links->insert(['fromPage' => $pageFrom, 'toPage' => $pageTo], true);
+
+        $relationlib = TikiLib::lib('relation');
+        foreach ($types as $type) {
+            $relationlib->add_relation("tiki.link.$type", 'wiki page', $pageFrom, 'wiki page', $pageTo);
+        }
+    }
+
+    /**
+     * @param $page
+     */
+    public function invalidate_cache($page)
+    {
+        unset($this->cache_page_info[urlencode($page)]);
+        $this->table('tiki_pages')->update(['cache_timestamp' => 0], ['pageName' => $page]);
+
+        $pageCache = Tiki_PageCache::create()
+            ->checkMeta('wiki-page-output-meta-timestamp', ['page' => $page ])
+            ->invalidate();
+    }
+
+    /** Update a wiki page
+        @param array $hash- lock_it,contributions, contributors
+        @param int $saveLastModif - modification time - pass null for now, unless importing a Wiki page
+     **/
+    public function update_page($pageName, $edit_data, $edit_comment, $edit_user, $edit_ip, $edit_description = null, $edit_minor = 0, $lang = '', $is_html = null, $hash = null, $saveLastModif = null, $wysiwyg = '', $wiki_authors_style = '', $autoupdate = false)
+    {
+        global $prefs;
+        $histlib = TikiLib::lib('hist');
+        $parserlib = TikiLib::lib('parser');
+
+        if (! $edit_user) {
+            $edit_user = 'anonymous';
+        }
+
+        $this->invalidate_cache($pageName);
+        // Collect pages before modifying edit_data (see update of links below)
+        $pages = $parserlib->get_pages($edit_data, true);
+
+        if (! $this->page_exists($pageName)) {
+            return false;
+        }
+
+        // Get this page information
+        $info = $this->get_page_info($pageName);
+
+        if ($edit_description === null) {
+            $edit_description = $info['description'];
+        }
+
+        $user = $info["user"] ? $info["user"] : 'anonymous';
+        $data = $info["data"];
+        $willDoHistory = ($prefs['feature_wiki_history_full'] == 'y' || $data != $edit_data || $info['description'] != $edit_description || $info["comment"] != $edit_comment );
+        $version = $histlib->get_page_next_version($pageName, $willDoHistory);
+        $old_version = $version - 1;    // this doesn't really make sense but is needed to make diff links work properly - regression from r65651
+
+        if ($is_html === null) {
+            $html = $info['is_html'];
+        } else {
+            $html = $is_html ? 1 : 0;
+        }
+        if ($wysiwyg == '') {
+            $wysiwyg = $info['wysiwyg'];
+        }
+
+        if ($wysiwyg == 'y' && $html != 1 && $prefs['wysiwyg_htmltowiki'] != 'y') { // correct for html only wysiwyg
+            $html = 1;
+        }
+
+        $edit_data = $parserlib->process_save_plugins(
+            $edit_data,
+            [
+                'type' => 'wiki page',
+                'itemId' => $pageName,
+                'user' => $user,
+            ]
+        );
+
+        if ($html == 1 && $prefs['feature_purifier'] != 'n' && ! $autoupdate) {
+            $noparsed = [];
+            $parserlib->plugins_remove($edit_data, $noparsed);
+
+            require_once('lib/htmlpurifier_tiki/HTMLPurifier.tiki.php');
+            $edit_data = HTMLPurifier($edit_data);
+
+            $parserlib->plugins_replace($edit_data, $noparsed, true);
+        }
+
+        if (is_null($saveLastModif)) {
+            $saveLastModif = $this->now;
+        }
+
+        $queryData = [
+            'description' => $edit_description,
+            'data' => $edit_data,
+            'comment' => $edit_comment,
+            'lastModif' => (int) $saveLastModif,
+            'version' => $version,
+            'version_minor' => $edit_minor,
+            'user' => $edit_user,
+            'ip' => $edit_ip,
+            'page_size' => strlen($edit_data),
+            'is_html' => $html,
+            'wysiwyg' => $wysiwyg,
+            'wiki_authors_style' => $wiki_authors_style,
+            'lang' => $lang,
+        ];
+
+        if ($hash !== null) {
+            if (! empty($hash['lock_it']) && ($hash['lock_it'] == 'y' || $hash['lock_it'] == 'on')) {
+                $queryData['flag'] = 'L';
+                $queryData['lockedby'] = $user;
+            } elseif (empty($hash['lock_it']) || $hash['lock_it'] == 'n') {
+                $queryData['flag'] = '';
+                $queryData['lockedby'] = '';
+            }
+        }
+        if ($prefs['wiki_comments_allow_per_page'] != 'n') {
+            if (! empty($hash['comments_enabled']) && $hash['comments_enabled'] == 'y') {
+                $queryData['comments_enabled'] = 'y';
+            } elseif (empty($hash['comments_enabled']) || $hash['comments_enabled'] == 'n') {
+                $queryData['comments_enabled'] = 'n';
+            }
+        }
+        if (empty($hash['contributions'])) {
+            $hash['contributions'] = '';
+        }
+        if (empty($hash['contributors'])) {
+            $hash2 = '';
+        } else {
+            foreach ($hash['contributors'] as $c) {
+                $hash3['contributor'] = $c;
+                $hash2[] = $hash3;
+            }
+        }
+
+        $this->table('tiki_pages')->update($queryData, ['pageName' => $pageName]);
+
+        // Synchronize object comment
+        if ($prefs['feature_wiki_description'] == 'y') {
+            $query = 'update `tiki_objects` set `description`=? where `itemId`=? and `type`=?';
+            $this->query($query, [ $edit_description, $pageName, 'wiki page']);
+        }
+
+        //update status, page storage was updated in tiki 9 to be non html encoded
+        $wikilib = TikiLib::lib('wiki');
+        $converter = new convertToTiki9();
+        $converter->saveObjectStatus($this->getOne("SELECT page_id FROM tiki_pages WHERE
