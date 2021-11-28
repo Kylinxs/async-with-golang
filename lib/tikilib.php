@@ -5808,4 +5808,609 @@ class TikiLib extends TikiDb_Bridge
      */
     public function get_short_time($timestamp, $user = false)
     {
-        return $this->date_format($this->get_short_time_format(), $timestamp, 
+        return $this->date_format($this->get_short_time_format(), $timestamp, $user);
+    }
+
+    /**
+     * @param $timestamp
+     * @param bool $user
+     * @return string
+     */
+    public function get_long_datetime($timestamp, $user = false)
+    {
+        return $this->date_format($this->get_long_datetime_format(), $timestamp, $user);
+    }
+
+    /**
+     * @param $timestamp
+     * @param bool $user
+     * @return string
+     */
+    public function get_short_datetime($timestamp, $user = false)
+    {
+        return $this->date_format($this->get_short_datetime_format(), $timestamp, $user);
+    }
+
+    /**
+        Per http://www.w3.org/TR/NOTE-datetime
+     */
+    public function get_iso8601_datetime($timestamp, $user = false)
+    {
+        return $this->date_format('%Y-%m-%dT%H:%M:%S%O', $timestamp, $user);
+    }
+
+    /**
+     * @param $timestamp
+     * @param bool $user
+     * @return string
+     */
+    public function get_compact_iso8601_datetime($timestamp, $user = false)
+    {
+        // no dashes and no tz info - latter should be fixed
+        return $this->date_format('%Y%m%dT%H%M%S', $timestamp, $user);
+    }
+
+    /**
+     * @return  array of css files in the style dir
+     */
+    public function list_styles()
+    {
+        global $tikidomain;
+        $csslib = TikiLib::lib('css');
+
+        $sty = [];
+        $style_base_path = $this->get_style_path(); // knows about $tikidomain
+
+        if ($style_base_path) {
+            $sty = $csslib->list_css($style_base_path);
+        }
+
+        if ($tikidomain) {
+            $sty = array_unique(array_merge($sty, $csslib->list_css('styles')));
+        }
+        foreach ($sty as &$s) {
+            if (in_array($s, ['mobile', '960_gs'])) {
+                $s = '';
+            } elseif (substr($s, -4) == '-rtl' || substr($s, -6) == '-print') {
+                $s = '';
+            } else {
+                $s .= '.css';   // add the .css back onto the end of the style names
+            }
+        }
+        $sty = array_filter($sty);
+        sort($sty);
+        return $sty;
+
+        /* What is this $tikidomain section?
+         * Some files that call this method used to list styles without considering
+         * $tikidomain, now they do. They're listed below:
+         *
+         *  tiki-theme_control.php
+         *  tiki-theme_control_objects.php
+         *  tiki-theme_control_sections.php
+         *  tiki-my_tiki.php
+         *  modules/mod-switch_theme.php
+         *
+         *  lfagundes
+         *
+         *  Tiki 3.0 - now handled by get_style_path()
+         *  jonnybradley
+         */
+    }
+
+    /**
+     * @param $a_style - main style (e.g. "thenews.css")
+     * @return array of css files in the style options dir
+     */
+    public function list_style_options($a_style = '')
+    {
+        global $prefs;
+        $csslib = TikiLib::lib('css');
+
+        if (empty($a_style)) {
+            $a_style = $prefs['style'];
+        }
+
+        $sty = [];
+        $option_base_path = $this->get_style_path($a_style) . 'options/';
+
+        if (is_dir($option_base_path)) {
+            $sty = $csslib->list_css($option_base_path);
+        }
+
+        if (count($sty)) {
+            foreach ($sty as &$s) { // add .css back as above
+                $s .= '.css';
+            }
+            sort($sty);
+            return $sty;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param $stl - main style (e.g. "thenews.css")
+     * @return string - style passed in up to - | or . char (e.g. "thenews")
+     */
+    public function get_style_base($stl)
+    {
+        $parts = preg_split('/[\-\.]/', $stl);
+        if (count($parts) > 0) {
+            return $parts[0];
+        } else {
+            return '';
+        }
+    }
+
+    /**
+     * @param $stl - main style (e.g. "thenews.css" - can be empty to return main styles dir)
+     * @param $opt - optional option file name (e.g. "purple.css")
+     * @param $filename - optional filename to look for (e.g. "purple.png")
+     * @return path to dir or file if found or empty if not - e.g. "styles/mydomain.tld/thenews/options/purple/"
+     */
+    public function get_style_path($stl = '', $opt = '', $filename = '')
+    {
+        global $tikidomain;
+
+        $path = '';
+        $dbase = '';
+        if ($tikidomain && is_dir("styles/$tikidomain")) {
+            $dbase = $tikidomain . '/';
+        }
+
+        $sbase = '';
+        if (! empty($stl)) {
+            $sbase = $this->get_style_base($stl) . '/';
+        }
+
+        $obase = '';
+        if (! empty($opt)) {
+            $obase = 'options/';
+            if ($opt != $filename) {    // exception for getting option.css as it doesn't live in it's own dir
+                $obase .= substr($opt, 0, strlen($opt) - 4) . '/';
+            }
+        }
+
+        if (empty($filename)) {
+            if (is_dir('styles/' . $dbase . $sbase . $obase)) {
+                $path = 'styles/' . $dbase . $sbase . $obase;
+            } elseif (is_dir('styles/' . $dbase . $sbase)) {
+                $path = 'styles/' . $dbase . $sbase;    // try "parent" style dir if no option one
+            } elseif (is_dir('styles/' . $sbase . $obase)) {
+                $path = 'styles/' . $sbase . $obase;    // try root style dir if no domain one
+            } else {
+                $path = 'styles/' . $sbase;         // fall back to "parent" style dir if no option one
+            }
+        } else {
+            if (is_file('styles/' . $dbase . $sbase . $obase . $filename)) {
+                $path = 'styles/' . $dbase . $sbase . $obase . $filename;
+            } elseif (is_file('styles/' . $dbase . $sbase . $filename)) {   // try "parent" style dir if no option one
+                $path = 'styles/' . $dbase . $sbase . $filename;
+            } elseif (is_file('styles/' . $sbase . $obase . $filename)) {   // try non-tikidomain dirs if not found
+                $path = 'styles/' . $sbase . $obase . $filename;
+            } elseif (is_file('styles/' . $sbase . $filename)) {
+                $path = 'styles/' . $sbase . $filename;             // fall back to "parent" style dir if no option
+            } elseif (is_file('styles/' . $dbase . $filename)) {
+                $path = 'styles/' . $dbase . $filename;             // tikidomain root style dir?
+            } elseif (is_file('styles/' . $dbase . $filename)) {
+                $path = 'styles/' . $filename;                  // root style dir?
+            }
+        }
+
+        return $path;
+    }
+
+    /**
+     * @param bool $user
+     * @return null
+     */
+    public function get_language($user = false)
+    {
+        global $prefs;
+        static $language = false;
+
+        if (! $language) {
+            if ($user) {
+                $language = $this->get_user_preference($user, 'language', 'default');
+                if (! $language || $language == 'default') {
+                    $language = $prefs['language'];
+                }
+            } else {
+                $language = $prefs['language'];
+            }
+        }
+        return $language;
+    }
+
+    /**
+     * @param $text
+     * @return string
+     */
+    public function read_raw($text, $preserve = false)
+    {
+        $file = explode("\n", $text);
+        $back = [];
+        // When the fieldID is not preserved, ensure uniqueness of the $var key even if the fieldID is duplicated in the input
+        $i = 0;
+        foreach ($file as $line) {
+            $r = $s = '';
+            if (substr($line, 0, 1) != "#") {
+                if (preg_match("/^\[([A-Z0-9]+)\]/", $line, $r)) {
+                    if ($preserve) {
+                        $var = strtolower($r[1]);
+                    } else {
+                        $i++;
+                        $var = 'id' . $i . strtolower($r[1]);
+                    }
+                }
+                if (isset($var) and (preg_match("/^([-_\/ a-zA-Z0-9]+)[ \t]+[:=][ \t]+(.*)/", $line, $s))) {
+                    $back[$var][trim($s[1])] = trim($s[2]);
+                }
+            }
+        }
+        return $back;
+    }
+
+
+    /**
+     * Get URL Scheme (http / https)
+     * Considers the use of a reverse proxy / ssl offloader. I.e If request is https -> ssl offloader -> http tiki, then it will correctly return https
+     * @return string http | https
+     */
+    public static function httpScheme()
+    {
+        global $url_scheme;
+        return $url_scheme;
+    }
+
+    /**
+     * @param bool $isUserSpecific
+     * @return string
+     */
+    public static function httpPrefix($isUserSpecific = false)
+    {
+        global $url_scheme, $url_host, $url_port, $prefs;
+
+        if ($isUserSpecific && $prefs['https_login'] != 'disabled' && $prefs['https_external_links_for_users'] == 'y') {
+            $scheme = 'https';
+        } else {
+            $scheme = $url_scheme;
+        }
+
+        return $scheme . '://' . $url_host . (($url_port != '') ? ":$url_port" : '');
+    }
+
+    /**
+     * Includes the full tiki path in the links for external link generation.
+     * @param string $relative
+     * @param array $args
+     * @return string
+     */
+    public static function tikiUrl($relative = "", $args = [])
+    {
+        global $tikiroot;
+
+        if (preg_match('/^http(s?):/', $relative)) {
+            $base = $relative;
+        } else {
+            $base = self::httpPrefix() . $tikiroot . $relative;
+        }
+
+        if (count($args)) {
+            $base .= '?';
+            $base .= http_build_query($args, '', '&');
+        }
+
+        return $base;
+    }
+
+    /**
+     * Include the full tiki path if requested in an external context.
+     * Otherwise, leave as-is.
+     *
+     * @param string $relative
+     * @param array $args
+     * @return string
+     */
+    public static function tikiUrlOpt($relative)
+    {
+        if (self::$isExternalContext) {
+            return self::tikiUrl($relative);
+        } else {
+            return $relative;
+        }
+    }
+
+    public static function setExternalContext($isExternal)
+    {
+        $oldValue = self::$isExternalContext;
+
+        self::$isExternalContext = (bool) $isExternal;
+
+        return $oldValue;
+    }
+
+    public static function contextualizeKey($key, $param1 = null, $param2 = null)
+    {
+        global $prefs;
+
+        $args = func_get_args();
+        array_shift($args);
+
+        foreach ($args as $arg) {
+            if ($arg == 'language') {
+                $language = isset($prefs['language']) ? $prefs['language'] : 'en';
+                $key .= "_{$language}";
+            } elseif ($arg == 'external') {
+                $key .= (int) self::$isExternalContext;
+            }
+        }
+
+        return $key;
+    }
+
+    /**
+     * Removes the protocol, host and path from a URL if they match
+     *
+     * @param string $url       URL to be converted
+     * @return string           relative URL if possible
+     */
+    public static function makeAbsoluteLinkRelative($url)
+    {
+        global $base_url;
+
+        if (strpos($url, $base_url) !== false) {
+            $out = substr($url, strlen($base_url));
+        } else {
+            $out = $url;
+        }
+        return $out;
+    }
+
+    /**
+     * @param $lat1
+     * @param $lon1
+     * @param $lat2
+     * @param $lon2
+     * @return int
+     */
+    public function distance($lat1, $lon1, $lat2, $lon2)
+    {
+        // This function uses a pure spherical model
+        // it could be improved to use the WGS84 Datum
+        // Franck Martin
+        $lat1rad = deg2rad($lat1);
+        $lon1rad = deg2rad($lon1);
+        $lat2rad = deg2rad($lat2);
+        $lon2rad = deg2rad($lon2);
+        $distance = 6367 * acos(sin($lat1rad) * sin($lat2rad) + cos($lat1rad) * cos($lat2rad) * cos($lon1rad - $lon2rad));
+        return($distance);
+    }
+
+    /**
+     * returns a list of usergroups where the user is a member and the group has the right perm
+     * sir-b
+     **/
+    public function get_groups_to_user_with_permissions($user, $perm)
+    {
+        $userid = $this->get_user_id($user);
+        $query = "SELECT DISTINCT `users_usergroups`.`groupName` AS `groupName`";
+        $query .= "FROM  `users_grouppermissions`, `users_usergroups` ";
+        $query .= "WHERE `users_usergroups`.`userId` = ? AND ";
+        $query .= "`users_grouppermissions`.`groupName` = `users_usergroups`.`groupName` AND ";
+        $query .= "`users_grouppermissions`.`permName` = ? ";
+        $query .= "ORDER BY `groupName`";
+        return $this->fetchAll($query, [(int)$userid, $perm]);
+    }
+
+    /**
+     * @param $tab
+     * @param $valField1
+     * @param $field1
+     * @param $field2
+     * @return mixed
+     */
+    public function other_value_in_tab_line($tab, $valField1, $field1, $field2)
+    {
+        foreach ($tab as $line) {
+            if ($line[$field1] == $valField1) {
+                return $line[$field2];
+            }
+        }
+    }
+
+    /**
+     * @param $file_name
+     * @return string
+     */
+    public function get_attach_hash_file_name($file_name)
+    {
+        global $prefs;
+        do {
+            $fhash = md5($file_name . date('U') . rand());
+        } while (file_exists($prefs['w_use_dir'] . $fhash));
+        return $fhash;
+    }
+
+    /**
+     * @param $file_name
+     * @param $file_tmp_name
+     * @param $store_type
+     * @return array
+     */
+    public function attach_file($file_name, $file_tmp_name, $store_type)
+    {
+        global $prefs;
+        $tmp_dest = $prefs['tmpDir'] . "/" . $file_name . ".tmp";
+        if (! is_writable(dirname($tmp_dest))) {
+            return ["ok" => false, "error" => tra('Temporary directory destination not writable: ' . dirname($tmp_dest))];
+        }
+        if (! move_uploaded_file($file_tmp_name, $tmp_dest)) {
+            return ["ok" => false, "error" => tra('Unable to move uploaded file to temporary destination.')];
+        }
+        try {
+            $filegallib = TikiLib::lib('filegal');
+            $filegallib->assertUploadedFileIsSafe($tmp_dest, $file_name);
+        } catch (Exception $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+        $fp = fopen($tmp_dest, "rb");
+        $data = '';
+        $fhash = '';
+        $chunk = '';
+        if ($store_type == 'dir') {
+            $fhash = $this->get_attach_hash_file_name($file_name);
+            $fw = fopen($prefs['w_use_dir'] . $fhash, "wb");
+            if (! $fw) {
+                return ["ok" => false, "error" => tra('Cannot write to this file:') . $prefs['w_use_dir'] . $fhash];
+            }
+        }
+        while (! feof($fp)) {
+            $chunk = fread($fp, 8192 * 16);
+
+            if ($store_type == 'dir') {
+                fwrite($fw, $chunk);
+            }
+            $data .= $chunk;
+        }
+        fclose($fp);
+        unlink($tmp_dest);
+        if ($store_type == 'dir') {
+            fclose($fw);
+            $data = "";
+        }
+        return ["ok" => true, "data" => $data, "fhash" => $fhash];
+    }
+
+    /* to get the length of a data without the quoted part (very
+         approximative)  */
+    /**
+     * @param $data
+     * @return int
+     */
+    public function strlen_quoted($data)
+    {
+        global $prefs;
+        if ($prefs['feature_use_quoteplugin'] != 'y') {
+            $data = preg_replace('/^>.*\\n?/m', '', $data);
+        } else {
+            $data = preg_replace('/{QUOTE\([^\)]*\)}.*{QUOTE}/Ui', '', $data);
+        }
+        return strlen($data);
+    }
+
+    /**
+     * @param $id
+     * @param int $offset
+     * @param $maxRecords
+     * @param string $sort_mode
+     * @param string $find
+     * @param string $table
+     * @param string $column
+     * @param string $from
+     * @param string $to
+     * @return array
+     */
+    public function list_votes($id, $offset = 0, $maxRecords = -1, $sort_mode = 'user_asc', $find = '', $table = '', $column = '', $from = '', $to = '')
+    {
+        $mid = 'where  `id`=?';
+        $bindvars[] = $id;
+        $select = '';
+        $join = '';
+        if (! empty($find)) {
+            $mid .= ' and (`user` like ? or `title` like ? or `ip` like ?)';
+            $bindvars[] = '%' . $find . '%';
+            $bindvars[] = '%' . $find . '%';
+            $bindvars[] = '%' . $find . '%';
+        }
+        if (! empty($from) && ! empty($to)) {
+            $mid .= ' and ((time >= ? and time <= ?) or time = ?)';
+            $bindvars[] = $from;
+            $bindvars[] = $to;
+            $bindvars[] = 0;
+        }
+        if (! empty($table) && ! empty($column)) {
+            $select = ", `$table`.`$column` as title";
+            $join = "left join `$table` on (`tiki_user_votings`.`optionId` = `$table`.`optionId`)";
+        }
+        $query = "select * $select from `tiki_user_votings` $join $mid order by " . $this->convertSortMode($sort_mode);
+        $query_cant = "select count(*) from `tiki_user_votings` $join $mid";
+        $ret = $this->fetchAll($query, $bindvars, $maxRecords, $offset);
+        $cant = $this->getOne($query_cant, $bindvars);
+        $retval = [];
+        $retval["data"] = $ret;
+        $retval["cant"] = $cant;
+        return $retval;
+    }
+
+    /**
+      *  Returns explicit message on upload problem
+      *
+      * @params: $iError: php status of the file uploading (documented in http://uk2.php.net/manual/en/features.file-upload.errors.php )
+      *
+      */
+    public function uploaded_file_error($iError)
+    {
+        switch ($iError) {
+            case UPLOAD_ERR_OK:
+                return tra('The file was successfully uploaded.');
+            case UPLOAD_ERR_INI_SIZE:
+                return tra('The uploaded file exceeds the upload_max_filesize directive in php.ini.');
+            case UPLOAD_ERR_FORM_SIZE:
+                return tra('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.');
+            case UPLOAD_ERR_PARTIAL:
+                return tra('The file was only partially uploaded.');
+            case UPLOAD_ERR_NO_FILE:
+                return tra('No file was uploaded. Was a file selected ?');
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return tra('A temporary folder is missing.');
+            case UPLOAD_ERR_CANT_WRITE:
+                return tra('Failed to write file to disk.');
+            case UPLOAD_ERR_EXTENSION:
+                return tra('File upload stopped by extension.');
+
+            default:
+                return tra('Unknown error.');
+        }
+    }
+
+    // from PHP manual (ini-get function example)
+    /**
+     * @param string $val       php.ini key returning memory string i.e. 32M
+     * @return int              size in bytes
+     */
+    public function return_bytes($val)
+    {
+        $val = trim($val);
+        $bytes = (int) $val;
+        $lastCharacter = strtolower($val[strlen($val) - 1]);
+        $units = ['k' => 1, 'm' => 2, 'g' => 3];
+        if (array_key_exists($lastCharacter, $units)) {
+            $bytes = $bytes * (1024 ** $units[$lastCharacter]);
+        }
+        return $bytes;
+    }
+
+    /**
+     * @return int  bytes of memory available for PHP
+     */
+    public function get_memory_avail()
+    {
+        return $this->get_memory_limit() - memory_get_usage(true);
+    }
+
+    /**
+     * @return int
+     */
+    public function get_memory_limit()
+    {
+        return $this->return_bytes(ini_get('memory_limit'));
+    }
+
+    /**
+     * @param bool $with_names
+     * @param bool $translate
+     * @param bool $sort_names
+     * @return array|mixed
+     */
