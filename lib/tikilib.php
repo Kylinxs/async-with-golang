@@ -6867,4 +6867,670 @@ class TikiLib extends TikiDb_Bridge
                 },
                 $array
             );
-    
+        }
+
+        return implode($delimiter, $array);
+    }
+
+    /**
+     * @param $vals
+     * @param $filter
+     * @return string
+     */
+    public function array_apply_filter($vals, $filter)
+    {
+        if (is_array($vals) == true) {
+            foreach ($vals as $key => $val) {
+                $vals[$key] = $this->array_apply_filter($val, $filter);
+            }
+            return $vals;
+        } else {
+            return trim($filter->filter($vals));
+        }
+    }
+
+    /**
+     * @param $type
+     * @param $object
+     * @param bool $process
+     * @return bool
+     */
+    public function refresh_index($type, $object, $process = true)
+    {
+        require_once __DIR__ . '/search/refresh-functions.php';
+        return refresh_index($type, $object, $process);
+    }
+
+    /**
+     * Possibly enhanced version of strtolower(), using multi-byte if mbstring is available
+     *
+     * Since Tiki 17, mb_strtolower() can be used directly instead since Tiki indirectly depends on the symfony/polyfill-mbstring compatibility library.
+     *
+     * @param $string
+     * @return string
+     */
+    public static function strtolower($string)
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($string, 'UTF-8');
+        } else {
+            return strtolower($string);
+        }
+    }
+
+    /**
+     * Possibly enhanced version of strtoupper(), using multi-byte if mbstring is available
+     *
+     * Since Tiki 17, mb_strtoupper() can be used directly instead since Tiki indirectly depends on the symfony/polyfill-mbstring compatibility library.
+     *
+     * @param $string
+     * @return string
+     */
+    public static function strtoupper($string)
+    {
+        if (function_exists('mb_strtoupper')) {
+            return mb_strtoupper($string, 'UTF-8');
+        } else {
+            return strtoupper($string);
+        }
+    }
+
+    /**
+     * @param $string
+     * @return string UTF-8
+     */
+    public static function urldecode($string)
+    {
+        return TikiInit::to_utf8(urldecode($string));
+    }
+
+    /**
+     * @param $string
+     * @return string UTF-8
+     */
+    public static function rawurldecode($string)
+    {
+        return TikiInit::to_utf8(rawurldecode($string));
+    }
+
+    /**
+     * Unparse an array of url parts, e.g. the result of parse_url()
+     * Thanks to http://php.net/manual/en/function.parse-url.php#106731
+     *
+     * @param $parsed_url
+     * @return string
+     */
+    public static function unparse_url($parsed_url)
+    {
+        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '//';
+        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+        $user     = isset($parsed_url['user']) ? $parsed_url['user'] : '';
+        $pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass'] : '';
+        $pass     = ($user || $pass) ? "$pass@" : '';
+        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+        $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+        $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+
+        return "$scheme$user$pass$host$port$path$query$fragment";
+    }
+
+
+
+    /**
+    *   Return the request URI.
+    *   Assumes http or https is used. Non-standard ports are taken into account
+    *   @return Full URL to the current page
+      * \static
+    */
+    // Note: this is unused as of r37658, but quite generic.
+    public static function curPageURL()
+    {
+        $pageURL = 'http';
+        if (isset($_SERVER["HTTPS"]) && ($_SERVER["HTTPS"] == "on")) {
+            $pageURL .= 's';
+        }
+        $pageURL .= '://';
+        if ($_SERVER['SERVER_PORT'] != '80') {
+            $pageURL .= $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'] . $_SERVER['REQUEST_URI'];
+        } else {
+            $pageURL .= $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+        }
+        return $pageURL;
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    public static function array_flat(array $data)
+    {
+        $out = [];
+        foreach ($data as $entry) {
+            if (is_array($entry)) {
+                $out = array_merge($out, self::array_flat($entry));
+            } else {
+                $out[] = $entry;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * This checks the modifier array and scans the template directory for templates
+     * that match the modifiers.
+     * Example: if we are looking at modifier "blog" for the articles.tpl, this function
+     * looks for the existence of articles--blog.tpl to use before using the standard articles.tpl
+     *
+     * @param $basetpl
+     * @param $modifier_arr
+     * @return string
+     * @throws Exception
+     */
+    public static function custom_template($basetpl, $modifier_arr)
+    {
+        //if it's an item passed and not an array, put the item in an array
+        if (! is_array($modifier_arr)) {
+            $modifier_arr = [$modifier_arr];
+        }
+        //strip the .tpl
+        $temp = explode('.', $basetpl);
+        $ext  = array_pop($temp);
+        $base = implode('.', $temp);
+
+        $smarty = TikiLib::lib('smarty');
+        foreach ($modifier_arr as $modifier) {
+            if ($smarty->templateExists("$base--$modifier.tpl")) {
+                return "$base--$modifier.tpl";
+            }
+        }
+        return "$base.tpl";
+    }
+
+    /**
+     * @param $page
+     * @return mixed
+     */
+    public function removePageReference($page)
+    {
+        $page_id = $this->get_page_id_from_name($page);
+        $query = "DELETE FROM `tiki_page_references` WHERE `page_id`=?";
+        $result = $this->query($query, [$page_id]);
+        return $result;
+    }
+
+    /**
+     * @param array $new_toolbars
+     * @param string $section
+     * @param string $action
+     */
+    public function saveEditorToolbars($new_toolbars = [], $section = 'global', $action = 'add')
+    {
+        global $prefs;
+        $prefName = 'toolbar_' . $section;
+        $toolbars = explode(',', $prefs[$prefName]);
+        if ($action == 'add') {
+            foreach ($new_toolbars as $key => $value) {
+                if (! in_array($value, $toolbars)) {
+                    $toolbars[] = $value;
+                }
+            }
+        } else {//remove the toolbars
+            $toolbars = array_diff($toolbars, $new_toolbars);
+        }
+        $toolbars = implode(',', $toolbars);
+        $this->set_preference($prefName, $toolbars);
+    }
+
+    /**
+     * @param $haystack
+     * @param $needle
+     * @return bool
+     */
+    public static function startsWith($haystack, $needle)
+    {
+        $length = strlen($needle);
+        return (substr($haystack, 0, $length) === $needle);
+    }
+
+    /**
+     * @param $haystack
+     * @param $needle
+     * @return bool
+     */
+    public static function endsWith($haystack, $needle)
+    {
+        $length = strlen($needle);
+        if ($length == 0) {
+            return true;
+        }
+
+        $start  = $length * -1; //negative
+        return (substr($haystack, $start) === $needle);
+    }
+
+    /**
+     * Checks if all link aliases contained in a page are valid, it automatically flashes the error in case there are invalid aliases
+     * @param String $edit  Contains page edit content
+     * @param String $page  Page name
+     * @return bool returns false if there is at least one invalid alias
+     * @throws Exception
+     */
+    public function check_duplicate_alias($edit, $page)
+    {
+        $errors = [];
+
+        $parserlib = TikiLib::lib('parser');
+        $table = $this->table('tiki_object_relations');
+
+        $smarty = TikiLib::lib('smarty');
+        $smarty->loadPlugin('smarty_modifier_sefurl');
+
+        foreach ($parserlib->get_pages($edit, true) as $pointedPage => $types) {
+            if (empty($types[0]) || $types[0] != 'alias') {
+                continue;
+            }
+
+            $conflictPages = $table->fetchColumn('source_itemId', [
+                'target_itemId' => $pointedPage,
+                'source_itemId' => $table->not($page),
+                'relation' => $table->like('%alias%')
+            ]);
+
+            if (empty($conflictPages)) {
+                continue;
+            }
+
+            $url = [];
+            foreach ($conflictPages as $pageName) {
+                $url[] = sprintf('<a href="%s">%s</a>', smarty_modifier_sefurl($pageName, 'wiki'), $pageName);
+            }
+
+            $errors[] = tr('Alias <b>%0</b> link already present in %1 page(s)', $pointedPage, implode(', ', $url));
+        }
+
+        if (! empty($errors)) {
+            Feedback::error(implode('<br>', $errors));
+        }
+
+        return empty($errors);
+    }
+
+    /**
+     * @param $arr - array of data to convert to csv
+     * @return string - csv formatted string
+     */
+    public function str_putcsv($arr)
+    {
+        $fh = fopen('php://temp', 'rw');
+        fputcsv($fh, $arr);
+        rewind($fh);
+        $csv = stream_get_contents($fh);
+        fclose($fh);
+        return trim($csv);
+    }
+
+    /**
+     * Find a text inside string range
+     *
+     * @param string $text
+     * @param string $string
+     * @param int $from
+     * @param int $to
+     * @return mixed
+     */
+    public function findText($text, $string, $from, $to)
+    {
+        if ($from >= strlen($text)) {
+            return false;
+        }
+
+        $pos = strpos($text, $string, $from);
+
+        if ($pos === false || $pos + strlen($string) > $to) {
+            return false;
+        }
+
+        return $pos;
+    }
+
+    /**
+     * Return wiki markers
+     *
+     * @return array
+     */
+    public function getWikiMarkers()
+    {
+        $listMarkers = [
+            ['~np~', '~/np~'],
+            ['-+', '+-'],
+            ['~pp~', '~/pp~'],
+            ['~pre~', '~/pre~'],
+            ['-=', '=-'],
+        ];
+
+        return $listMarkers;
+    }
+}
+// end of class ------------------------------------------------------
+
+// function to check if a file or directory is in the path
+// returns FALSE if incorrect
+// returns the canonicalized absolute pathname otherwise
+/**
+ * @param $file
+ * @param $dir
+ * @return bool|string
+ */
+function inpath($file, $dir)
+{
+    $realfile = realpath($file);
+    $realdir = realpath($dir);
+    if (! $realfile) {
+        return (false);
+    }
+    if (! $realdir) {
+        return (false);
+    }
+    if (substr($realfile, 0, strlen($realdir)) != $realdir) {
+        return(false);
+    } else {
+        return($realfile);
+    }
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function compare_links($ar1, $ar2)
+{
+    return $ar1["links"] - $ar2["links"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function compare_backlinks($ar1, $ar2)
+{
+    return $ar1["backlinks"] - $ar2["backlinks"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function r_compare_links($ar1, $ar2)
+{
+    return $ar2["links"] - $ar1["links"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function r_compare_backlinks($ar1, $ar2)
+{
+    return $ar2["backlinks"] - $ar1["backlinks"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function compare_images($ar1, $ar2)
+{
+    return $ar1["images"] - $ar2["images"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function r_compare_images($ar1, $ar2)
+{
+    return $ar2["images"] - $ar1["images"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function compare_versions($ar1, $ar2)
+{
+    return $ar1["versions"] - $ar2["versions"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function r_compare_versions($ar1, $ar2)
+{
+    return $ar2["versions"] - $ar1["versions"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function compare_changed($ar1, $ar2)
+{
+    return $ar1["lastChanged"] - $ar2["lastChanged"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return mixed
+ */
+function r_compare_changed($ar1, $ar2)
+{
+    return $ar2["lastChanged"] - $ar1["lastChanged"];
+}
+
+/**
+ * @param $ar1
+ * @param $ar2
+ * @return int
+ */
+function compare_names($ar1, $ar2)
+{
+    return strcasecmp(tra($ar1["name"]), tra($ar2["name"]));
+}
+
+function chkgd2()
+{
+    return function_exists('imagecreatetruecolor');
+}
+
+
+/**
+ * @return string
+ */
+function detect_browser_language()
+{
+    global $prefs;
+    // Get supported languages
+    if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        $supported = preg_split('/\s*,\s*/', preg_replace('/;q=[0-9.]+/', '', $_SERVER['HTTP_ACCEPT_LANGUAGE']));
+    } else {
+        return '';
+    }
+
+    // Get available languages
+    $available = [];
+    $available_aprox = [];
+
+    if (is_dir("lang")) {
+        $dh = opendir("lang");
+        while ($lang = readdir($dh)) {
+            if (! strpos($lang, '.') and is_dir("lang/$lang") and file_exists("lang/$lang/language.php") and ($prefs['restrict_language'] === 'n' || empty($prefs['available_languages']) || in_array($lang, $prefs['available_languages']))) {
+                $available[strtolower($lang)] = $lang;
+                $available_aprox[substr(strtolower($lang), 0, 2)] = $lang;
+            }
+        }
+    }
+
+    // Check better language
+    // Priority has been changed in 2.0 to that defined in RFC 4647
+    $aproximate_lang = '';
+    foreach ($supported as $supported_lang) {
+        $lang = strtolower($supported_lang);
+        if (in_array($lang, array_keys($available))) {
+            // exact match is always good
+            return $available[$lang];
+        } elseif (in_array($lang, array_keys($available_aprox))) {
+            // otherwise if supported language matches any available dialect, ok also
+            return $available_aprox[$lang];
+        } elseif ($aproximate_lang == '') {
+            // otherwise if supported dialect matches language, store as possible fallback
+            $lang = substr($lang, 0, 2);
+            if (in_array($lang, array_keys($available_aprox))) {
+                $aproximate_lang = $available_aprox[$lang];
+            }
+        }
+    }
+
+    return $aproximate_lang;
+}
+
+/**
+ * Validates an email address, using a domain check if $validate == 'y'
+ *
+ * @param string $email email to validate
+ * @param string $validate n|y|d (d = deep) defaults to pref validateEmail
+ * @return bool
+ */
+function validate_email($email, $validate = null)
+{
+    global $prefs;
+
+    if (empty($validate)) {
+        $validate = $prefs['validateEmail'];
+    }
+
+    $options = ['allow' => Laminas\Validator\Hostname::ALLOW_ALL,];
+
+    if ($validate === 'n') {
+        return true;
+    } else {
+        $options['useDomainCheck'] = true;  // both y and d
+    }
+
+    if ($validate === 'd') {                // deep mx check
+        $options['useMxCheck'] = true;
+        $options['useDeepMxCheck'] = true;
+    }
+    $validator = new Laminas\Validator\EmailAddress($options);
+    return $validator->isValid($email);
+}
+
+/**
+ * @param $val
+ * @param $default
+ * @return string
+ */
+function makeBool($val, $default)
+{
+    // Warning: This function is meant to return a string 'true' or 'false' to be used in JS, not a real boolean value
+    if (isset($val) && ! empty($val)) {
+        $val = ($val == 'y' ? true : false);
+    } else {
+        $val = $default;
+    }
+    return ($val ? 'true' : 'false');
+}
+/* Editor configuration
+     Local Variables:
+     tab-width: 4
+     c-basic-offset: 4
+End:
+ * vim: fdm=marker tabstop=4 shiftwidth=4 noet:
+ */
+
+
+/**
+ *
+ * Writes a temporary directory and/or file in a cryptographically secure way.
+ *
+ * @param string|null $data Data to be written to file, null if we are creating directories only.
+ * @param string      $directory Directory for the file to be created in. using the string 'random' will generate a random directory. Sending NULL will create a directory only.
+ * @param bool        $system If files should be stored in the system directory (outside the web root), will fall back to tiki /temp directory upon failure.
+ * @param string      $prefix A string to add to the beginning of the file name.
+ * @param string      $append A string to append the file name, such as an extension.
+ *
+ * @return string            The path and filename of the file written.
+ * @throws exception        If a file can not be created, an exception will be thrown.
+ */
+
+function writeTempFile(?string $data, string $directory = '', bool $system = true, string $prefix = '', string $append = ''): ?string
+{
+    global $prefs;
+    $fileName = '';
+
+    if ($directory === 'random') {
+        if (is_callable('random_bytes')) {
+            $directory = bin2hex(random_bytes(16)) . '/';
+        } else {
+            $directory = dechex(rand(0, 2 ** 62)) . dechex(rand(0, 2 ** 62)) . '/';
+        }
+    }
+
+    if (strlen($prefix) + strlen($append) > 223) {
+        throw new Exception('File name must be under 255 characters.');
+    }
+
+    if ($system) {
+        $tmpDir = $prefs['tmpDir'];
+        if (substr($tmpDir, -1) !== '/') {
+            $tmpDir = $tmpDir . '/';
+        }
+        if (file_exists($tmpDir . $directory)) {
+            $dirName = $tmpDir . $directory;
+        } elseif (@mkdir($tmpDir . $directory)) {
+            $dirName = $tmpDir . $directory;
+        }
+        // if the system directory is not writable, then fall back to Tiki tmp directory.
+        if (! is_writable($tmpDir . $directory)) {
+            unset($dirName);
+        }
+    }
+
+    if (! isset($dirName)) {
+        if (file_exists('temp/' . $directory)) {
+            $dirName = 'temp/' . $directory;
+        } elseif (@mkdir('temp/' . $directory)) {
+            $dirName = 'temp/' . $directory;
+            @file_put_contents('temp/' . $directory . 'index.php', '');
+        } else {
+            throw new Exception("Can not create temp/$directory directory.");
+        }
+    }
+
+    if (! is_null($data)) {
+        do {
+            if (is_callable('random_bytes')) {
+                $fileName = $prefix . bin2hex(random_bytes(16)) . $append;
+            } else {
+                $fileName = $prefix . dechex(rand(0, 2 ** 62)) . dechex(rand(0, 2 ** 62)) . $append;
+            }
+        } while (file_exists($dirName . $fileName));
+
+
+        if (@file_put_contents($dirName . $fileName, $data) === false) {
+            throw new exception("Can not write to $dirName$fileName file.");
+        }
+    }
+    return $dirName . $fileName;
+}

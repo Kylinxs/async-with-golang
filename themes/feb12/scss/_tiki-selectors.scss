@@ -1,0 +1,334 @@
+
+// Feb12 theme for Tiki
+// This file is for additional SCSS rules beyond what are in variables.scss.
+// Image path example:
+$imagePath: "../images/";
+// body {
+//    background-image: url('#{$imagePath}bg.jpg');
+// }
+
+.btn-outline-success,
+.text-success {
+    color: #388038 !important;
+}
+
+.btn-outline-danger,
+.text-danger {
+    color: #D23732 !important;
+}
+
+.btn-outline-warning,
+.text-warning {
+    color: #A4660E !important;
+}
+
+.btn-outline-info,
+.text-info {
+    color: #1F7C98 !important;
+}
+
+.btn-outline-secondary {
+    color: #595959;
+    border-color: #595959;
+}
+
+.col2 .linkmodule {
+    color: #23527B;
+}
+
+.container:not(.in-navbar) {
+    border: 1px solid #006669;
+}
+
+
+// Layout basic (single container) page header
+.layout_basic nav.top_modules {
+    margin-right: -0.75rem;  // Compensate for padding on row
+    margin-left: -0.75rem;
+//    background: #3e7ca1; /* Old browsers */
+//    background: linear-gradient(to bottom,  #3e7ca1 0%,#609ec3 3%,#163866 5%,#0b2d5b 8%,#0f2658 11%,#002552 16%,#002d57 24%,#052b58 27%,#0c3867 43%,#11406e 57%,#1b507c 76%,#235685 86%,#1c5b87 100%) !important; /* W3C */
+//    .navbar-dark,
+//    .navbar-light {
+//        background: transparent !important;
+//    }
+//    a,
+//    .nav-link,
+//    .btn-link {
+//        color: $navbar-dark-color !important;
+//    }
+}
+
+// Classic layout (3 containers - header, middle, and foooter)
+
+//.layout_classic .bg-light-parent {
+//    background: #dbdbdb !important; /* Old browsers */
+//    background: linear-gradient(to bottom,  #dbdbdb 0%,#b6b6b6 2%,#acacac 3%,#ababab 5%,#c8c8c8 10%,#d4d4d4 17%,#e6e6e6 48%,#eaeaea 60%,#f3f3f3 77%,#fdfdfd 90%,#ffffff 100%) !important; /* W3C */
+//}
+
+//.header_outer.bg-dark-parent {
+//    background: #3e7ca1 !important;
+//    background: linear-gradient(to bottom,  #3e7ca1 0%,#609ec3 3%,#163866 5%,#0b2d5b 8%,#0f2658 11%,#002552 16%,#002d57 24%,#052b58 27%,#0c3867 43%,#11406e 57%,#1b507c 76%,#235685 86%,#1c5b87 100%) !important; /* W3C */
+//    a,
+//    .btn-link {
+//        color: $navbar-dark-color;
+//    }
+//}
+
+//.bg-light-parent .bg-light,
+//.bg-dark-parent .bg-dark {
+//    background: transparent !important;
+//}
+//
+.header_container {
+    .container:not(.in-navbar) {
+        border: none;
+    }
+}
+
+// end Classic layout
+
+header.container {
+    margin-top: 30px;
+    border-bottom: none;
+}
+
+//.bg-dark .top_modules {
+//    background: url('#{$imagePath}header.jpg') repeat-x bottom;
+//    a,
+//    .btn-link {
+//        color: #f5f5f5;
+//        &:hover {
+//            color: darken(#f5f5f5,10%);
+//        }
+//    }
+//}
+
+.side-col-toggle-container {
+    margin-top: -1.8rem;
+    .toggle_zone {
+        padding: 3px;
+        border-radius: 2px;
+    }
+}
+
+// Toggle - Dark background
+.bg-dark .toggle_zone {
+    color: $navbar-dark-color;
+    &:hover {
+        color: $navbar-dark-hover-color;
+    }
+}
+
+// Toggle - Light background
+.bg-light .toggle_zone {
+    color: $navbar-light-color;
+    &:hover {
+        color: $navbar-light-hover-color;
+    }
+}
+// end Toggle
+
+.navbar-fixed-top .container {
+    border: none;
+}
+
+.topbar_modules {
+    padding-left: 2.8rem; // to leave space for column toggle icons
+    padding-right: 2.8rem;
+}
+
+.layout_social .topbar.mx-0 {
+    margin-left: -0.75rem !important;
+    margin-right: -0.75rem !important;
+}
+
+.navbar-dark a,
+.navbar-dark .navbar-brand,
+.dropdown-item,
+.dropdown-item a,
+.dropdown-item button.btn-link.link-list,
+.dropdown-menu .tikihelp {
+    color: $navbar-dark-color;
+}
+.navbar-dark a:hover,
+.navbar-dark .navbar-brand:hover,
+.navbar-dark .navbar-brand:focus {
+    color: $navbar-dark-hover-color;
+    background-color: transparent;
+}
+
+
+.navbar-dark a:hover,
+.navbar-dark a:focus {
+    color: $navbar-dark-hover-color;
+}
+
+.navbar-dark .active a,
+.navbar-dark .active a:hover,
+.navbar-dark .active a:focus {
+    color: $navbar-dark-active-color;
+}
+
+.navbar-dark .disabled a,
+.navbar-dark .disabled a:hover,
+.navbar-dark .disabled a:focus {
+    color: $navbar-dark-disabled-color;
+    background-color: transparent;
+}
+
+.bg-dark,
+.navbar:not(.bg-dark) .bg-dark,
+.bg-dark .navbar-form,
+#topbar_modules.bg-dark,
+.admin-navbar.bg-dark .bg-dark {
+    color: #f5f5f5 !important;
+    border: none;
+    background: #3e7ca1; /* Old browsers */
+    background: linear-gradient(to bottom,  #3e7ca1 0%,#609ec3 3%,#163866 5%,#0b2d5b 8%,#0f2658 11%,#002552 16%,#002d57 24%,#052b58 27%,#0c3867 43%,#11406e 57%,#1b507c 76%,#235685 86%,#1c5b87 100%) !important; /* W3C */
+}
+
+.bg-dark {
+  .navbar-brand,
+  .nav-link,
+  button.dropdown-toggle {
+    color: #f5f5f5;
+  }
+}
+
+.fixed-top .top_modules {
+  background: transparent;
+}
+
+.bg-dark .bg-dark { background: transparent !important; }
+
+#topbar_modules .box-search .mb-3 {
+    margin-bottom: 0;
+}
+
+.layout_social_modules .navbar-light > a:hover,
+.bg-light,
+.navbar-light .navbar-nav > li > a:hover,
+.navbar-light .navbar-nav > li > a:focus,
+#topbar_modules.navbar-light .navbar-nav > .active > a,
+#topbar_modules.navbar-light .navbar-nav > .active > a:hover,
+#topbar_modules.navbar-light .navbar-nav > .active > a:focus {
+    color: #3e7ca1 !important;
+    background: #dbdbdb; /* Old browsers */
+    background: linear-gradient(to bottom,  #dbdbdb 0%,#b6b6b6 2%,#acacac 3%,#ababab 5%,#c8c8c8 10%,#d4d4d4 17%,#e6e6e6 48%,#eaeaea 60%,#f3f3f3 77%,#fdfdfd 90%,#ffffff 100%); /* W3C */
+}
+
+.bg-light {
+  .navbar-brand,
+  .nav-link,
+  button.dropdown-toggle {
+    color: #3e7ca1;
+  }
+}
+
+.navbar {
+    margin-bottom: 0;
+    border: none;
+}
+
+.middle {
+    background: #ffffff url('#{$imagePath}page.jpg') repeat-x;
+    padding-bottom: 20px;
+}
+
+.col1,
+.col3 {
+    padding-top: 30px;
+    background: #ffffff url('#{$imagePath}page.jpg') repeat-x;
+}
+
+.side-col-toggle + .col1,
+.side-col-toggle + .col1 + .col3 {
+  background-position: 0 -30px;
+}
+
+body.fullscreen {
+    background: #ffffff url('#{$imagePath}page.jpg') repeat-x;
+    .container { border: none; }
+}
+
+.col2 {
+    background: #a8cce2 url('#{$imagePath}columnbg.jpg') repeat-x;
+    .navbar {
+        background: transparent;
+        .nav-link {
+            color: #214D73;
+        }
+    }
+}
+
+.bottom_modules nav.navbar.navbar-light.bg-light.navbar-dark.bg-dark {
+    background: transparent !important;
+    .nav-link {
+        color: #214D73;
+    }
+}
+
+.side-col-toggle + .col + .col2 { background-position: 0 -30px; }
+
+.card.module {
+    border: none;
+    background: none;
+}
+
+.card.module .card-header {
+    border: none;
+    border-bottom: 1px solid #57a5d0;
+    background: none;
+}
+
+.card.module .card-title {
+    color: #93554a;
+    font-weight: 700;
+    font-size: 1.2em;
+}
+
+.module legend { font-size: .9rem; }
+
+.topbar { margin-bottom: 0; }
+
+.topbar + .row,
+.layout_social > .container {
+    background: #ffffff url('#{$imagePath}page.jpg') repeat-x;
+}
+
+.topbar + .row {
+    border-width: 0 1px;
+}
+
+#bottom_modules {
+    background: #A8CCE2;
+    border-top: none;
+}
+
+.autotoc .dropdown-item {
+    color: $link-color;
+}
+
+// Fix bad contrast
+.dropdown-item.text-danger {
+    background: #fff;
+    border-radius: 0;
+    &:hover {
+        color: #fff !important;
+        background-color: #d9534f;
+    }
+}
+
+blockquote,
+.blockquote {
+    color: #4D4D4D
+}
+
+.progress-bar {
+    &.bg-success,
+    &.bg-info,
+    &.bg-warning,
+    &.bg-danger {
+        color: #000;
+    }
+}
