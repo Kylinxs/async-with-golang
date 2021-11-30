@@ -6414,3 +6414,457 @@ class TikiLib extends TikiDb_Bridge
      * @param bool $sort_names
      * @return array|mixed
      */
+    public function get_flags($with_names = false, $translate = false, $sort_names = false, $langsort = false)
+    {
+        global $prefs;
+
+        $cachelib = TikiLib::lib('cache');
+        $args = func_get_args();
+        $cacheKey = serialize($args) . $prefs['language'];
+
+        if ($data = $cachelib->getSerialized($cacheKey, 'flags')) {
+            return $data;
+        }
+
+        $flags = [];
+        $h = opendir("img/flags/");
+        while ($file = readdir($h)) {
+            if (strstr($file, ".png")) {
+                $parts = explode('.', $file);
+                $flags[] = $parts[0];
+            }
+        }
+        closedir($h);
+        if ($langsort) {
+            foreach ($flags as $flagname => $flagtra) {
+                unset($flags[$flagname]);
+                $flags[$flagtra] = tra($flagtra);
+            }
+        }
+        natcasesort($flags);
+
+        if ($with_names) {
+            $ret = [];
+            $names = [];
+            foreach ($flags as $f) {
+                $ret[$f] = strtr($f, '_', ' ');
+                if ($translate) {
+                    $ret[$f] = tra($ret[$f]);
+                }
+                if ($sort_names) {
+                    $names[$f] = strtolower($this->take_away_accent($ret[$f]));
+                }
+            }
+            if ($sort_names) {
+                array_multisort($names, $ret);
+            }
+
+            $flags = $ret;
+        }
+
+        $cachelib->cacheItem($cacheKey, serialize($flags), 'flags');
+
+        return $flags;
+    }
+
+
+    /**
+     * @param {string} $data
+     * @return string
+     */
+    public function strip_tags($data)
+    {
+        $result = preg_replace('/[<]style[^>]*?[>](.|\n|\r)*?[<][\/]style[>]/', '', $data);
+        $result = strip_tags($result);
+        return $result;
+    }
+    /**
+     * @param $data
+     * @param string $outputType
+     * @param boolean $is_html
+     * @param string $highlight
+     * @param int $length
+     * @param string $start
+     * @param string $end
+     * @return string
+     */
+    public function get_snippet($data, $outputType = '', $is_html = false, $highlight = '', $length = 240, $start = '', $end = '')
+    {
+        global $prefs;
+        if ($prefs['search_parsed_snippet'] == 'y') {
+            $data = preg_replace('/{(:?make)?toc[^}]*}/', '', $data);
+
+            $_REQUEST['redirectpage'] = 'y'; //do not interpret redirect
+            $data = TikiLib::lib('parser')->parse_data($data, ['is_html' => $is_html, 'stripplugins' => true, 'parsetoc' => true]);
+        }
+
+
+        $data = strip_tags($data);
+        if ($length > 0) {
+            if (function_exists('mb_substr')) {
+                return mb_substr($data, 0, $length);
+            } else {
+                return substr($data, 0, $length);
+            }
+        }
+        if (! empty($start) && ($i = strpos($data, $start))) {
+            $data = substr($data, $i + strlen($start));
+        }
+        if (! empty($end) && ($i = strpos($data, $end))) {
+            $data = substr($data, 0, $i);
+        }
+        return $data;
+    }
+
+    /**
+     * @param $string
+     * @param int $quote_style
+     * @param int $translation_table
+     * @return string
+     */
+    public static function htmldecode($string, $quote_style = ENT_COMPAT, $translation_table = HTML_ENTITIES)
+    {
+        if ($translation_table == HTML_ENTITIES) {
+            $string = html_entity_decode($string, $quote_style, 'utf-8');
+        } elseif ($translation_table === HTML_SPECIALCHARS) {
+            $string = htmlspecialchars_decode($string, $quote_style);
+        }
+
+        return $string;
+    }
+
+    /**
+     * * Unaccent the input string string. An example string like `ÀØėÿᾜὨζὅБю`
+     * will be translated to `AOeyIOzoBY`
+     * @param $str
+     * @return string unaccented string
+     */
+    public static function take_away_accent($str)
+    {
+        $transliteration = [
+            'Ĳ' => 'I', 'Ö' => 'O','Œ' => 'O','Ü' => 'U','ä' => 'a','æ' => 'a',
+            'ĳ' => 'i','ö' => 'o','œ' => 'o','ü' => 'u','ß' => 's','ſ' => 's',
+            'À' => 'A','Á' => 'A','Â' => 'A','Ã' => 'A','Ä' => 'A','Å' => 'A',
+            'Æ' => 'A','Ā' => 'A','Ą' => 'A','Ă' => 'A','Ç' => 'C','Ć' => 'C',
+            'Č' => 'C','Ĉ' => 'C','Ċ' => 'C','Ď' => 'D','Đ' => 'D','È' => 'E',
+            'É' => 'E','Ê' => 'E','Ë' => 'E','Ē' => 'E','Ę' => 'E','Ě' => 'E',
+            'Ĕ' => 'E','Ė' => 'E','Ĝ' => 'G','Ğ' => 'G','Ġ' => 'G','Ģ' => 'G',
+            'Ĥ' => 'H','Ħ' => 'H','Ì' => 'I','Í' => 'I','Î' => 'I','Ï' => 'I',
+            'Ī' => 'I','Ĩ' => 'I','Ĭ' => 'I','Į' => 'I','İ' => 'I','Ĵ' => 'J',
+            'Ķ' => 'K','Ľ' => 'K','Ĺ' => 'K','Ļ' => 'K','Ŀ' => 'K','Ł' => 'L',
+            'Ñ' => 'N','Ń' => 'N','Ň' => 'N','Ņ' => 'N','Ŋ' => 'N','Ò' => 'O',
+            'Ó' => 'O','Ô' => 'O','Õ' => 'O','Ø' => 'O','Ō' => 'O','Ő' => 'O',
+            'Ŏ' => 'O','Ŕ' => 'R','Ř' => 'R','Ŗ' => 'R','Ś' => 'S','Ş' => 'S',
+            'Ŝ' => 'S','Ș' => 'S','Š' => 'S','Ť' => 'T','Ţ' => 'T','Ŧ' => 'T',
+            'Ț' => 'T','Ù' => 'U','Ú' => 'U','Û' => 'U','Ū' => 'U','Ů' => 'U',
+            'Ű' => 'U','Ŭ' => 'U','Ũ' => 'U','Ų' => 'U','Ŵ' => 'W','Ŷ' => 'Y',
+            'Ÿ' => 'Y','Ý' => 'Y','Ź' => 'Z','Ż' => 'Z','Ž' => 'Z','à' => 'a',
+            'á' => 'a','â' => 'a','ã' => 'a','ā' => 'a','ą' => 'a','ă' => 'a',
+            'å' => 'a','ç' => 'c','ć' => 'c','č' => 'c','ĉ' => 'c','ċ' => 'c',
+            'ď' => 'd','đ' => 'd','è' => 'e','é' => 'e','ê' => 'e','ë' => 'e',
+            'ē' => 'e','ę' => 'e','ě' => 'e','ĕ' => 'e','ė' => 'e','ƒ' => 'f',
+            'ĝ' => 'g','ğ' => 'g','ġ' => 'g','ģ' => 'g','ĥ' => 'h','ħ' => 'h',
+            'ì' => 'i','í' => 'i','î' => 'i','ï' => 'i','ī' => 'i','ĩ' => 'i',
+            'ĭ' => 'i','į' => 'i','ı' => 'i','ĵ' => 'j','ķ' => 'k','ĸ' => 'k',
+            'ł' => 'l','ľ' => 'l','ĺ' => 'l','ļ' => 'l','ŀ' => 'l','ñ' => 'n',
+            'ń' => 'n','ň' => 'n','ņ' => 'n','ŉ' => 'n','ŋ' => 'n','ò' => 'o',
+            'ó' => 'o','ô' => 'o','õ' => 'o','ø' => 'o','ō' => 'o','ő' => 'o',
+            'ŏ' => 'o','ŕ' => 'r','ř' => 'r','ŗ' => 'r','ś' => 's','š' => 's',
+            'ť' => 't','ù' => 'u','ú' => 'u','û' => 'u','ū' => 'u','ů' => 'u',
+            'ű' => 'u','ŭ' => 'u','ũ' => 'u','ų' => 'u','ŵ' => 'w','ÿ' => 'y',
+            'ý' => 'y','ŷ' => 'y','ż' => 'z','ź' => 'z','ž' => 'z','Α' => 'A',
+            'Ά' => 'A','Ἀ' => 'A','Ἁ' => 'A','Ἂ' => 'A','Ἃ' => 'A','Ἄ' => 'A',
+            'Ἅ' => 'A','Ἆ' => 'A','Ἇ' => 'A','ᾈ' => 'A','ᾉ' => 'A','ᾊ' => 'A',
+            'ᾋ' => 'A','ᾌ' => 'A','ᾍ' => 'A','ᾎ' => 'A','ᾏ' => 'A','Ᾰ' => 'A',
+            'Ᾱ' => 'A','Ὰ' => 'A','ᾼ' => 'A','Β' => 'B','Γ' => 'G','Δ' => 'D',
+            'Ε' => 'E','Έ' => 'E','Ἐ' => 'E','Ἑ' => 'E','Ἒ' => 'E','Ἓ' => 'E',
+            'Ἔ' => 'E','Ἕ' => 'E','Ὲ' => 'E','Ζ' => 'Z','Η' => 'I','Ή' => 'I',
+            'Ἠ' => 'I','Ἡ' => 'I','Ἢ' => 'I','Ἣ' => 'I','Ἤ' => 'I','Ἥ' => 'I',
+            'Ἦ' => 'I','Ἧ' => 'I','ᾘ' => 'I','ᾙ' => 'I','ᾚ' => 'I','ᾛ' => 'I',
+            'ᾜ' => 'I','ᾝ' => 'I','ᾞ' => 'I','ᾟ' => 'I','Ὴ' => 'I','ῌ' => 'I',
+            'Θ' => 'T','Ι' => 'I','Ί' => 'I','Ϊ' => 'I','Ἰ' => 'I','Ἱ' => 'I',
+            'Ἲ' => 'I','Ἳ' => 'I','Ἴ' => 'I','Ἵ' => 'I','Ἶ' => 'I','Ἷ' => 'I',
+            'Ῐ' => 'I','Ῑ' => 'I','Ὶ' => 'I','Κ' => 'K','Λ' => 'L','Μ' => 'M',
+            'Ν' => 'N','Ξ' => 'K','Ο' => 'O','Ό' => 'O','Ὀ' => 'O','Ὁ' => 'O',
+            'Ὂ' => 'O','Ὃ' => 'O','Ὄ' => 'O','Ὅ' => 'O','Ὸ' => 'O','Π' => 'P',
+            'Ρ' => 'R','Ῥ' => 'R','Σ' => 'S','Τ' => 'T','Υ' => 'Y','Ύ' => 'Y',
+            'Ϋ' => 'Y','Ὑ' => 'Y','Ὓ' => 'Y','Ὕ' => 'Y','Ὗ' => 'Y','Ῠ' => 'Y',
+            'Ῡ' => 'Y','Ὺ' => 'Y','Φ' => 'F','Χ' => 'X','Ψ' => 'P','Ω' => 'O',
+            'Ώ' => 'O','Ὠ' => 'O','Ὡ' => 'O','Ὢ' => 'O','Ὣ' => 'O','Ὤ' => 'O',
+            'Ὥ' => 'O','Ὦ' => 'O','Ὧ' => 'O','ᾨ' => 'O','ᾩ' => 'O','ᾪ' => 'O',
+            'ᾫ' => 'O','ᾬ' => 'O','ᾭ' => 'O','ᾮ' => 'O','ᾯ' => 'O','Ὼ' => 'O',
+            'ῼ' => 'O','α' => 'a','ά' => 'a','ἀ' => 'a','ἁ' => 'a','ἂ' => 'a',
+            'ἃ' => 'a','ἄ' => 'a','ἅ' => 'a','ἆ' => 'a','ἇ' => 'a','ᾀ' => 'a',
+            'ᾁ' => 'a','ᾂ' => 'a','ᾃ' => 'a','ᾄ' => 'a','ᾅ' => 'a','ᾆ' => 'a',
+            'ᾇ' => 'a','ὰ' => 'a','ᾰ' => 'a','ᾱ' => 'a','ᾲ' => 'a','ᾳ' => 'a',
+            'ᾴ' => 'a','ᾶ' => 'a','ᾷ' => 'a','β' => 'b','γ' => 'g','δ' => 'd',
+            'ε' => 'e','έ' => 'e','ἐ' => 'e','ἑ' => 'e','ἒ' => 'e','ἓ' => 'e',
+            'ἔ' => 'e','ἕ' => 'e','ὲ' => 'e','ζ' => 'z','η' => 'i','ή' => 'i',
+            'ἠ' => 'i','ἡ' => 'i','ἢ' => 'i','ἣ' => 'i','ἤ' => 'i','ἥ' => 'i',
+            'ἦ' => 'i','ἧ' => 'i','ᾐ' => 'i','ᾑ' => 'i','ᾒ' => 'i','ᾓ' => 'i',
+            'ᾔ' => 'i','ᾕ' => 'i','ᾖ' => 'i','ᾗ' => 'i','ὴ' => 'i','ῂ' => 'i',
+            'ῃ' => 'i','ῄ' => 'i','ῆ' => 'i','ῇ' => 'i','θ' => 't','ι' => 'i',
+            'ί' => 'i','ϊ' => 'i','ΐ' => 'i','ἰ' => 'i','ἱ' => 'i','ἲ' => 'i',
+            'ἳ' => 'i','ἴ' => 'i','ἵ' => 'i','ἶ' => 'i','ἷ' => 'i','ὶ' => 'i',
+            'ῐ' => 'i','ῑ' => 'i','ῒ' => 'i','ῖ' => 'i','ῗ' => 'i','κ' => 'k',
+            'λ' => 'l','μ' => 'm','ν' => 'n','ξ' => 'k','ο' => 'o','ό' => 'o',
+            'ὀ' => 'o','ὁ' => 'o','ὂ' => 'o','ὃ' => 'o','ὄ' => 'o','ὅ' => 'o',
+            'ὸ' => 'o','π' => 'p','ρ' => 'r','ῤ' => 'r','ῥ' => 'r','σ' => 's',
+            'ς' => 's','τ' => 't','υ' => 'y','ύ' => 'y','ϋ' => 'y','ΰ' => 'y',
+            'ὐ' => 'y','ὑ' => 'y','ὒ' => 'y','ὓ' => 'y','ὔ' => 'y','ὕ' => 'y',
+            'ὖ' => 'y','ὗ' => 'y','ὺ' => 'y','ῠ' => 'y','ῡ' => 'y','ῢ' => 'y',
+            'ῦ' => 'y','ῧ' => 'y','φ' => 'f','χ' => 'x','ψ' => 'p','ω' => 'o',
+            'ώ' => 'o','ὠ' => 'o','ὡ' => 'o','ὢ' => 'o','ὣ' => 'o','ὤ' => 'o',
+            'ὥ' => 'o','ὦ' => 'o','ὧ' => 'o','ᾠ' => 'o','ᾡ' => 'o','ᾢ' => 'o',
+            'ᾣ' => 'o','ᾤ' => 'o','ᾥ' => 'o','ᾦ' => 'o','ᾧ' => 'o','ὼ' => 'o',
+            'ῲ' => 'o','ῳ' => 'o','ῴ' => 'o','ῶ' => 'o','ῷ' => 'o','А' => 'A',
+            'Б' => 'B','В' => 'V','Г' => 'G','Д' => 'D','Е' => 'E','Ё' => 'E',
+            'Ж' => 'Z','З' => 'Z','И' => 'I','Й' => 'I','К' => 'K','Л' => 'L',
+            'М' => 'M','Н' => 'N','О' => 'O','П' => 'P','Р' => 'R','С' => 'S',
+            'Т' => 'T','У' => 'U','Ф' => 'F','Х' => 'K','Ц' => 'T','Ч' => 'C',
+            'Ш' => 'S','Щ' => 'S','Ы' => 'Y','Э' => 'E','Ю' => 'Y','Я' => 'Y',
+            'а' => 'A','б' => 'B','в' => 'V','г' => 'G','д' => 'D','е' => 'E',
+            'ё' => 'E','ж' => 'Z','з' => 'Z','и' => 'I','й' => 'I','к' => 'K',
+            'л' => 'L','м' => 'M','н' => 'N','о' => 'O','п' => 'P','р' => 'R',
+            'с' => 'S','т' => 'T','у' => 'U','ф' => 'F','х' => 'K','ц' => 'T',
+            'ч' => 'C','ш' => 'S','щ' => 'S','ы' => 'Y','э' => 'E','ю' => 'Y',
+            'я' => 'Y','ð' => 'd','Ð' => 'D','þ' => 't','Þ' => 'T','ა' => 'a',
+            'ბ' => 'b','გ' => 'g','დ' => 'd','ე' => 'e','ვ' => 'v','ზ' => 'z',
+            'თ' => 't','ი' => 'i','კ' => 'k','ლ' => 'l','მ' => 'm','ნ' => 'n',
+            'ო' => 'o','პ' => 'p','ჟ' => 'z','რ' => 'r','ს' => 's','ტ' => 't',
+            'უ' => 'u','ფ' => 'p','ქ' => 'k','ღ' => 'g','ყ' => 'q','შ' => 's',
+            'ჩ' => 'c','ც' => 't','ძ' => 'd','წ' => 't','ჭ' => 'c','ხ' => 'k',
+            'ჯ' => 'j','ჰ' => 'h'
+            ];
+        $str = str_replace(array_keys($transliteration), array_values($transliteration), $str);
+        return $str;
+    }
+
+    /**
+     * @param $str
+     * @return mixed
+     */
+    public static function substituteSeparators($str)
+    {
+        $subst = explode(' ', '+ \' : ;');
+        $convs = explode(' ', '_ _ _ _');
+        $ret = str_replace($subst, $convs, $str);
+        $ret = str_replace(' ', '_', $ret);
+        return $ret;
+    }
+
+    /**
+     * @param $str
+     * @return mixed
+     */
+    public function urlencode_accent($str)
+    {
+        $convs = [];
+        preg_match_all('/[\x80-\xFF| ]/', $str, $matches);
+        $accents = $matches[0];
+        foreach ($accents as $a) {
+            $convs[] = rawurlencode($a);
+        }
+        return str_replace($accents, $convs, $str);
+    }
+
+    /**
+     * Remove all "non-word" characters and accents from a string
+     * Can be used for DOM elements and preferences etc
+     *
+     * @static
+     * @param string $str
+     * @return string cleaned
+     */
+
+    public static function remove_non_word_characters_and_accents($str)
+    {
+        return preg_replace('/\W+/', '_', TikiLib::take_away_accent($str));
+    }
+
+    /* return the positions in data where the hdr-nth header is find
+     */
+    /**
+     * @param $data
+     * @param $hdr
+     * @return array
+     */
+    public function get_wiki_section($data, $hdr)
+    {
+        $start = 0;
+        $end = strlen($data);
+        $lines = explode("\n", $data);
+        $header = 0;
+        $pp_level = 0;
+        $np_level = 0;
+        for ($i = 0, $count_lines = count($lines); $i < $count_lines; ++$i) {
+            $pp_level += preg_match('/~pp~/', $lines[$i]);
+            $pp_level -= preg_match('/~\/pp~/', $lines[$i]);
+            $np_level += preg_match('/~np~/', $lines[$i]);
+            $np_level -= preg_match('/~\/np~/', $lines[$i]);
+            // We test if we are inside nonparsed or pre section to ignore !*
+            if ($pp_level % 2 == 0 and $np_level % 2 == 0) {
+                if (substr($lines[$i], 0, 1) == '!') {
+                    ++$header;
+                    if ($header == $hdr) { // we are on it - now find the next header at same or lower level
+                        $level = $this->how_many_at_start($lines[$i], '!');
+                        $end = strlen($lines[$i]) + 1;
+                        for (++$i; $i < $count_lines; ++$i) {
+                            if (substr($lines[$i], 0, 1) == '!' && $level >= $this->how_many_at_start($lines[$i], '!')) {
+                                return ([$start, $end]);
+                            }
+                            $end += strlen($lines[$i]) + 1;
+                        }
+                        break;
+                    }
+                }
+            }
+            $start += strlen($lines[$i]) + 1;
+        }
+        return ([$start, $end]);
+    }
+
+    /**
+     * @param bool $descendants The default is to get all descendents of the jailed categories, but for unified search
+     *                          we only need the "root" jailed categories as the search does a deep_categories search on them
+     * @return array
+     */
+    public function get_jail($descendants = true)
+    {
+        global $prefs;
+        // if jail is zero, we should allow non-categorized objects to be seen as well, i.e. consider as no jail
+        if (
+            ! empty($prefs['feature_categories']) &&  $prefs['feature_categories'] == 'y' &&
+                ! empty($prefs['category_jail']) && $prefs['category_jail'] != [0 => 0]
+        ) {
+            $expanded = [];
+            if ($descendants) {
+                $categlib = TikiLib::lib('categ');
+                foreach ($prefs['category_jail'] as $categId) {
+                    $expanded = array_merge($expanded, $categlib->get_category_descendants($categId));
+                }
+            } else {
+                $expanded = $prefs['category_jail'];
+            }
+            return $expanded;
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * @param $type
+     * @param $old
+     * @param $new
+     */
+    protected function rename_object($type, $old, $new, $user = '')
+    {
+        global $prefs;
+
+        // comments
+        $this->table('tiki_comments')->updateMultiple(['object' => $new], ['object' => $old, 'objectType' => $type]);
+
+        // Move email notifications
+        $oldId = str_replace($type, ' ', '') . $old;
+        $newId = str_replace($type, ' ', '') . $new;
+        $this->table('tiki_user_watches')->updateMultiple(['object' => $newId], ['object' => $oldId]);
+        $this->table('tiki_group_watches')->updateMultiple(['object' => $newId], ['object' => $oldId]);
+
+        // theme_control_objects(objId,name)
+        $oldId = md5($type . $old);
+        $newId = md5($type . $new);
+        $this->table('tiki_theme_control_objects')->updateMultiple(['objId' => $newId, 'name' => $new], ['objId' => $oldId]);
+
+        // polls
+        if ($prefs['feature_polls'] == 'y') {
+            $query = "update `tiki_polls` tp inner join `tiki_poll_objects` tpo on tp.`pollId` = tpo.`pollId` inner join `tiki_objects` tob on tpo.`catObjectId` = tob.`objectId` set tp.`title`=? where tp.`title`=? and tob.`type` = ?";
+            $this->query($query, [ $new, $old, $type ]);
+        }
+
+        // Move custom permissions
+        $oldId = md5($type . TikiLib::strtolower($old));
+        $newId = md5($type . TikiLib::strtolower($new));
+        $this->table('users_objectpermissions')->updateMultiple(['objectId' => $newId], ['objectId' => $oldId, 'objectType' => $type]);
+
+        // Logs
+        if ($prefs['feature_actionlog'] == 'y') {
+            $logslib = TikiLib::lib('logs');
+            $logslib->add_action('Renamed', $new, 'wiki page', 'old=' . $old . '&new=' . $new, $user, '', '', '', '', [['rename' => $old]]);
+            $logslib->rename($type, $old, $new);
+        }
+
+        // Attributes
+        $this->table('tiki_object_attributes')->updateMultiple(['itemId' => $new], ['itemId' => $old, 'type' => $type]);
+        $this->table('tiki_object_relations')->updateMultiple(['source_itemId' => $new], ['source_itemId' => $old, 'source_type' => $type]);
+        $this->table('tiki_object_relations')->updateMultiple(['target_itemId' => $new], ['target_itemId' => $old, 'target_type' => $type]);
+
+        $menulib = TikiLib::lib('menu');
+        $menulib->rename_wiki_page($old, $new);
+    }
+
+    /**
+     * @param $delimiters
+     * @param $string
+     * @return array
+     */
+    public function multi_explode($delimiters, $string)
+    {
+        global $prefs;
+
+        if (is_array($delimiters) == false) {
+            $delimiters = [$delimiters];
+        }
+
+        $delimiter = array_shift($delimiters);
+        $temp = explode($delimiter, $string);
+
+        $array = [];
+        $keep = false;
+
+        $ignore_chars = array_unique(str_split($prefs['namespace_separator']));
+
+        foreach ($temp as $v) {
+            $filtered = str_replace($ignore_chars, '', $v);
+            if ($filtered == '' && $v != '') {
+                if (! $keep) {
+                    $array[count($array) - 1] .= $delimiter;
+                }
+
+                $array[count($array) - 1] .= $v . $delimiter;
+                $keep = true;
+            } elseif ($keep) {
+                $array[count($array) - 1] .= $v;
+                $keep = false;
+            } else {
+                $array[] = $v;
+            }
+        }
+
+        if ($delimiters != null) {
+            foreach ($array as $key => $val) {
+                 $array[$key] = $this->multi_explode($delimiters, $val);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * @param $delimiters
+     * @param $string
+     * @return string
+     */
+    public function multi_implode($delimiters, $array)
+    {
+        $delimiters = (array) $delimiters;
+        $delimiter = array_shift($delimiters);
+
+        if (count($delimiters)) {
+            $self = $this;
+            $array = array_map(
+                function ($value) use ($delimiters, $self) {
+                    return $self->multi_implode($delimiters, $value);
+                },
+                $array
+            );
+    
