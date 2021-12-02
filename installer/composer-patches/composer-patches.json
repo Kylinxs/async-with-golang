@@ -1,0 +1,40 @@
+{
+  "patches": {
+    "candy-chat/xmpp-prebind-php": {
+      "Removed string access with curly braces syntax in PHP8": "../installer/composer-patches/xmpp-prebind-php__php8fixes.patch"
+    },
+    "h5p/h5p-editor": {
+      "Fix PHP 8.0 warning (missed in v1.24.4)": "../installer/composer-patches/h5p-editor__php8fixes.patch"
+    },
+    "jquery/jquery-sheet": {
+      "Fix visibility issues": "../installer/composer-patches/jquery-sheet_fix-visibility-issues.patch"
+    },
+    "jquery-plugins/jquery-validation": {
+      "Fix remote validation unhighlights": "../installer/composer-patches/jquery-validator_fix-remote-validation-unhighlights.patch"
+    },
+    "pear/text_wiki": {
+      "Recursive call to constructor": "../installer/composer-patches/text_wiki__recursive_call_to_constructor.json"
+    },
+    "pear/text_wiki_mediawiki": {
+      "Removed deprecated syntax in PHP7": "../installer/composer-patches/text_wiki_mediawiki__php7fixes.patch",
+      "Renamed method to avoid collision with func from parent class": "../installer/composer-patches/text_wiki_mediawiki__func_collision.patch",
+      "Removed string access with curly braces syntax in PHP8": "../installer/composer-patches/text_wiki_mediawiki__php8fixes.patch"
+    },
+    "pear/xml_rpc": {
+      "Add support for PHP7": "../installer/composer-patches/pear_xml_rpc-php7-patch-RELEASE_1_5_5.patch"
+    },
+    "npm-asset/converse.js": {
+      "Remove native javascript for bootstrap": "../installer/composer-patches/jcbrand-conversejs_remove-native-javascript-for-bootstrap.patch"
+    },
+    "nicolaskruchten/pivottable": {
+      "Sort rows and columns by key_z_to_a": "../installer/composer-patches/nicolaskruchten_pivottable__sort_by_key_z_to_a.patch"
+    },
+    "teqneers/shamir": {
+      "Fix PHP 8.1 deprecated errors": "../installer/composer-patches/teqneers-shamir__php81_fix_deprecated_issues.patch"
+    },
+    "umakantp/smartylint": {
+      "Fix smartylint syntax with curly braces": "../installer/composer-patches/smartylint-warning-curly-bracket.patch",
+      "Fix smartylint PHP 8.1 support and other fixes": "../installer/composer-patches/smartylint-php8.1-and-other-fixes.patch"
+    }
+  }
+}
