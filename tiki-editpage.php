@@ -595,3 +595,514 @@ if (($prefs['feature_wiki_pictures'] === 'y') && (isset($tiki_p_upload_picture))
                 if (@getimagesize($_FILES['picfile' . $i]['tmp_name'])) {
                     $filegallib = TikiLib::lib('filegal');
                     try {
+                        $filegallib->assertUploadedFileIsSafe($_FILES['picfile' . $i]['tmp_name'], $_FILES['picfile' . $i]['name']);
+                    } catch (Exception $e) {
+                        // This is never being reached, because right now getimagesize fails for
+                        // any unsafe file (SVG). Doesn't hurt, as support is already done for future
+                        // safety issues.
+                        $smarty->assign('msg', $e->getMessage());
+                        $smarty->display("error.tpl");
+                        die();
+                    }
+                    move_uploaded_file($_FILES['picfile' . $i]['tmp_name'], "$wiki_up/$picname");
+                    chmod("$wiki_up/$picname", 0644); // seems necessary on some system (see move_uploaded_file doc on php.net)
+                }
+            }
+        }
+        $i++;
+    }
+}
+if ($prefs['feature_wiki_attachments'] === 'y' && isset($_REQUEST["attach"]) && ($tiki_p_wiki_attach_files === 'y' || $tiki_p_wiki_admin_attachments === 'y')) {
+    if (isset($_FILES['userfile2']) && is_uploaded_file($_FILES['userfile2']['tmp_name'])) {
+        $ret = $tikilib->attach_file($_FILES['userfile2']['name'], $_FILES['userfile2']['tmp_name'], $prefs['w_use_db'] === 'y' ? 'db' : 'dir');
+        if ($ret['ok']) {
+            $wikilib->wiki_attach_file($page, $_FILES['userfile2']['name'], $_FILES['userfile2']['type'], $_FILES['userfile2']['size'], ($prefs['w_use_db'] === 'dir') ? '' : $ret['data'], $_REQUEST["attach_comment"], $user, $ret['fhash']);
+        } else {
+                $smarty->assign('msg', $ret['error']);
+                $smarty->display("error.tpl");
+                die();
+        }
+    }
+}
+
+
+// Suck another page and append to the end of current
+$suck_url = isset($_REQUEST["suck_url"]) ? $_REQUEST["suck_url"] : '';
+
+if (isset($_REQUEST["parsehtml"])) {
+    $parsehtml = $_REQUEST["parsehtml"] === 'on' ? 'y' : 'n';
+} else {
+    // FIXME: If the user hasn't checked, we attempt to unparse anyway if ! is_html. Better not display the checkbox than ignoring its value
+    $parsehtml = isset($info['is_html']) ? ($info['is_html'] ? 'n' : 'y') : 'n';
+}
+$smarty->assign('parsehtml', $parsehtml);
+
+if (isset($_REQUEST['do_suck']) && strlen($suck_url) > 0) {
+    // \note by zaufi
+    //   This is ugly implementation of wiki HTML import.
+    //   I think it should be plugable import/export converters with ability
+    //   to choose from edit form what converter to use for operation.
+    //   In case of import converter, it can try to guess what source
+    //   file is (using mime type from remote server response).
+    //   Of couse converters may have itsown configuration panel what should be
+    //   pluged into wiki page edit form too... (like HTML importer may have
+    //   flags 'strip HTML tags' and 'try to convert HTML to wiki' :)
+    //   At least one export filter for wiki already coded :) -- PDF exporter...
+    $sdta = $tikilib->httprequest($suck_url);
+    if (error_get_last()) {
+        $smarty->assign('msg', tra("Can't import remote HTML page"));
+        $smarty->display("error.tpl");
+        die;
+    }
+    // Need to parse HTML?
+    if ($parsehtml === 'y') {
+        $sdta = $editlib->parse_html($sdta);
+    }
+    $_REQUEST['edit'] = $jitRequest['edit'] . $sdta;
+}
+// if "UserPage" complete with the user name
+if ($prefs['feature_wiki_userpage'] === 'y' && $tiki_p_admin !== 'y' && $page === $prefs['feature_wiki_userpage_prefix']) {
+    $page .= $user;
+    $_REQUEST['page'] = $page;
+}
+
+if (strtolower($_REQUEST["page"]) === 'sandbox' && $prefs['feature_sandbox'] !== 'y') {
+    $smarty->assign('msg', tra("The Sandbox is disabled"));
+    $smarty->display("error.tpl");
+    die;
+}
+
+if (! isset($_REQUEST["comment"])) {
+    $_REQUEST["comment"] = '';
+}
+
+// Get page data
+if (isset($info['wiki_cache'])) {
+    $prefs['wiki_cache'] = $info['wiki_cache'];
+    $smarty->assign('wiki_cache', $prefs['wiki_cache']);
+}
+
+if (isset($info["flag"]) ? $info["flag"] === 'L' : false && ! $wikilib->is_editable($page, $user, $info)) {
+    $smarty->assign('msg', tra("The page cannot be edited because it is locked"));
+    $smarty->display("error.tpl");
+    die;
+}
+
+$smarty->assign('editable', 'y');
+$smarty->assign('show_page', 'n');
+$smarty->assign('comments_show', 'n');
+
+$smarty->assign_by_ref('data', $info);
+$smarty->assign('footnote', '');
+$smarty->assign('has_footnote', 'n');
+$parserlib = TikiLib::lib('parser');
+if ($prefs['feature_wiki_footnotes'] === 'y') {
+    if ($user) {
+        $x = $wikilib->get_footnote($user, $page);
+        $footnote = $wikilib->get_footnote($user, $page);
+        $smarty->assign('footnote', $footnote);
+        if ($footnote) {
+            $smarty->assign('has_footnote', 'y');
+        }
+        $smarty->assign('parsed_footnote', $parserlib->parse_data($footnote));
+        if (isset($_REQUEST['footnote'])) {
+            check_ticket('edit-page');
+            $smarty->assign('parsed_footnote', $parserlib->parse_data($_REQUEST['footnote']));
+            $smarty->assign('footnote', $_REQUEST['footnote']);
+            $smarty->assign('has_footnote', 'y');
+            if (empty($_REQUEST['footnote'])) {
+                $wikilib->remove_footnote($user, $page);
+            } else {
+                $wikilib->replace_footnote($user, $page, $_REQUEST['footnote']);
+            }
+        }
+    }
+}
+if (isset($_REQUEST["customTip"]) && ! isset($_REQUEST['preview']) && ! isset($_REQUEST['save'])) {
+    $smarty->assign('customTip', $_REQUEST['customTip']);
+    if (isset($_REQUEST["customTipTitle"])) {
+        $smarty->assign('customTipTitle', tra($_REQUEST["customTipTitle"]));
+    } else {
+        $smarty->assign('customTipTitle', tra('Tip'));
+    }
+}
+if (isset($_REQUEST["wikiHeaderTpl"]) && ! isset($_REQUEST['preview']) && ! isset($_REQUEST['save'])) {
+    $smarty->assign('wikiHeaderTpl', $smarty->fetch("wiki:{$_REQUEST['wikiHeaderTpl']}"));
+}
+if ((isset($_REQUEST["template_name"]) || isset($_REQUEST["templateId"])) && ! isset($_REQUEST['preview']) && ! isset($_REQUEST['save'])) {
+    $templateLang = isset($_REQUEST['lang']) ? $_REQUEST['lang'] : null;
+
+    if (isset($_REQUEST["templateId"])) {
+        $templateId = $_REQUEST["templateId"];
+    } else {
+        $multilinguallib = TikiLib::lib('multilingual');
+        $templateId = $multilinguallib->getTemplateIDInLanguage('wiki', $_REQUEST["template_name"], $templateLang);
+    }
+    $template_data = TikiLib::lib('template')->get_template($templateId, $templateLang);
+    $_REQUEST["edit"] = $template_data["content"] . "\n" . $_REQUEST["edit"];
+    $smarty->assign("templateId", $templateId);
+}
+
+if (isset($_REQUEST["ratingId"]) && $_REQUEST["ratingId"] > 0) {
+    $smarty->assign("poll_template", $_REQUEST["ratingId"]);
+} else {
+    $smarty->assign("poll_template", 0);
+}
+
+if (isset($_REQUEST["edit"])) {
+    $edit_data = $_REQUEST["edit"];
+} else {
+    if (isset($info['draft'])) {
+        $edit_data = $info['draft']['data'];
+    } elseif (isset($info["data"])) {
+        if ((isset($_REQUEST['hdr']) || (! empty($_REQUEST['pos']) && isset($_REQUEST['cell']))) && $prefs['wiki_edit_section'] === 'y') {
+            if (isset($_REQUEST['hdr'])) {
+                if ($_REQUEST['hdr'] === "0") {
+                    list($real_start, $real_len) = $tikilib->get_wiki_section($info['data'], 1);
+                    $real_len = $real_start;
+                    $real_start = 0;
+                } else {
+                    list($real_start, $real_len) = $tikilib->get_wiki_section($info['data'], $_REQUEST['hdr']);
+                }
+            } else {
+                include_once('lib/wiki-plugins/wikiplugin_split.php');
+                list($real_start, $real_len) = wikiplugin_split_cell($info['data'], $_REQUEST['pos'], $_REQUEST['cell']);
+            }
+            $edit_data = substr($info['data'], $real_start, $real_len);
+        } else {
+            $edit_data = $info['data'];
+        }
+    } else {
+        $edit_data = '';
+    }
+}
+
+$likepages = '';
+$smarty->assign_by_ref('likepages', $likepages);
+if ($prefs['feature_likePages'] === 'y' and $edit_data === '' && ! $tikilib->page_exists($page)) {
+    $likepages = $wikilib->get_like_pages($page);
+}
+
+if (isset($prefs['wiki_feature_copyrights']) && $prefs['wiki_feature_copyrights'] === 'y') {
+    if (isset($_REQUEST['copyrightTitle'])) {
+        $smarty->assign('copyrightTitle', $_REQUEST["copyrightTitle"]);
+    }
+    if (isset($_REQUEST['copyrightYear'])) {
+        $smarty->assign('copyrightYear', $_REQUEST["copyrightYear"]);
+    }
+    if (isset($_REQUEST['copyrightAuthors'])) {
+        $smarty->assign('copyrightAuthors', $_REQUEST["copyrightAuthors"]);
+    }
+    if (isset($_REQUEST['copyrightHolder'])) {
+        $smarty->assign('copyrightHolder', $_REQUEST["copyrightHolder"]);
+    }
+}
+
+/* Local reference handling */
+if (isset($prefs['feature_references']) && $prefs['feature_references'] === 'y') {
+    if ($prefs['wikiplugin_addreference'] == 'y') {
+        $referenceslib = TikiLib::lib('references');
+        $page_id = TikiLib::lib('tiki')->get_page_id_from_name($page);
+        if ($page_id) {
+            $smarty->assign('showBiblioSection', '1');
+
+            $references = $referenceslib->list_references($page_id);
+            $lib_references = $referenceslib->list_lib_references();
+            $perms = Perms::get(['wiki page', $page]);
+
+            if ($perms->use_references) {
+                $use_references = 1;
+            } else {
+                $use_references = 0;
+            }
+
+            if ($perms->edit_references) {
+                $edit_references = 1;
+            } else {
+                $edit_references = 0;
+            }
+
+            $assoc_references = $referenceslib->list_assoc_references($page_id);
+
+            $page_info = TikiLib::lib('tiki')->get_page_info($page);
+            $listOfCodes = \Tiki\WikiPlugin\Reference::extractBibliographicCodesFromText($page_info['data']);
+            $listOfCodes = array_unique($listOfCodes);
+
+            $key_exists = [];
+            foreach ($listOfCodes as $m) {
+                if (array_key_exists($m, $assoc_references['data'])) {
+                    $key_exists[$m] = 1;
+                }
+            }
+            foreach ($references['data'] as $key => $ref) {
+                if (array_key_exists($ref['biblio_code'], $key_exists)) {
+                    $references['data'][$key]['is_present'] = 1;
+                } else {
+                    $references['data'][$key]['is_present'] = 0;
+                }
+            }
+
+            $smarty->assign('key_exists', $key_exists);
+            $smarty->assign('referencesCant', $references['cant']);
+            $smarty->assign('references', $references['data']);
+
+            if ($references['cant'] < 1 && $lib_references['cant'] < 1) {
+                $smarty->assign('display', 'none');
+            } else {
+                $smarty->assign('display', 'block');
+            }
+            $smarty->assign('ajaxURL', $GLOBALS['base_url']);
+
+            $smarty->assign('libReferencesCant', $lib_references['cant']);
+            $smarty->assign('libReferences', $lib_references['data']);
+            $smarty->assign('use_references', $use_references);
+            $smarty->assign('edit_references', $edit_references);
+        } else {
+            $smarty->assign('showBiblioSection', '0');
+        }
+    }
+}
+/* Local reference handling */
+
+
+if (isset($_REQUEST["comment"])) {
+    $smarty->assign_by_ref('commentdata', $_REQUEST["comment"]);
+} elseif (isset($info['draft'])) {
+    $smarty->assign_by_ref('commentdata', $info['draft']['data']);
+} else {
+    $smarty->assign('commentdata', '');
+}
+if (isset($info["description"])) {
+    if (isset($info['draft'])) {
+        $info['description'] = $info['draft']['description'];
+    }
+    $smarty->assign('description', $info["description"]);
+    $description = $info["description"];
+} else {
+    $smarty->assign('description', '');
+    $description = '';
+}
+if (isset($_REQUEST["description"])) {
+    $smarty->assign_by_ref('description', $_REQUEST["description"]);
+    $description = $_REQUEST["description"];
+}
+
+$wiki_authors_style = '';
+if ($prefs['wiki_authors_style_by_page'] === 'y') {
+    if (isset($_REQUEST['wiki_authors_style']) && $tiki_p_admin_wiki === 'y') {
+        $wiki_authors_style = $_REQUEST['wiki_authors_style'];
+    } elseif (! empty($info['wiki_authors_style'])) {
+        $wiki_authors_style = $info['wiki_authors_style'];
+    }
+    $smarty->assign('wiki_authors_style', $wiki_authors_style);
+}
+
+if ($is_html) {
+    $smarty->assign('allowhtml', 'y');
+} else {
+    if (! empty($_REQUEST['preview'])) {
+        $edit_data = str_replace('<x>', '', $edit_data);
+    }
+    $smarty->assign('allowhtml', 'n');
+}
+if (empty($_REQUEST['lock_it']) && ! empty($info['flag']) && $info['flag'] === 'L') {
+    $lock_it = 'y';
+}
+$smarty->assign_by_ref('lock_it', $lock_it);
+if ($prefs['wiki_comments_allow_per_page'] !== 'n') {
+    if (! isset($_REQUEST['save']) && ! isset($_REQUEST['preview'])) {
+        if (! empty($info) && ! empty($info['comments_enabled'])) {
+            $comments_enabled = $info['comments_enabled'];
+        } else {
+            if ($prefs['wiki_comments_allow_per_page'] === 'y') {
+                $comments_enabled = 'y';
+            } else {
+                $comments_enabled = 'n';
+            }
+        }
+    }
+    $smarty->assign_by_ref('comments_enabled', $comments_enabled);
+}
+if (isset($_REQUEST["lang"])) {
+    if ($prefs['feature_multilingual'] === 'y' && isset($info["lang"]) && $info['lang'] !== $_REQUEST["lang"]) {
+        $multilinguallib = TikiLib::lib('multilingual');
+        if ($multilinguallib->updateObjectLang('wiki page', $info['page_id'], $_REQUEST["lang"], true)) {
+            $pageLang = $info['lang'];
+            $smarty->assign('msg', tra("The language can't be changed as its set of translations has already this language"));
+            $smarty->display("error.tpl");
+            die;
+        }
+    }
+    $pageLang = $_REQUEST["lang"];
+} elseif (isset($info["lang"])) {
+    $pageLang = $info["lang"];
+} elseif (isset($edit_lang)) {
+    $pageLang = $edit_lang;
+} else {
+    $pageLang = "";
+}
+
+$smarty->assign('lang', $pageLang);
+if ($prefs['feature_urgent_translation'] === 'y') {
+    $urgent_allowed = true;
+    $smarty->assign('urgent_allowed', $urgent_allowed);
+}
+if (isset($_REQUEST['translation_critical'])) {
+    $smarty->assign('translation_critical', 1);
+} else {
+    $smarty->assign('translation_critical', 0);
+}
+
+// Parse (or not) $edit_data into $parsed
+// Handles switching editor modes
+if (! isset($_REQUEST['preview']) && ! isset($_REQUEST['save'])) {
+    if (isset($_REQUEST['mode_normal']) && $_REQUEST['mode_normal'] === 'y') {
+        // Convert page content, as we are switching from the WYSIWYG editor to the regular editor
+        if (! $is_html) {
+            // we come from WYSIWYG-Wiki
+            $parsed = $edit_data;
+        } else {
+            // we come from WYSIWYG-HTML
+            $parsed = $editlib->parseToWiki($edit_data);
+        }
+        $is_html = false;
+        $info['is_html'] = false;
+        $info['wysiwyg'] = false;
+        $smarty->assign('allowhtml', 'n');
+    } elseif (isset($_REQUEST['mode_wysiwyg']) && $_REQUEST['mode_wysiwyg'] === 'y') {
+        // We are switching from the regular editor to the WYSIWYG editor
+        if (! $is_html && $prefs['wysiwyg_htmltowiki'] === 'y') {
+            // we switch to WYSIWYG-Wiki
+            $parsed = $edit_data;
+        } else {
+            // we switch to WYSIWYG-HTML (regular WYSIWYG)
+            $parsed = $editlib->parseToWysiwyg($edit_data, true); // Convert page content
+            $is_html = true;
+            $smarty->assign('allowhtml', 'y');
+        }
+        $info['is_html'] = $is_html;
+        $info['wysiwyg'] = true;
+    } elseif ($_SESSION['wysiwyg'] === 'y') {
+        if (empty($info['is_html'])) {
+            if ($edit_data == 'ajax error') {
+                unset($_REQUEST['save']);   // don't save an ajax error
+            }
+        } else {
+            $parsed = $parserlib->parse_data(
+                $edit_data,
+                [
+                    'absolute_links' => true,
+                    'noheaderinc' => true,
+                    'suppress_icons' => true,
+                    'wysiwyg' => true,
+                    'is_html' => true,
+                    'process_wiki_paragraphs' => false
+                 ]
+            );
+        }
+    }
+    if (isset($info['pageName'])) {
+        $tikilib->check_duplicate_alias($edit_data, $info['pageName']);
+    }
+}
+
+if (empty($parsed)) {
+        $parsed = $edit_data;
+}
+$smarty->assign('pagedata', $parsed);
+
+// apply the optional post edit filters before preview
+if (isset($_REQUEST["preview"])) {
+    if ($_SESSION['wysiwyg'] === 'y' && $prefs['wysiwyg_wiki_parsed'] === 'y') {
+        $parsed = $editlib->partialParseWysiwygToWiki($parsed);
+        $parsed = $parserlib->parse_data($parsed, ['absolute_links' => true, 'noheaderinc' => true, 'suppress_icons' => true, 'preview_mode' => true, 'is_html' => $is_html]);
+    } else {
+        $parsed = $parserlib->parse_data($parsed, ['is_html' => $is_html, 'preview_mode' => true]);
+    }
+    // If we are in preview mode then preview it!
+    $smarty->assign('preview', 1);
+} else {
+    $parsed = '';
+    $smarty->assign('preview', 0);
+}
+
+$smarty->assign_by_ref('parsed', $parsed);
+
+/**
+ * @param $obj
+ * @param $parts
+ * @param $i
+ */
+function parse_output(&$obj, &$parts, $i)
+{
+    if (! empty($obj['parts'])) {
+        foreach ($obj['parts'] as $index => $part) {
+            parse_output($part, $parts, $index);
+        }
+    } elseif ($obj['type'] === 'application/x-tikiwiki') {
+        $aux["body"] = $obj['body'];
+        $ccc = $obj['header']["content-type"];
+        $items = explode(';', $ccc);
+        foreach ($items as $item) {
+            $portions = explode('=', $item);
+            if (isset($portions[0]) && isset($portions[1])) {
+                $aux[trim($portions[0])] = trim($portions[1]);
+            }
+        }
+        $parts[] = $aux;
+    }
+}
+// Pro
+// Check if the page has changed
+$pageAlias = '';
+$cat_type = 'wiki page';
+$cat_objid = $_REQUEST["page"];
+if (
+    isset($_REQUEST['save'])
+     && $prefs['feature_contribution'] === 'y'
+     && $prefs['feature_contribution_mandatory'] === 'y'
+     && (empty($_REQUEST['contributions']) || count($_REQUEST['contributions']) <= 0)
+) {
+    $contribution_needed = true;
+    $smarty->assign('contribution_needed', 'y');
+} else {
+    $contribution_needed = false;
+}
+if (
+    isset($_REQUEST['save'])
+    && $prefs['feature_categories'] === 'y'
+    && $prefs['feature_wiki_mandatory_category'] >= 0
+    && (empty($_REQUEST['cat_categories']) || count($_REQUEST['cat_categories']) <= 0)
+) {
+    $category_needed = true;
+    $smarty->assign('category_needed', 'y');
+} else {
+    $category_needed = false;
+}
+if (isset($_REQUEST['save']) && $prefs['wiki_mandatory_edit_summary'] === 'y' && empty($_REQUEST['comment'])) {
+    $summary_needed = true;
+    $smarty->assign('summary_needed', 'y');
+} else {
+    $summary_needed = false;
+}
+if ($prefs['wiki_mandatory_edit_summary'] === 'y') {
+    $headerlib->add_jq_onready(
+        '$("input[name=save],input[name=minor]").click(function(){
+            if (!$("#comment").val()) {
+                var s = prompt("' . tra('Describe the change you made') . '", "");
+                if (!s) return false;
+                $("#comment").val(s);
+            }
+            return true;
+        })'
+    );
+}
+
+if ($prefs['site_layout_per_object'] == 'y') {
+    $attributelib = TikiLib::lib('attribute');
+
+    if (isset($jitPost['object_layout'])) {
+        $attributelib->set_attribute('wiki page', $page, 'tiki.object.layout', $jitPost->object_layout->word());
+    }
+
+    $attributes = $at
