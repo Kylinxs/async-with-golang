@@ -1513,4 +1513,237 @@ if ($prefs['feature_polls'] === 'y' and $prefs['feature_wiki_ratings'] === 'y' &
     $poll_rated = $polllib->get_ratings($cat_type, $cat_objid);
     $smarty->assign('poll_rated', $poll_rated);
     if (isset($_REQUEST['poll_template'])) {
-        $sma
+        $smarty->assign('poll_template', $_REQUEST['poll_template']);
+    }
+}
+
+if ($prefs['feature_multilingual'] === 'y') {
+    $languages = [];
+    $langLib = TikiLib::lib('language');
+    $languages = $langLib->list_languages();
+    $smarty->assign_by_ref('languages', $languages);
+
+    if ($editlib->isNewTranslationMode()) {
+        $smarty->assign('translationOf', $editlib->sourcePageName);
+
+        if ($tikilib->page_exists($page)) {
+            // Display an error if the page already exists
+            $smarty->assign(
+                'msg',
+                tra("That page already exists. Go back and choose a different name.") . "<P>" . tra("The page name is") . ": '$page'"
+            );
+            $smarty->display("error.tpl");
+            die;
+        }
+
+        $multilinguallib = TikiLib::lib('multilingual');
+        $sourceInfo = $tikilib->get_page_info($editlib->sourcePageName);
+        if ($multilinguallib->getTranslation('wiki page', $sourceInfo['page_id'], $_REQUEST['lang'])) {
+            // Display an error if the page already exists
+            $smarty->assign('msg', tra("The translation set already contains a page in this language."));
+            $smarty->display("error.tpl");
+            die;
+        }
+    }
+    $histlib = TikiLib::lib('hist');
+    if ($editlib->isTranslationMode()) {
+        histlib_helper_setup_diff(
+            $editlib->sourcePageName,
+            $editlib->oldSourceVersion,
+            $editlib->newSourceVersion,
+            $_REQUEST['diff_style']
+        );
+        $smarty->assign('diff_oldver', (int) $editlib->oldSourceVersion);
+        $smarty->assign('diff_newver', (int) $editlib->newSourceVersion);
+        $smarty->assign('update_translation', 'y');
+    }
+}
+$cat_type = 'wiki page';
+$cat_objid = $_REQUEST["page"];
+$cat_lang = $pageLang;
+$cat_object_exists = $tikilib->page_exists($_REQUEST['page']);
+if (! $cat_object_exists) {
+    $cookietab = 1;
+}
+
+$smarty->assign('section', $section);
+include_once('tiki-section_options.php');
+if ($prefs['feature_freetags'] === 'y') {
+    include_once('freetag_list.php');
+    // if given in the request, set the freetag list (used for preview mode, when coming back from zoom mode, ...)
+    if (isset($_REQUEST['freetag_string'])) {
+        $smarty->assign('taglist', $_REQUEST['freetag_string']);
+    } elseif ($editlib->isNewTranslationMode()) {
+        $tags = $freetaglib->get_all_tags_on_object_for_language($editlib->sourcePageName, 'wiki page', $pageLang);
+        $smarty->assign('taglist', implode(' ', $tags));
+    }
+}
+if ($prefs['feature_categories'] === 'y') {
+    include_once("categorize_list.php");
+
+    if (isset($_REQUEST["current_page_id"]) && $prefs['feature_wiki_categorize_structure'] === 'y' && $categlib->is_categorized('wiki page', $structure_info["pageName"])) {
+        $categIds = $categlib->get_object_categories('wiki page', $structure_info["pageName"]);
+        $smarty->assign('categIds', $categIds);
+    } else {
+        $smarty->assign('categIds', []);
+    }
+    if (isset($_SERVER['HTTP_REFERER']) && strstr($_SERVER['HTTP_REFERER'], 'tiki-index.php') && ! $tikilib->page_exists($_REQUEST["page"])) { // default the categs the page you come from for a new page
+        if (preg_match('/page=([^\&]+)/', $_SERVER['HTTP_REFERER'], $ms)) {
+            $p = $ms[1];
+        } else {
+            $p = $wikilib->get_default_wiki_page();
+        }
+        $cs = $categlib->get_object_categories('wiki page', $p);
+        for ($i = count($categories) - 1; $i >= 0; --$i) {
+            if (in_array($categories[$i]['categId'], $cs)) {
+                $categories[$i]['incat'] = 'y';
+            }
+        }
+    }
+}
+
+if ($prefs['object_maintainers_enable'] === 'y') {
+    if (isset($info['pageName'])) {
+        $object_maintainers = TikiLib::lib('relation')->get_relations_from('wiki page', $info['pageName'], 'tiki.object.maintainer');
+        if (! empty($object_maintainers)) {
+            $maintainers = [];
+            foreach ($object_maintainers as $object_maintainer) {
+                $maintainers[] = $object_maintainer['itemId'];
+            }
+            $smarty->assign('object_maintainers', implode(';', $maintainers));
+        }
+        $update_frequency = TikiLib::lib('attribute')->get_attribute('wiki page', $info['pageName'], 'tiki.object.update_frequency');
+        if (! empty($update_frequency)) {
+            $smarty->assign('update_frequency', $update_frequency);
+        } else {
+            $smarty->assign('update_frequency', $prefs['object_maintainers_default_update_frequency']);
+        }
+    } else {
+        $smarty->assign('update_frequency', $prefs['object_maintainers_default_update_frequency']);
+    }
+}
+
+$page_name = $page;
+
+if ($wikilib->contains_badchars($page) && ! $tikilib->page_exists($page)) {
+    $smarty->assign('page_badchars_display', $wikilib->get_badchars());
+}
+
+$smarty->assign('showstructs', []);
+if ($structlib->page_is_in_structure($_REQUEST["page"])) {
+    $structs = $structlib->get_page_structures($_REQUEST["page"]);
+    $smarty->assign('showstructs', $structs);
+}
+// Flag for 'page bar' that currently 'Edit' mode active
+// so no need to show comments & attachments, but need
+// to show 'wiki quick help'
+$smarty->assign('edit_page', 'y');
+if ($prefs['wiki_feature_copyrights'] === 'y' && $tiki_p_edit_copyrights === 'y') {
+    include_once('lib/copyrights/copyrightslib.php');
+    $copyrightslib = new CopyrightsLib();
+    $copyrights = $copyrightslib->list_copyrights($_REQUEST["page"]);
+    if ($copyrights['cant']) {
+        $smarty->assign_by_ref('copyrights', $copyrights['data']);
+    }
+}
+$defaultRows = $prefs['default_rows_textarea_wiki'];
+if (! $user or $user === 'anonymous') {
+    $smarty->assign('anon_user', 'y');
+}
+if ($prefs['feature_contribution'] === 'y') {
+    include_once('contribution.php');
+}
+
+if (! empty($prefs['geo_locate_wiki']) && $prefs['geo_locate_wiki'] == 'y') {
+    $smarty->assign('geolocation_string', TikiLib::lib('geo')->get_coordinates_string('wiki page', $page));
+}
+
+if ($prefs['feature_multilingual'] === 'y' && $tikilib->page_exists($page)) {
+    $multilinguallib = TikiLib::lib('multilingual');
+    $trads = $multilinguallib->getTranslations('wiki page', $info['page_id'], $page, $info['lang']);
+    $smarty->assign('trads', $trads);
+}
+
+$smarty->assign('explicit_namespace', $wikilib->get_explicit_namespace($page));
+$smarty->assign('pageAutoToc', $wikilib->get_page_auto_toc($page));
+$smarty->assign('page_hide_title', $wikilib->get_page_hide_title($page));
+
+// setup properties tab visibility
+if (
+    ($prefs['feature_wiki_templates'] === 'y' && $tiki_p_use_content_templates === 'y') ||
+    ($prefs['feature_wiki_usrlock'] === 'y' && ($tiki_p_lock === 'y' || $tiki_p_admin_wiki === 'y')) ||
+    ($prefs['feature_wiki_replace'] === 'y' && $_SESSION['wysiwyg'] !== 'y') ||
+    ($prefs['feature_wiki_allowhtml'] === 'y' && $tiki_p_use_HTML === 'y' && $_SESSION['wysiwyg'] !== 'y') ||
+    $prefs['feature_wiki_import_html'] === 'y' ||
+    $prefs['wiki_comments_allow_per_page'] !== 'n' ||
+    $prefs['markdown_enabled'] === 'y' ||
+    ($tiki_p_admin_wiki === 'y' && $prefs['feature_wiki_import_page'] === 'y') ||
+    ($_SESSION['wysiwyg'] !== 'y' && ($prefs['feature_wiki_attachments'] === 'y' && ($tiki_p_wiki_attach_files === 'y' && $tiki_p_wiki_admin_attachments === 'y'))) ||
+    strtolower($page) !== 'sandbox' &&
+            ($prefs['wiki_feature_copyrights'] === 'y' ||
+            ($prefs['feature_freetags'] === 'y' && $tiki_p_freetags_tag === 'y') ||
+            $prefs['feature_wiki_icache'] === 'y' ||
+            $prefs['feature_contribution'] === 'y' ||
+            $prefs['feature_wiki_structure'] === 'y' ||
+            $prefs['wiki_feature_copyrights'] === 'y' ||
+            ($tiki_p_admin_wiki === 'y' && $prefs['wiki_authors_style_by_page'] === 'y')) ||    // end not sandbox
+        ($prefs['feature_wiki_description'] === 'y' || $prefs['metatag_pagedesc'] === 'y') ||
+        $prefs['feature_wiki_footnotes'] === 'y' ||
+        ($prefs['feature_wiki_ratings'] === 'y' && $tiki_p_wiki_admin_ratings === 'y') ||
+        $prefs['feature_multilingual'] === 'y' ||
+        $prefs['namespace_enabled'] === 'y' ||
+        $prefs['site_layout_per_object'] === 'y' ||
+        ! empty($prefs['geo_locate_wiki']) && $prefs['geo_locate_wiki'] === 'y'
+) {
+    $smarty->assign('showPropertiesTab', 'y');
+}
+
+ask_ticket('edit-page');
+// disallow robots to index page:
+$smarty->assign('metatag_robots', 'NOINDEX, NOFOLLOW');
+// Display the Edit Template or language check
+$smarty->assign('showtags', 'n');
+$smarty->assign('qtnum', '1');
+$smarty->assign('qtcycle', '');
+$smarty->assign('outputType', (isset($info['outputType'])) ? $info['outputType'] : '');
+
+possibly_set_pagedata_to_pretranslation_of_source_page();
+
+if ($need_lang) {
+    $smarty->display('tiki-choose_page_language.tpl');
+} else {
+    // if ajax_autosave is disabled, create an alert to inform the user
+    if ($prefs['ajax_autosave'] == 'n') {
+        $content = tr('Feature <strong>%0</strong>  disabled.', 'ajax_autosave');
+
+        if (Perms::get()->admin) {
+            $smarty = TikiLib::lib('smarty');
+            $smarty->loadPlugin('smarty_function_preference');
+            $smarty->loadPlugin('smarty_modifier_escape');
+            $smarty->loadPlugin('smarty_function_ticket');
+
+            $content .= "<form method='post' action='tiki-admin.php'>";
+            $content .= str_replace('"', "&quot;", smarty_function_preference(['name' => 'ajax_autosave'], $smarty->getEmptyInternalTemplate()));
+            $content .= str_replace('"', "&quot;", smarty_function_ticket([], $smarty->getEmptyInternalTemplate()));
+            $content .= "<input type='submit' class='btn btn-primary btn-sm' value='";
+            $content .= smarty_modifier_escape(tra('Apply')) . "'>";
+            $content .= '</form>';
+        }
+        $smarty->loadPlugin('smarty_block_remarksbox');
+        $remrepeat = false;
+        $smartyTemplate = $smarty->getEmptyInternalTemplate();
+        $remarksbox = str_replace('"', "'", smarty_block_remarksbox(['type' => 'warning', 'title' => 'Autosave', 'close' => 'y'], $content, $smartyTemplate, $remrepeat));
+
+        $smarty->assign('alert_content', $remarksbox);
+    }
+    $smarty->display('tiki-editpage.tpl');
+}
+/**
+ * @param $chkURL
+ * @return bool
+ */
+function isURL($chkURL)
+{
+    $rc = (false !== parse_url($chkURL));
+    return $rc;
+}

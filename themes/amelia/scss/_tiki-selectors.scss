@@ -1,0 +1,102 @@
+
+// This file is for additional SCSS rules beyond what are in variables.scss.
+// Amelia for Tiki Bootstrap 5
+
+// Image path example:
+//$imagePath: "../images/";
+// body {
+//    background-image: url('#{$imagePath}bg.jpg');
+// }
+
+// Color system
+.bg-dark { background: #ad1d28 !important; }
+
+// Body
+body.fullscreen { background: $body-bg; }
+
+// Typography
+.text-primary { color: #F9CFC8 !important; }
+.text-secondary { color: #E7D58D !important; }
+.text-info { color: #DFD7EE !important; }
+.text-success, .valid-feedback { color: #AEE6A7  !important; }
+.text-warning { color: #EDDFA6  !important; }
+.text-danger, .invalid-feedback, .was-validated .form-check-input:invalid ~ .form-check-label, .form-check-input.is-invalid ~ .form-check-label { color: #F3D7C4  !important; }
+
+// Forms
+legend {
+    font-family: 'Lobster', cursive;
+    color: #ffffff;
+}
+
+// Cards
+.card,
+.autotoc > .nav {
+//  background-color: #13a0aa !important;
+  border-color: #0d747c !important;
+}
+
+.card-body  a:not(.btn,.dropdown-item),
+.card-body .btn-link {
+    color: #F2E4A6;
+}
+
+.card-header,
+.modal-header{
+  color: #ffffff;
+  background-color: #6e0d0d !important;
+  border-color: #0d747c !important;
+}
+
+.card-title a,
+.card-title small,
+.card-title .small,
+.card-title small a,
+.card-title .small a {
+  color: inherit;
+}
+
+// Navs
+.nav-tabs .nav-link {
+    color: $link-color;
+}
+
+// Navs
+//.bg-light-parent {
+//    a,
+//    .btn-link {
+//        color: $navbar-light-color;
+//        &:hover {
+//            color: $navbar-light-hover-color;
+//        }
+//    }
+//}
+
+// Dropdowns
+//.dropdown-menu.dropdown-menu-dark .dropdown-item {
+//    color: $gray-300 !important;
+//}
+
+// Buttons
+.btn.btn-outline-dark {
+    color: #de3b48;
+    background: #000;
+    &:hover {
+        background: $gray-800;
+    }
+}
+
+// Badges
+.badge.bg-dark { color: #fff; }
+
+// Tiki-specific
+.tiki_trackers {
+    .icon-status-open, .icon-status-pending, .icon-status-closed {
+        filter: drop-shadow(0 0 1px black);
+    }
+}
+
+.textarea-toolbar a.toolbar { color: #222; }
+
+.tiki .select2-selection__choice__value {
+    color: $input-placeholder-color;
+}
