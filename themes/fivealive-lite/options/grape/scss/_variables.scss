@@ -1,0 +1,237 @@
+
+// These FiveAlive-lite Grape theme option variables are applied to fivealive-lite/scss/fivealive-lite_option_selectors.scss.
+
+// - - - - - - - Bootstrap variables (override values in vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss - - - - - - //
+$gray-600: #6c757d;
+$gray-900: #212529;
+
+$white:    #fff;
+$black:    #000;
+$light: #a02871;
+$dark: #551e3d;
+
+$theme-colors: (
+    "primary":            #a52873,
+    "secondary":         #3c2846,
+    "success":             #5cb85c,
+    "info":             #551e3c,
+    "warning":             #f0ad4e,
+    "danger":              #d00b0b,
+    "light":            #fff,
+    "dark":                #8e286a
+);
+
+$primary:       #a52873;
+$secondary:     #3c2846;
+$success:       #5cb85c;
+$info:          #551e3c;
+$warning:       #f0ad4e;
+$danger:        #d00b0b;
+$light:         #fff;
+$dark:          #8e286a;
+
+$theme-colors: map-merge(
+        (
+            "primary":    $primary,
+            "secondary":  $secondary,
+            "success":    $success,
+            "info":       $info,
+            "warning":    $warning,
+            "danger":     $danger,
+            "light":      $light,
+            "dark":       $dark
+        ),
+        $theme-colors
+);
+
+// The following are default values from vendor/twbs/bootstrap/scss/variables.scss - change as needed for theme child option (or to match values in parent theme).
+// Comment-out any that are already defined in the parent theme variables.scss file and shouldn't be redefined.
+//$color-c-threshold:  150;
+
+$color-contrast-dark:             $gray-900 !default;
+$color-contrast-light:            $white !default;
+
+$bg-light: #a02871 !important;
+
+// Links
+$link-color: #a02871;
+$link-hover-color: #a02871;
+
+// Navs
+$nav-tabs-link-color: #000;
+$nav-tabs-link-bg: #f4dded;;
+$nav-tabs-link-active-color: #fff;
+$nav-tabs-link-active-bg: #742157; // same as $dropdown-link-hover-bg;
+
+// Navbars
+//$top-bg: #a52874;
+$top-color: #fff;
+//$top-link-color: #fff;
+//$top-link-hover-color: #f9f9f9;
+//$topbar-bg: #551e3d;
+$bg-dark: #8e286a;
+$bg-light: #f4dded;
+//$page-header-link-color: #000;
+//$topbar-link-color: #fff;
+
+// navbar link hover colors
+$bg-dark-link-hover-color: #f2f2f2;
+$bg-dark-link-hover-bg: #003c4a;
+
+// Dropdowns
+$dropdown-dark-link-hover-bg:       rgba($white, .15) !default;
+
+// Typography
+$text-muted:  #6B737B;
+$hr-color: #a02871;
+
+// Cards
+$card-border-color: #bc2f84;
+
+// Tables
+$table-border-color: #a82a76;
+$table-accent-bg: #f9f9f9;
+$table-hover-bg: #f5f5f5;
+
+$component-active-bg: $card-border-color;
+
+// Forms
+$input-color: #555555;
+$input-bg: #f4dded;
+$input-border-color: #e4afd3;
+$input-border-top-color: #e4afd3;
+$input-border-right-color: #fff;
+$input-border-bottom-color: #fff;
+$input-border-left-color: #e4afd3;
+$input-focus-border-color: lighten($component-active-bg, 25%);
+
+// Form validation
+
+// Dropdowns
+$dropdown-bg: #8e286a; //#c82b8b;
+$dropdown-border-color: rgba(0, 0, 0, 0.15);
+$dropdown-link-color: #ffffff;
+$dropdown-link-hover-color: #f2f2f2;
+$dropdown-link-hover-bg: #742157;
+$dropdown-link-active-color: #ffffff;
+$dropdown-link-active-bg: #2e1f39;
+$dropdown-link-disabled-color: #f2f2f2;
+$dropdown-header-color: #ffffff;
+$dropdown-divider-bg: $dropdown-bg;
+
+$dropdown-dark-color: #fff;
+$dropdown-dark-bg: $dropdown-bg;
+
+// Pagination
+$nav-pills-link-active-bg: #a02871;
+$pagination-color: #a02871;
+$pagination-bg: #ffffff;
+$pagination-border-color: #dddddd;
+$pagination-hover-color: #a02871;
+$pagination-hover-bg: #eeeeee;
+$pagination-hover-border-color: #dddddd;
+$pagination-active-bg: #a02871;
+$pagination-active-border-color: #a02871;
+$pagination-disabled-color: #999999;
+$pagination-disabled-bg: #ffffff;
+$pagination-disabled-border-color: #dddddd;
+
+
+// - - - - - - - - - -  - - - - - - Other variables, if any - - - - - - - - - - - - - - - - - //
+
+// Aug 18 2022 start
+$top-bg: #a52874; // Used for $post-card-header-bg and .postbody-title
+$top-color: #fff;
+$top-link-color: #fff;
+$top-link-hover-color: #f9f9f9;
+//$topbar-bg: #063035;
+
+$top-dark-bg: #a52874;
+$top-dark-color: #fff;
+$topbar-dark-bg: #551e3d; // $topbar-light-bg;
+$topbar-dark-color: #fff;
+
+$top-light-bg: $top-dark-bg; // #a52874;
+$top-light-color: $top-dark-color; // #fff;
+$topbar-light-bg: $topbar-dark-bg;  // #551e3d;
+$topbar-light-color: $topbar-dark-color; //#fff;
+
+$navbar-light-link-color: $top-light-color;
+$navbar-light-link-hover-color: #f2f2f2;
+$navbar-light-link-hover-bg: #003c4a;
+
+$navbar-dark-link-color: $top-light-color;
+$navbar-dark-link-hover-color: #f2f2f2;
+$navbar-dark-link-hover-color: $navbar-light-link-hover-color;
+//$navbar-light-link-hover-bg: #003c4a;
+// Aug 18 2022 revamp end
+
+//$bg-light-alt: #117485 !important;
+
+$side-column-heading-color: #bc2f84;
+
+$middle_outer-inset-shadow-bg: #8e286a;
+$footer_liner-card-inner-border: #a52873;
+
+$footer-accent-color: $input-border-color;
+$footer-btn-secondary-color: #f4f4f4;
+$footer_liner-border-color: $footer-accent-color;
+
+//$autotoc-nav-bg: #ffffff;
+//$autotoc-nav-border: #8e286a;
+//$autotoc-color: #8e286a;
+//$autotoc-nav-li-link-hover-color: #f2f2f2;
+//$autotoc-nav-li-link-hover-bg: #003c4a;
+
+$bg-dark-info: #00DAE6;
+
+// CSS variables / custom properties for base_files/scss/_tiki-pagetop_colors.scss -- Interpolation info from https://developersink.com/css/css-custom-properties-sass-variables/
+// Background images (actual images or CSS gradients, etc.), if assigned, override background colors.
+:root {
+    --tiki-top-light-bg: #{$top-light-bg};
+    --tiki-top-light-color: #{$top-light-color};
+    --tiki-top-light-link-color: #{$top-link-color};
+    --tiki-top-light-link-hover-color: #{$top-link-hover-color};
+
+    --tiki-topbar-light-bg: #{$topbar-light-bg};
+    --tiki-topbar-light-color: #{$topbar-light-color};
+    --tiki-topbar-light-link-color: #{$top-light-color};
+    --tiki-topbar-light-link-hover-color: #{$navbar-light-link-hover-color};
+
+    --tiki-top-dark-bg: #{$top-dark-bg};
+    --tiki-top-dark-color: #{$navbar-dark-link-color};
+    --tiki-top-dark-link-color: #{$navbar-dark-link-color};
+    --tiki-top-dark-link-hover-color: #{$navbar-dark-link-hover-color};
+
+    --tiki-topbar-dark-bg: #{$topbar-dark-bg};
+    --tiki-topbar-dark-color: #{$navbar-dark-link-color};
+    --tiki-topbar-dark-link-color: #{$navbar-dark-link-color};
+    --tiki-topbar-dark-link-hover-color: #{$navbar-dark-link-hover-color};
+
+    --tiki-top-light-border: solid #000;
+    --tiki-top-dark-border: solid #000;
+    --tiki-top-border-top-width: 0px;
+    --tiki-top-border-bottom-width: 5px;
+}
+
+.tiki-admin {
+    --tiki-admin-navbar-dark-bg: var(--tiki-top-dark-bg) !important;
+    --tiki-admin-dropdown-dark-color: #{$dropdown-dark-color};
+    --tiki-admin-dropdown-dark-hover-bg: #{$dropdown-dark-link-hover-bg};
+    --tiki-admin-dropdown-dark-bg: #{$dropdown-dark-bg};
+    --tiki-admin-navbar-light-bg: var(--tiki-top-light-bg);
+    --tiki-admin-dropdown-light-color: var(--tiki-top-light-color);
+    --tiki-admin-dropdown-light-hover-color: var(--tiki-top-light-hover-color);
+    --tiki-admin-dropdown-light-bg: #{$dropdown-bg};
+    --tiki-admin-toggle-light-bg: #{$dropdown-bg};
+    --tiki-admin-navbar-dark-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-dark-highlight-color: #{$dropdown-link-hover-color};
+    --tiki-admin-navbar-light-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-light-highlight-color: #{$dropdown-link-hover-color};
+}
+
+.accordion {
+    --bs-accordion-active-bg: #{$top-dark-bg};
+    --bs-accordion-active-color: #fff;
+    --bs-accordion-btn-bg: #{$bg-light};
+}

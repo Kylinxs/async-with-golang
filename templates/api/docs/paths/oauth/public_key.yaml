@@ -1,0 +1,13 @@
+---
+get:
+  description: Get Tiki OAuth server public key used to verify JWT access tokens
+  responses:
+    '200':
+      description: public key response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              key:
+                type: string
