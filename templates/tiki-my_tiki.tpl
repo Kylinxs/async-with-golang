@@ -480,4 +480,134 @@
                 {/section}
             </table>
             </div>
-            <ul class="nav nav-pills f
+            <ul class="nav nav-pills float-end">
+                <li><a href="#">{tr}Records{/tr} <span class="badge bg-secondary">{$tasks|@count}</span></a></li>
+            </ul>
+        </div>
+    {/if} *}
+
+    {* {if $prefs.feature_forums eq 'y' && $mytiki_forum_topics eq 'y'}
+        <div id="content7" class="content clearfix mb-4">
+            <h4>{if $userwatch eq $user}{tr}My forum topics{/tr}{else}{tr}User forum topics{/tr}{/if}</h4>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <tr>
+                        <th>{tr}Forum topic{/tr}</th>
+                        <th>{tr}Date of post{/tr}</th>
+                    </tr>
+
+                    {section name=ix loop=$user_forum_topics}
+                        <tr>
+                            <td class="text">
+                                <a class="tips" title=":{tr}View{/tr}" href="tiki-view_forum_thread.php?comments_parentId={$user_forum_topics[ix].threadId}">
+                                    {$user_forum_topics[ix].title}
+                                </a>
+                            </td>
+                            <td class="date">
+                                {$user_forum_topics[ix].commentDate|tiki_short_datetime}
+                            </td>
+                        </tr>
+                    {/section}
+                </table>
+            </div>
+            <ul class="nav nav-pills float-end">
+                <li><a href="#">{tr}Records{/tr} <span class="badge bg-secondary">{$user_forum_topics|@count}</span></a></li>
+            </ul>
+        </div>
+    {/if} *}
+
+    {* {if $prefs.feature_forums eq 'y' && $mytiki_forum_replies eq 'y'}
+        <div id="content8" class="content clearfix mb-4">
+            <h4>{if $userwatch eq $user}{tr}My forum replies{/tr}{else}{tr}User forum replies{/tr}{/if}</h4>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <tr>
+                        <th>{tr}Forum reply{/tr}</th>
+                        <th>{tr}Date of post{/tr}</th>
+                    </tr>
+
+                    {section name=ix loop=$user_forum_replies}
+                        <tr>
+                            <td class="text">
+                                <a class="tips" title=":{tr}View{/tr}" href="tiki-view_forum_thread.php?comments_parentId={$user_forum_replies[ix].threadId}&amp;forumId={$user_forum_replies[ix].object}">
+                                    {$user_forum_replies[ix].title}
+                                </a>
+                            </td>
+                            <td class="date">
+                                {$user_forum_replies[ix].commentDate|tiki_short_datetime}
+                            </td>
+                        </tr>
+                    {/section}
+                </table>
+            </div>
+            <ul class="nav nav-pills float-end">
+                <li><a href="#">{tr}Records{/tr} <span class="badge bg-secondary">{$user_forum_replies|@count}</span></a></li>
+            </ul>
+        </div>
+    {/if} *}
+
+    {* {if $prefs.feature_blogs eq 'y' && $mytiki_blogs eq 'y'}
+        <div id="content9" class="content clearfix mb-4">
+            <h4>{if $userwatch eq $user}{tr}My blogs{/tr}{else}{tr}User Blogs{/tr}{/if}</h4>
+            <div class="clearfix mb-4">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <tr>
+                            <th>{tr}Blog{/tr}</th>
+                            <th style="width:50px"></th>
+                        </tr>
+
+                        {section name=ix loop=$user_blogs}
+                            <tr>
+                                <td class="text">
+                                    <a class="tips" title=":{tr}View{/tr}" href="{$user_blogs[ix].blogId|sefurl:blog}">{$user_blogs[ix].title}</a>
+                                </td>
+                                <td class="action">
+                                    <a class="tips" href="tiki-edit_blog.php?blogId={$user_blogs[ix].blogId}" title=":{tr}Edit{/tr}">
+                                        {icon name='edit'}
+                                    </a>
+                                </td>
+                            </tr>
+                        {/section}
+                    </table>
+                </div>
+                <ul class="nav nav-pills float-end">
+                    <li><a href="#">{tr}Records{/tr} <span class="badge bg-secondary">{$user_blogs|@count}</span></a></li>
+                </ul>
+            </div>
+            <div class="clearfix">
+                <h4>{if $userwatch eq $user}{tr}My blog Posts{/tr}{else}{tr}User Blog Posts{/tr}{/if}</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <tr>
+                            <th>{tr}Blog post{/tr}</th>
+                            <th style="width:50px"></th>
+                        </tr>
+
+                        {section name=ix loop=$user_blog_posts}
+                            <tr>
+                                <td class="text">
+                                    <a class="tips" title=":{tr}View{/tr}" href="{$user_blog_posts[ix].postId|sefurl:blogpost}">{$user_blog_posts[ix].title|escape}</a>
+                                </td>
+                                <td class="action">
+                                    <a class="tips" href="tiki-blog_post.php?postId={$user_blog_posts[ix].postId}" title=":{tr}Edit{/tr}">
+                                        {icon name='edit'}
+                                    </a>
+                                </td>
+                            </tr>
+                        {/section}
+                    </table>
+                </div>
+                <ul class="nav nav-pills float-end">
+                    <li><a href="#">{tr}Records{/tr} <span class="badge bg-secondary">{$user_blog_posts|@count}</span></a></li>
+                </ul>
+            </div>
+        </div>
+    {/if} *}
+
+{/capture}
+
+{$smarty.capture.my}
+{if $smarty.capture.my|strip:'' eq ''}
+    {tr}To display the objects you created or contributed to:{/tr} <a href="tiki-user_information.php#contentuser_information-2">{tr}My Items{/tr}</a>
+{/if}
