@@ -126,4 +126,75 @@ function module_domain_password($mod_reference, $module_params)
                 $smarty->assign('username', $username);
             } else {
                 $smarty->assign('currentuser', $use_currentuser);
-                $username[$cntModule] = $cryptlib->getUser
+                $username[$cntModule] = $cryptlib->getUserData($domain, 'usr');
+                if (! empty($username[$cntModule])) {
+                    $smarty->assign('username', $username);
+                } else {
+                    if ($isSaving == false) {
+                        $errors[$cntModule][] = tra('No user defined');
+                    }
+                }
+            }
+
+            // Check if editing
+            $edit_option[$cntModule] = 'n';
+            if ($can_update[$cntModule] == 'y' && (! isset($_REQUEST['edit_form' . $cntModule]) || $_REQUEST['edit_form' . $cntModule] != 'y')) {
+                // Only enable editing, after the user clicks the edit link
+                $can_update[$cntModule] = 'n';
+                $edit_option[$cntModule] = 'y';
+            }
+            $smarty->assign('edit_option', $edit_option);
+            $smarty->assign('can_update', $can_update);
+
+            // Check stored data if they can be decrypted
+            if (! empty($username[$cntModule]) && $isSaving == false) {
+                $chkPwd = $cryptlib->hasUserData($domain);
+                if ($chkPwd == false) {
+                    if ($isSaving == false) {
+                        $errors[$cntModule][] = tra('No password saved');
+                    }
+                } else {
+                    $chkPwd = $cryptlib->getUserData($domain);
+                    if ($chkPwd == false) {
+                        $errors[$cntModule][] = tra('Read error');
+                    }
+                }
+            }
+
+            // Saved the credentials
+            /////////////////////////////////
+            if (($dompwdCount == $cntModule) && $isSaving && $hasDomain && isset($_REQUEST['domPassword'])) {
+                if (empty($_REQUEST['domPassword'])) {
+                    $errors[$cntModule][] = tra('No password specified');
+                } elseif (! $use_currentuser[$cntModule] && empty($_REQUEST['domUsername'])) {
+                    $errors[$cntModule][] = tra('No username specified');
+                } else {
+                    $domUsername = $use_currentuser[$cntModule] === 'y' ? $user : $_REQUEST['domUsername'];
+                    $domPassword = $_REQUEST['domPassword'];
+
+                    if (! $cryptlib->setUserData($domain, $domPassword)) {
+                        $errors[$cntModule][] = tra('Failed to save password');
+                    } else {
+                        if (! $cryptlib->setUserData($domain, $domUsername, 'usr')) {
+                            $errors[$cntModule][] = tra('Failed to save user');
+                        } else {
+                            // Refresh the displayed username is saved ok
+                            $username[$cntModule] = $domUsername;
+                            $smarty->assign('username', $username);
+
+                            // Format result
+                            $result = [];
+                            $result[$cntModule] = tra('Saved OK');
+                            $smarty->assign('result', $result);
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            $errors[$cntModule][] = $e->getMessage();
+        }
+    }
+    if (! empty($errors[$cntModule])) {
+        Feedback::error(['mes' => $errors[$cntModule]]);
+    }
+}
