@@ -1,0 +1,1 @@
+ALTER TABLE `users_users` ADD COLUMN `twoFactorSecret` VARCHAR(16) default NULL;

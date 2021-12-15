@@ -383,4 +383,35 @@ class TikiCalendarLib extends CalendarLib
             'faq' => [
                     'label' => tra('FAQs'),
                     'feature' => '' . $prefs['feature_faqs'],
-                    'right' => $tiki_
+                    'right' => $tiki_p_view_faqs
+            ],
+
+            'quiz' => [
+                    'label' => tra('Quizzes'),
+                    'feature' => '' . $prefs['feature_quizzes'],
+                    'right' => $tiki_p_take_quiz
+            ],
+
+            'track' => [
+                    'label' => tra('Trackers'),
+                    'feature' => '' . $prefs['feature_trackers'],
+                    'right' => "$tiki_p_view_trackers"
+            ],
+
+            'surv' => [
+                    'label' => tra('Survey'),
+                    'feature' => '' . $prefs['feature_surveys'],
+                    'right' => "$tiki_p_take_survey"
+            ],
+
+            'nl' => [
+                    'label' => tra('Newsletter'),
+                    'feature' => '' . $prefs['feature_newsletters'],
+                    'right' => "$tiki_p_subscribe_newsletters"
+            ]
+        ];
+        return ( $with_infos ? $return : array_keys($return) );
+    }
+}
+
+$tikicalendarlib = new TikiCalendarLib();
