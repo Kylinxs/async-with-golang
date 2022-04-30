@@ -1546,3 +1546,284 @@ class NlLib extends TikiLib
     // $csrfCheck: indicated whether modified csrf check passed
     public function send($nl_info, $info, $browser, &$sent, &$errors, &$logFileName, $csrfCheck)
     {
+        global $prefs, $section;
+        $tikilib = TikiLib::lib('tiki');
+        $userlib = TikiLib::lib('user');
+        $smarty = TikiLib::lib('smarty');
+        $users = $this->get_all_subscribers($nl_info['nlId'], $nl_info['unsubMsg'] == 'y');
+
+        if (empty($info['editionId'])) {
+            $info['editionId'] = $this->replace_edition(
+                $nl_info['nlId'],
+                $info['subject'],
+                $info['data'],
+                0,
+                0,
+                true,
+                $info['datatxt'],
+                $info['files'],
+                $info['wysiwyg'],
+                $info['is_html']
+            );
+        } else {
+            $this->replace_edition(
+                $nl_info['nlId'],
+                $info['subject'],
+                $info['data'],
+                0,
+                $info['editionId'],
+                true,
+                $info['datatxt'],
+                $info['files'],
+                $info['wysiwyg'],
+                $info['is_html']
+            );
+        }
+
+        if (isset($info['begin'])) {
+            $this->memo_subscribers_edition($info['editionId'], $users);
+        }
+
+        $remaining = $this->table('tiki_sent_newsletters_errors')->fetchColumn(
+            'email',
+            [
+                'editionId' => $info['editionId'],
+                'error' => ''
+            ]
+        );
+
+        $sent = [];
+        $errors = [];
+        $toSend = [];
+        foreach ($users as $uInfo) {
+            $userEmail = $uInfo['login'];
+            $email = $uInfo['email'];
+            if ($userEmail == '') {
+                $userEmail = $userlib->get_user_by_email($email);
+            }
+            $language = ! $userEmail ? $prefs['site_language'] : $tikilib->get_user_preference(
+                $userEmail,
+                "language",
+                $prefs['site_language']
+            );
+
+            if (preg_match('/([a-zA-Z0-9])+([a-zA-Z0-9\._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9\._-]+)+/', $email)) {
+                if (in_array($email, $remaining)) {
+                    $uInfo['user'] = $userEmail;
+                    $uInfo['email'] = $email;
+                    $uInfo['language'] = $language;
+
+                    $toSend[$email] = $uInfo;
+                } else {
+                    $remainingErrors = $this->table('tiki_sent_newsletters_errors')->fetchColumn(
+                        'email',
+                        [
+                            'editionId' => $info['editionId'],
+                            'email' => $uInfo['email'],
+                            'error' => 'y'
+                        ]
+                    );
+                    if (count($remainingErrors) === 0) {
+                        $sent[] = $email;
+                    } else {
+                        $errors[] = ["user" => $userEmail, "email" => $email, "msg" => tr("potential CSRF")];
+                    }
+                }
+            } else {
+                $errors[] = ["user" => $userEmail, "email" => $email, "msg" => tr("invalid email")];
+            }
+        }
+
+        $users = array_values($toSend);
+
+        $logFileName = $prefs['tmpDir'] . '/public/newsletter-log-' . $info['editionId'] . '.txt';
+        if (($logFileHandle = fopen($logFileName, 'a')) == false) {
+            $logFileName = '';
+        }
+
+        $smarty->assign('sectionClass', empty($section) ? '' : "tiki_$section ");
+        if ($browser) {
+            echo $smarty->fetch('send_newsletter_header.tpl');
+        }
+
+        if ($browser) {
+            @ini_set('zlib.output_compression', 0);
+        }
+
+        $throttleLimit = (int) $prefs['newsletter_batch_size'];
+
+        foreach ($users as $us) {
+            $tikilib->clear_cache_user_preferences();
+            $email = $us['email'];
+            if ($browser) {
+                if (@ob_get_level() == 0) {
+                    @ob_start();
+                }
+                print str_repeat(' ', 4096) . "\n";
+            }
+
+            if ($csrfCheck) {
+                try {
+                    $zmail = $this->get_edition_mail(
+                        $info['editionId'],
+                        $us,
+                        $info['is_html'],
+                        $info['replyto'],
+                        $info['sendfrom']
+                    );
+                    if (! $zmail) {
+                        continue;
+                    }
+                    tiki_send_email($zmail);
+                    $sent[] = $email;
+                    if ($browser) {
+                        print '<div class="confirmation">' . ' Total emails sent: ' . count($sent)
+                            . tr(' after sending to') . ' <b>' . $email . '</b>: <span class="text-success">' . tr('OK')
+                            . '</span></div>' . "\n";
+                    }
+                    $this->delete_edition_subscriber($info['editionId'], $us);
+                    $logStatus = 'OK';
+                } catch (ZendMailException | SlmMailException $e) {
+                    if ($browser) {
+                        print '<div class="confirmation">' . ' Total emails sent: ' . count($sent)
+                            . tr(' after error in sending to') . ' <b>' . $email . '</b>: <span class="text-danger">'
+                            . tr('Error') . ' - ' . $e->getMessage();
+                        print "'red'>" . tr('Error') . " - {$e->getMessage()}" . '</font></div>' . "\n";
+                    }
+                    $errors[] = ["user" => $us['user'], "email" => $email, "msg" => $e->getMessage()];
+                    $this->mark_edition_subscriber($info['editionId'], $us);
+                    $logStatus = 'Error';
+                }
+            } else {
+                if ($browser) {
+                    print '<div class="confirmation">' . ' Total emails sent: ' . count($sent)
+                        . tr(' after failure to send to') . ' <b>' . $email . '</b>: <span class="text-danger">'
+                        . tr('Error - potential cross site request forgery detected') . '</span></div>' . "\n";
+                }
+                $errors[] = [
+                    "user" => $us['user'],
+                    "email" => $email,
+                    "msg" => tr('Potential cross site forgery request detected')
+                ];
+                $this->mark_edition_subscriber($info['editionId'], $us);
+                $logStatus = 'Error';
+            }
+
+            if ($logFileHandle) {
+                @fwrite($logFileHandle, "$email : $logStatus\n");
+            }
+
+            if ($browser) {
+                // Flush output to force the browser to display email addresses as soon as emails are sent
+                // This should avoid CGI and/or proxy and/or browser timeouts when sending to a lot of emails
+                @ob_flush();
+                @flush();
+                @ob_end_flush();
+            }
+
+            if ($prefs['newsletter_throttle'] === 'y' && 0 == --$throttleLimit) {
+                if (isset($_SESSION['tickets']['newsletter']['iterations'])) {
+                    if ($_SESSION['tickets']['newsletter']['iterations'] > 1) {
+                        --$_SESSION['tickets']['newsletter']['iterations'];
+                    } else {
+                        unset($_SESSION['tickets']['newsletter']);
+                    }
+                }
+
+                $rate = (int) $prefs['newsletter_pause_length'];
+                $replytoData = '';
+                if (! empty($info['replyto'])) {
+                    $replytoData = ' data-replyto="' . $info['replyto'] . '"';
+                }
+                $sendfromData = '';
+                if (! empty($info['sendfrom'])) {
+                    $sendfromData = ' data-sendfrom="' . $info['sendfrom'] . '"';
+                }
+
+                TikiLib::lib('access')->setTicket();
+                $ticketData = ' data-ticket="' . $smarty->getTemplateVars('ticket') . '"';
+
+                print '<div class="throttle" data-edition="' . $info['editionId'] . '"' . $replytoData . $sendfromData . $ticketData
+                    . ' data-rate="' . $rate . '">' . tr('Limiting the email send rate. Resuming in %0 seconds.', $rate)
+                    . '</div>';
+                exit;
+            }
+        }
+        $info['editionId'] = $this->replace_edition(
+            $nl_info['nlId'],
+            $info['subject'],
+            $info['data'],
+            count($sent),
+            $info['editionId'],
+            false,
+            $info['datatxt'],
+            $info['files'],
+            $info['wysiwyg'],
+            $info['is_html']
+        );
+        foreach ($info['files'] as $k => $f) {
+            if ($f['savestate'] == 'tikitemp') {
+                $newpath = $prefs['tmpDir'] . '/newsletterfile-' . $f['filename'];
+                rename($f['path'], $newpath);
+                unlink($f['path'] . '.infos');
+                $info['files'][$k]['savestate'] = 'tiki';
+                $info['files'][$k]['path'] = $newpath;
+            }
+        }
+        if ($logFileHandle) {
+            @fclose($logFileHandle);
+        }
+    }
+
+    // code originally in tiki-send_newsletters.php but made into a lib function so it could
+    // be reused for the resume option when newsletter throttling is used
+    public function closesendframe($sent, $errors, $logFileName)
+    {
+        $smarty = TikiLib::lib('smarty');
+        $nb_sent = count($sent);
+        $nb_errors = count($errors);
+
+        $msg = '<h4>' . sprintf(tra('Newsletter successfully sent to %s users.'), $nb_sent) . '</h4>';
+        if ($nb_errors > 0) {
+            $msg .= "\n" . '<span class="text-danger">' . '(' . sprintf(tra('Number of errors: %s'), $nb_errors) . ')'
+                . '</span><br />';
+        }
+
+        // If logfile exists and if it is reachable from the web browser, add a download link
+        if (! empty($logFileName) && $logFileName[0] != '/' && $logFileName[0] != '.') {
+            $smarty->assign('downloadLink', $logFileName);
+        }
+
+        echo str_replace("'", "\\'", $msg);
+        echo $smarty->fetch('send_newsletter_footer.tpl');
+
+        $smarty->assign('sent', $nb_sent);
+        $smarty->assign('emited', 'y');
+        if (count($errors) > 0) {
+            $smarty->assign_by_ref('errors', $errors);
+        }
+        unset($_SESSION["sendingUniqIds"][ $_REQUEST["sendingUniqId"] ]);
+
+        return;
+    }
+
+    public function generateTxtVersion($txt, $parsed = null)
+    {
+        global $tikilib;
+
+        if (empty($parsed)) {
+            $txt = TikiLib::lib('parser')->parse_data($txt, ['absolute_links' => true, 'suppress_icons' => true]);
+        } else {
+            $txt = $parsed;
+        }
+        $txt = str_replace('&nbsp;', ' ', $txt);
+        $txt = strip_tags($txt);
+        $txt = str_replace("\t", '', $txt);
+        $txt = str_replace("\n\n", "\n", $txt);     // convert from wysiwyg seems to double up linefeeds
+
+        $txt = html_entity_decode($txt);
+        return $txt;
+    }
+}
+
+$nllib = new NlLib();
