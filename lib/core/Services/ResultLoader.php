@@ -52,4 +52,12 @@ class Services_ResultLoader implements Iterator
 
     public function valid(): bool
     {
-        if ($this->position >= $this
+        if ($this->position >= $this->loaded && ! $this->isLast) {
+            $this->data = call_user_func($this->callback, $this->position, $this->perPage);
+            $this->isLast = count($this->data) < $this->perPage;
+            $this->loaded += count($this->data);
+        }
+
+        return isset($this->data[$this->position % $this->perPage]);
+    }
+}
