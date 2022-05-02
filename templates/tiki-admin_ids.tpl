@@ -66,4 +66,86 @@
                                             </action>
                                             <action>
                                                 <a href="{bootstrap_modal controller=ids action=remove ruleId=$ids_rules[rule].id}">
-                       
+                                                    {icon name="remove" _menu_text='y' _menu_icon='y' alt="{tr}Delete{/tr}"}
+                                                </a>
+                                            </action>
+                                        {/strip}
+                                    {/actions}
+                            </tr>
+                        {/section}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </form>
+    {/tab}
+{/if}
+    {* ---------------------- tab with form -------------------- *}
+    <a id="tab2"></a>
+{if isset($ruleinfo.id) && $ruleinfo.id && !$ruleinfo.error}
+    {$add_edit_rule_tablabel = "{tr}Edit Rule{/tr}"}
+    {$rulename = "<i>{$ruleinfo.name|escape}</i>"}
+{else}
+    {$add_edit_rule_tablabel = "{tr}Add a new rule{/tr}"}
+    {$rulename = ""}
+{/if}
+
+{tab name="{$add_edit_rule_tablabel} {$rulename}"}
+    <br><br>
+    <form class="form{*}form-horizontal*}" action="tiki-admin_ids.php" method="post"
+            enctype="multipart/form-data" name="RegForm" autocomplete="off">
+        {ticket}
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="rule_id">{tr}Rule Id{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='rule_id' class="form-control" name='rule_id'
+                    value="{$ruleinfo.id|escape}" {if $ruleinfo.id && !$ruleinfo.error}readonly{/if}>
+                <span class="form-text">{tr}Rule Id must be numeric{/tr}</span>
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="rule_regex">{tr}Rule Regex{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='rule_regex' class="form-control" name='rule_regex'
+                       value="{$ruleinfo.regex|escape}">
+            </div>
+        </div>
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="rule_description">{tr}Description{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='rule_description' class="form-control" name='rule_description'
+                    value="{$ruleinfo.description|escape}">
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="rule_tags">{tr}Tags{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='rule_tags' class="form-control" name='rule_tags'
+                    value="{$ruleinfo.tags|escape}">
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <label class="col-sm-3 col-md-2 col-form-label" for="rule_impact">{tr}Impact{/tr}</label>
+            <div class="col-sm-7 col-md-6">
+                <input type="text" id='rule_impact' class="form-control" name='rule_impact'
+                       value="{$ruleinfo.impact|escape}">
+            </div>
+        </div>
+
+        <div class="mb-3 row">
+            <div class="col-sm-7 col-md-6 offset-sm-3 offset-md-2">
+                {if isset($ruleinfo.id) && $ruleinfo.id && !$ruleinfo.error}
+                    <input type="hidden" name="rule" value="{$ruleinfo.id|escape}">
+                    <input type="hidden" name="editrule" value="1">
+                    <input type="submit" class="btn btn-primary" name="save" value="{tr}Save{/tr}">
+                {else}
+                    <input type="submit" class="btn btn-secondary" name="new_rule" value="{tr}Add{/tr}">
+                {/if}
+            </div>
+        </div>
+
+    </form>
+{/tab}
+{/tabset}
