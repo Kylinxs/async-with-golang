@@ -148,3 +148,11 @@ function smarty_modifier_money_format($number, $local, $currency, $format = '%(#
             $rightpad .= ($locale['p_cs_precedes'] == false || $locale['n_cs_precedes'] == false) && empty($currency) ? $currpad : '';
             $rightpad .= empty($suffix) && $flags['usesignal'] == '(' ? ')' : '';
         }
+
+        $format = str_replace($fmatch[0], $value, $format);
+        if (! empty($rightpad) && $display == 0) {
+            $format .= '<span style="visibility:hidden">' . $rightpad . '</span>';
+        }
+    }
+    return $format;
+}
