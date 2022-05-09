@@ -637,4 +637,366 @@ function wikiplugin_trackerFilter_get_filters($trackerId = 0, array $listfields 
     $iField = 0;
     foreach ($listfields as $fieldId) {
         if ($fieldId == 'status' || $fieldId == 'Status') {
-            $filter = ['name' => $fieldId, 'fieldId' => 'status', 'format' => 'd', 'opts' => [['id' => 'o', 'name' => 'open', 'selected' => (! empty($_REQUEST['f_status']) && $_REQUEST['f_status'] == 'o') ? 'y' : 'n'], ['id' => 'p', 'name' => 'pending', 'select
+            $filter = ['name' => $fieldId, 'fieldId' => 'status', 'format' => 'd', 'opts' => [['id' => 'o', 'name' => 'open', 'selected' => (! empty($_REQUEST['f_status']) && $_REQUEST['f_status'] == 'o') ? 'y' : 'n'], ['id' => 'p', 'name' => 'pending', 'selected' => (! empty($_REQUEST['f_status']) && $_REQUEST['f_status'] == 'p') ? 'y' : 'n'], ['id' => 'c', 'name' => 'closed', 'selected' => (! empty($_REQUEST['f_status']) && $_REQUEST['f_status'] == 'c') ? 'y' : 'n']]];
+            $filters[] = $filter;
+            continue;
+        }
+        if (! is_numeric($fieldId)) { // composite field
+            $filter = ['name' => 'Text', 'fieldId' => $fieldId, 'format' => 'sqlsearch'];
+            if (! empty($_REQUEST['f_' . $fieldId])) {
+                $filter['selected'] = $_REQUEST['f_' . $fieldId];
+            }
+            $filters[] = $filter;
+            continue;
+        }
+        foreach ($fields['data'] as $iField => $field) {
+            if ($field['fieldId'] == $fieldId) {
+                break;
+            }
+        }
+        if (($field['isHidden'] == 'y' || $field['isHidden'] == 'c') && $tiki_p_admin_trackers != 'y') {
+            continue;
+        }
+        if ($field['type'] == 'i' || $field['type'] == 'h' || $field['type'] == 'G' || $field['type'] == 'x') {
+            continue;
+        }
+        $fieldId = $field['fieldId'];
+        $res = [];
+        if (empty($formats)) {
+            $formats = [];
+        }
+        if (empty($formats[$fieldId])) { // default format depends on field type
+            switch ($field['type']) {
+                case 'e':// category
+                    $res = wikiplugin_trackerfilter_get_categories($field);
+                    $formats[$fieldId] = (count($res) >= 6) ? 'd' : 'r';
+                    break;
+                case 'd': // drop down list
+                case 'y': // country
+                case 'g': // group selector
+                case 'M': // Multiple Values
+                    $formats[$fieldId] = 'd';
+                    break;
+                case 'REL':
+                    $formats[$fieldId] = 'REL';
+                    break;
+                case 'R': // radio
+                    $formats[$fieldId] = 'r';
+                    break;
+                case '*': //rating
+                    $formats[$fieldId] = '*';
+                    break;
+                case 'f':
+                case 'j':
+                    $formats[$fieldId] = $field['type'];
+                    break;
+                default:
+                    $formats[$fieldId] = 't';
+                    break;
+            }
+        }
+        if ($field['type'] == 'e' && ($formats[$fieldId] == 't' || $formats[$fieldId] == 'T' || $formats[$fieldId] == 'i')) { // do not accept a format text for a categ for the moment
+            if (empty($res)) {
+                $res = wikiplugin_trackerfilter_get_categories($field);
+            }
+            $formats[$fieldId] = (count($res) >= 6) ? 'd' : 'r';
+        }
+        $opts = [];
+        if ($formats[$fieldId] == 't' || $formats[$fieldId] == 'T' || $formats[$fieldId] == 'i') {
+            $selected = empty($_REQUEST['f_' . $fieldId]) ? '' : $_REQUEST['f_' . $fieldId];
+        } elseif ($formats[$fieldId] == 'range') {
+            // map f_ID_from/to request vars to ins_ ones for tracker fields to parse them
+            $from_input = $_REQUEST;
+            $to_input = $_REQUEST;
+            foreach (['', 'Month', 'Day', 'Year', 'Hour', 'Minute'] as $suffix) {
+                if (isset($from_input['f_' . $fieldId . '_from' . $suffix])) {
+                    $from_input['ins_' . $fieldId . $suffix] = $from_input['f_' . $fieldId . '_from' . $suffix];
+                }
+                if (isset($to_input['f_' . $fieldId . '_to' . $suffix])) {
+                    $to_input['ins_' . $fieldId . $suffix] = $to_input['f_' . $fieldId . '_to' . $suffix];
+                }
+            }
+            $handler = $trklib->get_field_handler($field);
+            $data = $handler->getFieldData($from_input);
+            $field['ins_id'] = 'f_' . $field['fieldId'] . '_from';
+            $field['value'] = $data['value'];
+            $opts['from'] = $field;
+            $data = $handler->getFieldData($to_input);
+            $field['ins_id'] = 'f_' . $field['fieldId'] . '_to';
+            $field['value'] = $data['value'];
+            $opts['to'] = $field;
+        } else {
+            $selected = false;
+            switch ($field['type']) {
+                case 'e': // category
+                    if (empty($res)) {
+                        $res = wikiplugin_trackerfilter_get_categories($field);
+                    }
+                    foreach ($res as $opt) {
+                        $opt['id'] = $opt['categId'];
+                        if (! empty($_REQUEST['f_' . $fieldId]) && ((is_array($_REQUEST['f_' . $fieldId]) && in_array($opt['id'], $_REQUEST['f_' . $fieldId])) || (! is_array($_REQUEST['f_' . $fieldId]) && $opt['id'] == $_REQUEST['f_' . $fieldId]))) {
+                            $opt['selected'] = 'y';
+                            $selected = true;
+                        } else {
+                            $opt['selected'] = 'n';
+                        }
+                        $opts[] = $opt;
+                    }
+                    $opts[] = wikiplugin_trackerFilter_add_empty_option($fieldId);
+                    break;
+                case 'd': // drop down list
+                case 'R': // radio buttons
+                case '*': // stars
+                case 'M': // Multiple Values
+                    $cumul = '';
+                    foreach ($field['options_array'] as $val) {
+                        // check if exists custom label, the format is 'value=label'
+                        $delimiterPos = stripos($val, '=');
+                        if ($delimiterPos !== false) {
+                            $optval = substr($val, 0, $delimiterPos);
+                            $sval = substr($val, $delimiterPos + 1);
+                        } else {
+                            $optval = $val;
+                            $sval = $val;
+                        }
+                        $sval = strip_tags(TikiLib::lib('parser')->parse_data($sval, ['parsetoc' => false]));
+                        $opt['id'] = $optval;
+                        if ($field['type'] == '*') {
+                            $cumul = $opt['name'] = "$cumul*";
+                        } else {
+                            $opt['name'] = $sval;
+                        }
+                        if (! empty($_REQUEST['f_' . $fieldId]) && ((! is_array($_REQUEST['f_' . $fieldId]) && $_REQUEST['f_' . $fieldId] == $optval) || (is_array($_REQUEST['f_' . $fieldId]) && in_array($optval, $_REQUEST['f_' . $fieldId])))) {
+                            $opt['selected'] = 'y';
+                            $selected = true;
+                        } else {
+                            $opt['selected'] = 'n';
+                        }
+                        $opts[] = $opt;
+                    }
+                    $opts[] = wikiplugin_trackerFilter_add_empty_option($fieldId);
+                    break;
+                case 'c': // checkbox
+                    $opt['id'] = 'y';
+                    $opt['name'] = 'Yes';
+                    if (! empty($_REQUEST['f_' . $fieldId]) && $_REQUEST['f_' . $fieldId] == 'y') {
+                        $opt['selected'] = 'y';
+                        $selected = true;
+                    } else {
+                        $opt['selected'] = 'n';
+                    }
+                    $opts[] = $opt;
+                    $opt['id'] = 'n';
+                    $opt['name'] = 'No';
+                    if (! empty($_REQUEST['f_' . $fieldId]) && $_REQUEST['f_' . $fieldId] == 'n') {
+                        $opt['selected'] = 'y';
+                        $selected = true;
+                    } else {
+                        $opt['selected'] = 'n';
+                    }
+                    $opts[] = $opt;
+                    $formats[$fieldId] = 'r';
+                    break;
+                case 'n': // numeric
+                case 'D': // drop down + other
+                case 't': // text
+                case 'i': // text with initial
+                case 'a': // textarea
+                case 'm': // email
+                case 'y': // country
+                case 'k': //page selector
+                case 'u': // user
+                case 'g': // group
+                case 'q': // auto increment
+                case 'math': // mathematical calculation
+                    if (isset($status)) {
+                        $res = $trklib->list_tracker_field_values($trackerId, $fieldId, $status);
+                    } else {
+                        $res = $trklib->list_tracker_field_values($trackerId, $fieldId);
+                    }
+                    if ($field['type'] == 'u') {
+                        $res = array_unique(
+                            call_user_func_array(
+                                'array_merge',
+                                array_map(
+                                    function ($users) use ($trklib) {
+                                        return $trklib->parse_user_field($users);
+                                    },
+                                    $res
+                                )
+                            )
+                        );
+                        sort($res, SORT_NATURAL);
+                    }
+                    foreach ($res as $val) {
+                        $sval = strip_tags(TikiLib::lib('parser')->parse_data($val, ['parsetoc' => false]));
+                        $opt['id'] = $val;
+                        $opt['name'] = $sval;
+                        if ($field['type'] == 'y') { // country
+                            $opt['name'] = str_replace('_', ' ', $opt['name']);
+                        }
+                        if (! empty($_REQUEST['f_' . $fieldId]) && ((! is_array($_REQUEST['f_' . $fieldId]) && urldecode($_REQUEST['f_' . $fieldId]) == $val) || (is_array($_REQUEST['f_' . $fieldId]) && in_array($val, $_REQUEST['f_' . $fieldId])))) {
+                            $opt['selected'] = 'y';
+                            $selected = true;
+                        } else {
+                            $opt['selected'] = 'n';
+                        }
+                        $opts[] = $opt;
+                    }
+                    $opts[] = wikiplugin_trackerFilter_add_empty_option($fieldId);
+                    break;
+                case 'REL':
+                    if (! empty($field['options_map']['filter'])) {
+                        parse_str($field['options_map']['filter'], $filter);
+                    } else {
+                        $filter = [];
+                    }
+                    $format = '{title}';
+
+                    $opts = [];
+                    $opts['field_filter'] = $filter;
+                    $opts['field_selection'] = isset($_REQUEST['f_' . $fieldId]) ? $_REQUEST['f_' . $fieldId] : '';
+                    $opts['field_format'] = $format;
+                    $opts['other_options'][] = wikiplugin_trackerFilter_add_empty_option($fieldId);
+
+                    break;
+                case 'w': //dynamic item lists
+                case 'r': // item link
+                    $opts = [];
+                    $handler = $trklib->get_field_handler($field);
+                    if ($handler) {
+                        $list1 = $handler->getPossibleItemValues();
+                        foreach ($list1 as $id => $option) {
+                            $opt['id'] = $id;
+                            $opt['name'] = html_entity_decode($option); // this will be escaped by smarty but already escaped from ItemLink
+                            if (
+                                ! empty($_REQUEST['f_' . $fieldId]) &&
+                                ((! is_array($_REQUEST['f_' . $fieldId]) &&
+                                        urldecode($_REQUEST['f_' . $fieldId]) == $id) ||
+                                    (is_array($_REQUEST['f_' . $fieldId]) &&
+                                        in_array($id, $_REQUEST['f_' . $fieldId]))
+                                )
+                            ) {
+                                $opt['selected'] = 'y';
+                                $selected = true;
+                            } else {
+                                $opt['selected'] = 'n';
+                            }
+                            $opts[] = $opt;
+                        }
+                    }
+                    $opts[] = wikiplugin_trackerFilter_add_empty_option($fieldId);
+                    break;
+
+                case 'f':
+                case 'j':
+                    $field['ins_id'] = 'f_' . $field['fieldId'];
+                    break;
+                case 'F': // freetags
+                    $freetaglib = TikiLib::lib('freetag');
+                    $opts = [];
+                    $tags = [];
+                    $items = $trklib->list_items($field['trackerId'], 0, -1, '', [$field]);
+
+                    foreach ($items['data'] as $item) {
+                        $tags = array_merge($tags, $item['field_values'][0]['freetags']);
+                    }
+
+                    $tags = array_unique($tags);
+                    sort($tags);
+
+                    foreach ($tags as $tag) {
+                        $selected = false;
+
+                        if (isset($_REQUEST['f_' . $fieldId])) {
+                            $selection = $_REQUEST['f_' . $fieldId];
+
+                            if ((is_array($selection) && in_array($tag, $selection)) || $selection == $tag) {
+                                $selected = true;
+                            }
+                        }
+
+                        $opts[] = [
+                        'id' => $tag,
+                        'name' => $tag,
+                        'selected' => $selected,
+                        ];
+                    }
+
+                    break;
+                default:
+                    return tra('tracker field type not processed yet:') . ' ' . $field['type'];
+            }
+        }
+        $filters[] = ['name' => $field['name'], 'fieldId' => $fieldId, 'format' => $formats[$fieldId], 'opts' => $opts, 'selected' => $selected, 'field' => $field];
+    }
+    return $filters;
+}
+
+/** get get categories for field
+ *
+ * @param array $field
+ * @return array of category arrays
+ * @throws Exception
+ */
+function wikiplugin_trackerfilter_get_categories($field)
+{
+    $handler = TikiLib::lib('trk')->get_field_handler($field);
+
+    if ($handler) {
+        $res = $handler->getFieldData();
+        // handle full path setting here
+        if ($field['options_map']['descendants'] == 2) {
+            foreach ($res['list'] as & $cat) {
+                $cat['name'] = $cat['categpath'];
+            }
+        }
+        return $res['list'];
+    } else {
+        return [];
+    }
+}
+
+function wikiplugin_trackerFilter_build_urlquery($params)
+{
+    if (empty($params['filterfield'])) {
+        return [];
+    }
+    $urlquery = [];
+    foreach ($params['filterfield'] as $key => $filter) {
+        $filterfield[] = $filter;
+        if (! empty($params['exactvalue'][$key]) && empty($params['filtervalue'][$key])) {
+            $filtervalue[] = '';
+            $exactvalue[] = $params['exactvalue'][$key];
+        } else {
+            $filtervalue[] = $params['filtervalue'][$key];
+            $exactvalue[] = '';
+        }
+    }
+    if (! empty($filterfield)) {
+        $urlquery['filterfield'] = implode(':', $filterfield);
+        $urlquery['filtervalue'] = implode(':', $filtervalue);
+        $urlquery['exactvalue'] = implode(':', array_map(
+            function ($ev) {
+                return is_array($ev) ?
+                    key($ev) . reset($ev)
+                    : $ev;
+            },
+            $exactvalue
+        ));
+    }
+    if (! empty($params['sort_mode'])) {
+        $urlquery['sort_mode'] = $params['sort_mode'];
+    }
+    return $urlquery;
+}
+
+function wikiplugin_trackerFilter_add_empty_option($fieldId)
+{
+    $empty = '-Blank (no data)-';
+    return [
+        'id' => $empty,
+        'name' => $empty,
+        'selected' => (! empty($_REQUEST['f_' . $fieldId]) && ((! is_array($_REQUEST['f_' . $fieldId]) && $_REQUEST['f_' . $fieldId] === $empty) || (is_array($_REQUEST['f_' . $fieldId]) && in_array($empty, $_REQUEST['f_' . $fieldId])))) ? 'y' : 'n'
+    ];
+}
