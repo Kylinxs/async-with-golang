@@ -186,4 +186,455 @@ function wikiplugin_trackerfilter_info()
     ];
 }
 
-function wikiplugin_trackerfilter($data, $
+function wikiplugin_trackerfilter($data, $params)
+{
+    global $prefs;
+    $trklib = TikiLib::lib('trk');
+    $smarty = TikiLib::lib('smarty');
+    static $iTrackerFilter = 0;
+    if ($prefs['feature_trackers'] != 'y') {
+        return $smarty->fetch("wiki-plugins/error_tracker.tpl");
+    }
+    $iTrackerFilter++;
+    $default = ['noflipflop' => 'y', 'action' => 'Filter', 'line' => 'n', 'displayList' => 'n', 'export_action' => '',
+                     'export_itemid' => 'y', 'export_status' => 'n', 'export_created' => 'n', 'export_modif' => 'n', 'export_charset' => 'UTF-8', 'status' => 'opc'];
+
+    if (isset($_REQUEST['reset_filter'])) {
+        wikiplugin_trackerFilter_reset_filters($iTrackerFilter);
+    } elseif (! isset($_REQUEST['filter']) && isset($_REQUEST['session_filters']) && $_REQUEST['session_filters'] == 'y') {
+        $params = array_merge($params, wikiplugin_trackerFilter_get_session_filters($iTrackerFilter));
+    }
+    if (isset($_REQUEST["mapview"]) && $_REQUEST["mapview"] == 'y' && ! isset($_REQUEST["searchmap"]) && ! isset($_REQUEST["searchlist"]) || isset($_REQUEST["searchmap"]) && ! isset($_REQUEST["searchlist"])) {
+        $params["showmap"] = 'y';
+        $smarty->assign('mapview', true);
+    }
+    if (isset($_REQUEST["mapview"]) && $_REQUEST["mapview"] == 'n' && ! isset($_REQUEST["searchmap"]) && ! isset($_REQUEST["searchlist"]) || isset($_REQUEST["searchlist"]) && ! isset($_REQUEST["searchmap"])) {
+        $params["showmap"] = 'n';
+        $smarty->assign('mapview', false);
+    }
+    $params = array_merge($default, $params);
+    if ($params['noflipflop'] !== 'n') {
+        $params['noflipflop'] = 'y';
+    }
+    extract($params, EXTR_SKIP);
+    $dataRes = '';
+
+    if (isset($_REQUEST['msgTrackerFilter'])) {
+        $smarty->assign('msgTrackerFilter', $_REQUEST['msgTrackerFilter']);
+    }
+
+    $headerlib = TikiLib::lib('header');
+
+    /**
+     * adding spinner when clicking on the filter button
+     *added by Axel.mwenze on  Monday, august 05, 2019
+     */
+    $headerlib->add_jq_onready(
+        '$("#form-filter").submit(function(r) { 
+                $(".trackerfilter_loader").show();
+                return true;
+        })'
+    );
+
+    $headerlib->add_jq_onready(
+        '/* Maintain state of other trackerfilter plugin forms */
+                    $(".trackerfilter form").submit( function () {
+                        var current_tracker = this;
+                        $(current_tracker).append("<input type=\"hidden\" name=\"tracker_filters[]\" value=\"" + $(current_tracker).serialize() + "\" />")
+                        $(".trackerfilter form").each( function() {
+                            if (current_tracker !== this && $("input[name=count_item]", this).val() > 0) {
+                                $(current_tracker).append("<input type=\"hidden\" name=\"tracker_filters[]\" value=\"" + $(this).serialize() + "\" />")
+                            }
+                        });
+                        return true;
+                    });'
+    );
+    if ($prefs['jquery_select2'] === 'y') {
+        $headerlib->add_css('@media (min-width: 768px) { .tiki #col1 .trackerfilter form .table-responsive { overflow-x: visible; overflow-y: visible; }} /* jquery_select2 specific: edit this in wikiplugin_trackerfilter.php */');
+    } // TODO: move the CSS to less and add class html attribute in wikiplugin_trackerfilter.tpl instead
+
+    if (! empty($_REQUEST['tracker_filters']) && count($_REQUEST['tracker_filters']) > 0) {
+        foreach ($_REQUEST['tracker_filters'] as $tf_vals) {
+            parse_str(urldecode($tf_vals), $vals);
+            foreach ($vals as $k => $v) {
+                // if it's me and i had some items
+                if ($k == 'iTrackerFilter' && $v == $iTrackerFilter && isset($vals['count_item']) && $vals['count_item'] > 0) {
+                    // unset request params for all the plugins (my one will be array_merged below)
+                    foreach ($_REQUEST['tracker_filters'] as $tf_vals2) {
+                        parse_str(urldecode($tf_vals2), $vals2);
+                        foreach ($vals2 as $k2 => $v2) {
+                            unset($GLOBALS['_REQUEST'][$k2]);
+                        }
+                    }
+                     $_REQUEST = array_merge($_REQUEST, $vals);
+                }
+            }
+        }
+    }
+    if (! empty($_REQUEST['filter']) || ! empty($_REQUEST['reset_filter'])) {  // If we set a new filter, reset pagination for this plugin
+        unset($GLOBALS['_REQUEST']["tr_offset$iTrackerFilter"]);
+    }
+
+    if (! isset($filters)) {
+        if (empty($export_action)) {
+            return tra('missing parameters') . ' filters';
+        } else {
+            $listfields = [];
+            $filters = [];
+            $formats = [];
+        }
+    } else {
+        $listfields = wikiplugin_trackerFilter_split_filters($filters);
+        foreach ($listfields as $i => $f) {
+            if (strchr($f, '/')) {
+                list($fieldId, $format) = explode('/', $f);
+                $listfields[$i] = $fieldId;
+                $formats[$fieldId] = $format;
+            } else {
+                $formats[$f] = '';
+            }
+        }
+    }
+    if (empty($trackerId) && ! empty($_REQUEST['trackerId'])) {
+         $trackerId = $_REQUEST['trackerId'];
+    }
+
+    $tracker_definition = Tracker_Definition::get($trackerId);
+
+    if (empty($_REQUEST['filter']) && empty($export_action)) { // look if not coming from an initial and not exporting
+        foreach ($_REQUEST as $key => $val) {
+            if (substr($key, 0, 2) == 'f_') {
+                $_REQUEST['filter'] = 'y';
+                break;
+            }
+        }
+    }
+    if (! isset($sortchoice)) {
+        $sortchoice = '';
+    } else {
+        unset($params['sortchoice']);
+        if (isset($_REQUEST["tr_sort_mode$iTrackerFilter"])) {
+            $params['sort_mode'] = $_REQUEST["tr_sort_mode$iTrackerFilter"];
+        }
+        foreach ($sortchoice as $i => $sc) {
+            $sc = explode('|', $sc);
+            $sortchoice[$i] = ['value' => $sc[0], 'label' => empty($sc[1]) ? $sc[0] : $sc[1]];
+        }
+    }
+    if (empty($trackerId) || ! ($tracker = $trklib->get_tracker($trackerId))) {
+        return $smarty->fetch("wiki-plugins/error_tracker.tpl");
+    }
+    $filters = wikiplugin_trackerFilter_get_filters($trackerId, $listfields, $formats, $status);
+    if (empty($export_action)) {
+        if (! is_array($filters)) {
+            return $filters;
+        }
+    }
+    if (
+        ($displayList == 'y' || isset($_REQUEST['filter']) || isset($_REQUEST["tr_offset$iTrackerFilter"]) || isset($_REQUEST['tr_sort_mode'])) &&
+                (! isset($_REQUEST['iTrackerFilter']) || $_REQUEST['iTrackerFilter'] == $iTrackerFilter)
+    ) {
+        $ffs = [];
+        $values = [];
+        $exactValues = [];
+        wikiplugin_trackerfilter_build_trackerlist_filter($_REQUEST, $formats, $ffs, $values, $exactValues, $tracker_definition);
+        // echo '<pre>BUILD_FILTER'; print_r($ffs); print_r($exactValues); echo '</pre>';
+
+        $params['fields'] = isset($fields) ? $fields : [];
+        if (empty($params['trackerId'])) {
+            $params['trackerId'] = $trackerId;
+        }
+        if (! empty($ffs)) {
+            if (empty($params['filterfield'])) {
+                $params['filterfield'] = $ffs;
+                $params['exactvalue'] = $exactValues;
+                $params['filtervalue'] = $values;
+            } else {
+                if (! isset($params['exactvalue']) && ! isset($params['filtervalue'])) {
+                    Feedback::error(tr('TrackerFilter: Wrong parameter specified - filterfield exists but exactvalue or filtervalue not set.'));
+                }
+                $c = count($params['filterfield']);
+                $params['filterfield'] = array_merge($params['filterfield'], $ffs);
+                for ($i = 0; $i < $c; ++$i) {
+                    $params['exactvalue'][$i] = empty($params['exactvalue'][$i]) ? '' : $params['exactvalue'][$i];
+                    $params['filtervalue'][$i] = empty($params['filtervalue'][$i]) ? '' : $params['filtervalue'][$i];
+                }
+                $params['exactvalue'] = array_merge($params['exactvalue'], $exactValues);
+                $params['filtervalue'] = array_merge($params['filtervalue'], $values);
+            }
+        }
+        if (empty($params['max'])) {
+            $params['max'] = $prefs['maxRecords'];
+        }
+        if (! empty($_REQUEST['f_status'])) {
+            $params['status'] = $_REQUEST['f_status'];
+        }
+        wikiplugin_trackerFilter_save_session_filters($params, $iTrackerFilter);
+        $smarty->assign('urlquery', wikiplugin_trackerFilter_build_urlquery($params));
+        include_once('lib/wiki-plugins/wikiplugin_trackerlist.php');
+        $dataRes .= wikiplugin_trackerlist($data, $params);
+    } else {
+        $data = '';
+    }
+
+    $smarty->assign_by_ref('sortchoice', $sortchoice);
+    $smarty->assign_by_ref('filters', $filters);
+    //echo '<pre>';print_r($filters); echo '</pre>';
+    $smarty->assign_by_ref('trackerId', $trackerId);
+    $smarty->assign('line', ($line == 'y' || $line == 'in') ? 'y' : 'n');
+    $smarty->assign('indrop', $line == 'in' ? 'y' : 'n');
+    $smarty->assign('iTrackerFilter', $iTrackerFilter);
+    if (! empty($export_action)) {
+        $smarty->assign('export_action', $export_action);
+        $smarty->assign('export_fields', implode(':', $fields));
+        $smarty->assign('export_itemid', $export_itemid == 'y' ? 'on' : '');
+        $smarty->assign('export_status', $export_status == 'y' ? 'on' : '');
+        $smarty->assign('export_created', $export_created == 'y' ? 'on' : '');
+        $smarty->assign('export_modif', $export_modif == 'y' ? 'on' : '');
+        $smarty->assign('export_charset', $export_charset);
+        if (! empty($_REQUEST['itemId']) && (empty($ignoreRequestItemId) || $ignoreRequestItemId != 'y')) {
+            $smarty->assign('export_itemId', $_REQUEST['itemId']);
+        }
+
+
+        if (empty($params['filters'])) {
+            if (! empty($filterfield)) {    // convert param filters to export params
+                $f_fields = [];
+                for ($i = 0, $cfilterfield = count($filterfield); $i < $cfilterfield; $i++) {
+                    if (! empty($exactvalue[$i])) {
+                        $f_fields['f_' . $filterfield[$i]] = $exactvalue[$i];
+                    } elseif (! empty($filtervalue[$i])) {
+                        $f_fields['f_' . $filterfield[$i]] = $filtervalue[$i];
+                        $f_fields['x_' . $filterfield[$i]] = 't';   // x_ is for not exact?
+                    }
+                }
+                $smarty->assign_by_ref('f_fields', $f_fields);
+            }
+            $filters = [];  // clear out filters set up earlier which default to all fields if not exporting
+        } else {
+            $f_fields = [];
+            foreach ($formats as $fid => $fformat) {
+                $f_fields['x_' . $fid] = $fformat;  // x_ is for not exact
+            }
+            $smarty->assign_by_ref('f_fields', $f_fields);
+        }
+    }
+    if ($displayList == 'n' || ! empty($_REQUEST['filter']) || $noflipflop !== 'n' || $prefs['javascript_enabled'] != 'y' || (isset($_SESSION['tiki_cookie_jar']["show_trackerFilter$iTrackerFilter"]) && $_SESSION['tiki_cookie_jar']["show_trackerFilter$iTrackerFilter"] == 'y')) {
+        $open = 'y';
+        $_SESSION['tiki_cookie_jar']["show_trackerFilter$iTrackerFilter"] = 'y';
+    } else {
+        $open = 'n';
+    }
+    $smarty->assign_by_ref('open', $open);
+    $smarty->assign_by_ref('action', $action);
+    $smarty->assign_by_ref('noflipflop', $noflipflop);
+    $smarty->assign_by_ref('dataRes', $dataRes);
+
+    if (isset($mapButtons)) {
+        $smarty->assign('mapButtons', $mapButtons);
+    }
+
+    $dataF = $smarty->fetch('wiki-plugins/wikiplugin_trackerfilter.tpl');
+
+    static $first = true;
+
+    if ($first) {
+        $first = false;
+        $headerlib->add_jq_onready(
+            '$("a.prevnext", "#trackerFilter' . $iTrackerFilter . ' + .trackerfilter-result").click( function( e ) {
+                e.preventDefault();
+                $("#trackerFilter' . $iTrackerFilter . ' form")
+                .attr("action", $(this).attr("href"))
+                .submit();
+            } );'
+        );
+    }
+
+    return $data . $dataF;
+}
+
+function wikiplugin_trackerfilter_build_trackerlist_filter($input, $formats, &$ffs, &$values, &$exactValues, Tracker_Definition $tracker_definition)
+{
+    $trklib = TikiLib::lib('trk');
+
+    foreach ($input as $key => $val) {
+        if (substr($key, 0, 2) == 'f_' && ! empty($val) && (! is_array($val) || ! empty($val[0]))) {
+            if (! is_array($val)) {
+                $val = urldecode($val);
+            }
+            if ($val === '-Blank (no data)-') {
+                $val = '';
+            }
+            $fieldId = substr($key, 2);
+            $field = $tracker_definition->getField((int)$fieldId);
+
+            if ($fieldId == 'status') {
+                continue;
+            }
+            if (preg_match('/([0-9]+)(Month|Day|Year|Hour|Minute|Second)/', $fieldId, $matches)) { // a date
+                if (! in_array($matches[1], $ffs)) {
+                    $fieldId = $matches[1];
+                    $ffs[] = $matches[1];
+                    // TO do optimize get options of the field
+                    $date = $trklib->build_date($_REQUEST, $trklib->get_tracker_field($fieldId), 'f_' . $fieldId);
+                    if (empty($formats[$fieldId])) { // = date
+                        $exactValues[] = $date;
+                    } else { // > or < data
+                        $exactValues[] = [$formats[$fieldId] => $date];
+                    }
+                }
+            } elseif ($field['type'] == 'F') {
+                // if field type is freetag force the use of $values instead of $exactValues
+                $ffs[] = $fieldId;
+
+                if (is_array($val)) {
+                    $val = implode('%', $val);
+                }
+
+                $values[] = "%$val%";
+            } else {
+                if (preg_match("/\d+_(from|to)(Month|Day|Year|Hour|Minute|Second)?/", $fieldId, $m)) { // range filter
+                    $fieldId = (int)$fieldId;
+                    $formats[$fieldId] = ( $m[1] == 'from' ? '>=' : '<=' );
+
+                    if (! empty($m[2])) {
+                        if ($m[2] != 'Year') {
+                            continue;
+                        } else {
+                            $val = $trklib->build_date($_REQUEST, $trklib->get_tracker_field($fieldId), 'f_' . $fieldId . '_' . $m[1]);
+                        }
+                    } else {
+                        $handler = $trklib->get_field_handler($field);
+                        $input['ins_' . $fieldId] = $val;
+                        $data = $handler->getFieldData($input);
+                        $val = $data['value'];
+                        if ($handler->getOption('datetime') == 'd' && $m[1] == 'to') {
+                            // end date inclusive if date-only field
+                            $val += 3600 * 24 - 1;
+                        }
+                    }
+                }
+                if (! is_numeric($fieldId)) { // composite filter
+                    $ffs[] = ['sqlsearch' => explode(':', str_replace(['(', ')'], '', $fieldId))];
+                } else {
+                    $ffs[] = $fieldId;
+                }
+                if (isset($formats[$fieldId]) && ($formats[$fieldId] == 't' || $formats[$fieldId] == 'i')) {
+                    $exactValues[] = '';
+                    $values[] = ($formats[$fieldId] == 'i') ? "$val%" : $val;
+                } else {
+                    if (! empty($formats[$fieldId]) && preg_match('/[\>\<]+/', $formats[$fieldId])) {
+                        $exactValues[] = [$formats[$fieldId] => $val];
+                    } else {
+                        $exactValues[] = $val;
+                    }
+                    $values[] = '';
+                }
+            }
+        }
+    }
+}
+
+function wikiplugin_trackerFilter_reset_filters($iTrackerFilter = 0)
+{
+    unset($_SESSION[wikiplugin_trackerFilter_get_session_filters_key($iTrackerFilter)]);
+    unset($_REQUEST['tracker_filters']);
+
+    foreach ($_REQUEST as $key => $val) {
+        if (substr($key, 0, 2) == 'f_') {
+            unset($_REQUEST[$key]);
+        }
+    }
+}
+
+function wikiplugin_trackerFilter_get_session_filters_key($iTrackerFilter = 0)
+{
+    $trackerId = isset($_REQUEST['trackerId']) ? $_REQUEST['trackerId'] : 0;
+    if (! empty($_REQUEST['page'])) {
+        return 'f_' . $_REQUEST['page'] . '_' . $iTrackerFilter;
+    }
+    return '';
+}
+
+function wikiplugin_trackerFilter_save_session_filters($filters, $iTrackerFilter = 0)
+{
+    $_SESSION[wikiplugin_trackerFilter_get_session_filters_key($iTrackerFilter)] = $filters;
+}
+
+function wikiplugin_trackerFilter_get_session_filters($iTrackerFilter = 0)
+{
+    $key = wikiplugin_trackerFilter_get_session_filters_key($iTrackerFilter);
+
+    if (! isset($_SESSION[$key])) {
+        return [];
+    }
+
+    if (isset($_SESSION[$key]['filterfield'])) {
+        foreach ($_SESSION[$key]['filterfield'] as $idx => $field) {
+            $_REQUEST['f_' . $field] = $_SESSION[$key]['filtervalue'][$idx];
+        }
+    }
+
+    return $_SESSION[$key];
+}
+
+function wikiplugin_trackerFilter_split_filters($filters)
+{
+    if (empty($filters)) {
+        return [];
+    }
+    $in = false;
+    for ($i = 0, $max = strlen($filters); $i < $max; ++$i) {
+        if ($filters[$i] == '(') {
+            $in = true;
+        } elseif ($filters[$i] == ')') {
+            $in = false;
+        } elseif ($in && $filters[$i] == ':') {
+            $filters[$i] = ',';
+        }
+    }
+    $list = explode(':', $filters);
+    foreach ($list as $i => $filter) {
+        $list[$i] = str_replace(',', ':', $filter);
+    }
+    return $list;
+}
+
+function wikiplugin_trackerFilter_get_filters($trackerId = 0, array $listfields = [], &$formats = [], $status = 'opc')
+{
+    global $tiki_p_admin_trackers;
+    $trklib = TikiLib::lib('trk');
+    $filters = [];
+    if (empty($trackerId) && ! empty($listfields[0])) {
+        $field = $trklib->get_tracker_field($listfields[0]);
+        $trackerId = $field['trackerId'];
+    }
+
+    if ($listfields) {
+        $newListFields = [];
+        foreach ($listfields as $id => $field) {
+            /** @var TrackerLib $trklib */
+            $info = $trklib->get_field_info($field);
+            if (! is_numeric($field) || ($info && $info['trackerId'] == $trackerId)) {
+                $newListFields[] = $field;
+            }
+        }
+        if (count($listfields) != count($newListFields)) {
+            $listfields = $newListFields;
+            if ($tiki_p_admin_trackers == "y") {
+                Feedback::error(tr('TrackerFields: Unknown tracker field used in the parameter "filters"'));
+            }
+        }
+    }
+
+    $fields = $trklib->list_tracker_fields($trackerId, 0, -1, 'position_asc', '', true, empty($listfields) ? '' : ['fieldId' => $listfields]);
+    if (empty($listfields)) {
+        foreach ($fields['data'] as $field) {
+            $listfields[] = $field['fieldId'];
+        }
+    }
+
+    $iField = 0;
+    foreach ($listfields as $fieldId) {
+        if ($fieldId == 'status' || $fieldId == 'Status') {
+            $filter = ['name' => $fieldId, 'fieldId' => 'status', 'format' => 'd', 'opts' => [['id' => 'o', 'name' => 'open', 'selected' => (! empty($_REQUEST['f_status']) && $_REQUEST['f_status'] == 'o') ? 'y' : 'n'], ['id' => 'p', 'name' => 'pending', 'select
