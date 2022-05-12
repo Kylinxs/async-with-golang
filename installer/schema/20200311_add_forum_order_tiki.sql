@@ -1,0 +1,1 @@
+ALTER TABLE tiki_forums ADD COLUMN `forumOrder` int(8) NOT NULL default 0 AFTER `parentId`;

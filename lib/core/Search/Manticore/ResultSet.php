@@ -11,4 +11,9 @@ class Search_Manticore_ResultSet extends Search_ResultSet
     public function highlight($content)
     {
         if (! empty($content['_highlight'])) {
-            return strip
+            return strip_tags($content['_highlight'], '<em>');
+        } elseif ($this->highlightHelper && isset($content['contents'])) {
+            return $this->highlightHelper->filter($content['contents']);
+        }
+    }
+}
