@@ -1,0 +1,167 @@
+
+// $Id: _variables.scss 67789 2018-10-02 14:52:34Z chibaguy $
+
+// - - - - - - - Bootstrap variables (override values in vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss - - - - - - //
+//
+// Colors
+$white:    #fff;
+$gray-100: #f8f9fa;
+$gray-200: #e9ecef;
+$gray-300: #dee2e6;
+$gray-400: #ced4da;
+$gray-500: #adb5bd;
+$gray-600: #868e96;
+$gray-700: #495057;
+$gray-800: #343a40;
+$gray-900: #212529;
+$black:    #000;
+
+$primary: #087EB4;
+$success: #5cb85c; //#48ca3b;
+//$info: #4d3a7d;
+$warning: #f0ad4e; //#debb27;
+$danger: #FF3D3D;
+
+$theme-colors: (
+  "primary":         #087EB4, // #56c4f7,
+  "secondary": #1784b7,
+  "success":          #5cb85c,
+  "info":             #5bc0de,
+  "warning":          #f0ad4e,
+  "danger":           #FF3D3D,
+    "light":      #1784b7,
+  "dark":       #000000,
+  "mono":           #0a1218,
+  "color_white": #ffffff,
+  "mono_1":           rgba(#0a1218, 0.77),
+  "dark_1":       rgba(0, 0, 0, 0.77),
+  "secondary_1": rgba(23, 132, 183, 0.77),
+  "color_white_1": rgba(255, 255, 255, 0.2),
+  "secondary_2": rgba(23, 132, 183, 0.95),
+  "primary_1":          rgba(86, 196, 247, 0.5),
+  "light_gray": #6c757d,
+  "dark_gray": #212529,
+);
+
+// Options
+// Spacing
+
+// Body
+$body-bg: #192129;
+$body-color: #fff;
+
+// Links
+$link-color: #53BAEA; // #56c4f7; lightened for WCAG 2 compliance
+$link-hover-color: #56c4f7;
+// Components
+$border-radius:               0.5rem;
+$border-radius-lg:            .2rem;
+$border-radius-sm:            .1rem;
+
+// Fonts
+$font-family-serif: "Myriad Pro", Helvetica, Arial, sans-serif;
+$font-family-base: $font-family-serif;
+$headings-font-family: inherit;
+$headings-font-weight: 400;
+
+$blockquote-small-color:      $gray-200;
+$text-muted:                  $gray-300;
+
+// Tables
+//$table-border-color: #dddddd;
+$table-border-radius: 0.2rem;
+
+// Buttons
+$btn-border-radius: 5px;
+//$btn-default-color: #ffffff;
+//$btn-default-bg: #3676c4;
+//$btn-default-border: #3676c4;
+
+//$btn-primary-color: #ffffff; just use primary color
+//$btn-primary-bg: #087EB4; // #56c4f7;
+
+// Forms
+//$input-border: #dddddd;
+$input-color: $gray-100;
+$input-border-radius: 0.2rem;
+$input-group-addon-color:               $input-color;
+$input-group-addon-bg:                  $gray-800;
+$input-placeholder-color:               $gray-300;
+
+// Dropdowns
+// Navs
+// Navbar
+$navbar-dark-color: $link-color; // #1784b7; // previous version note: unintuitive but has to match class of div in tpl
+$navbar-dark-active-color: $navbar-dark-color;
+$navbar-dark-active-hover-color: $navbar-dark-active-color;
+$navbar-dark-bg: rgba(23, 132, 183, 0.77); // ditto
+$navbar-dark-hover-color: #1784b7;
+$nav-link-color: $link-color;
+// $navbar-nav-link-padding-x: 2rem;
+//$navbar-dark-border: darken($navbar-dark-bg, 6.5%);
+
+//$navbar-dark-hover-color: darken(#fff, 10%);
+//$navbar-dark-hover-bg: #3270bd;
+//$navbar-dark-active-color: #ffffff;
+//$navbar-dark-active-bg: #3270bd;
+//$navbar-dark-disabled-color: #cccccc;
+
+// Pagination
+$pagination-color:                  $link-color;
+$pagination-bg:                     $black;
+
+// $breadcrumb-border-radius: 0.2rem;
+// Jumbotron
+// Cards
+$card-bg: rgba(#000, 0.77);
+$card-border-color: transparent;
+$card-border-radius: 0.5rem;
+//$card-border-radius: $border-radius-lg;
+//$card-text: #fff;//@gray-lighter;
+//$card-header-bg: #386dbb;
+
+// Tooltips
+// Popovers
+$popover-header-color: #fff;
+$popover-header-bg: #1784b7;
+// Badges
+// Modals
+//$modal-header-border-color: #386dbb;
+// Alerts
+$alert-border-radius: 0.5rem;
+// Progress bars
+$progress-border-radius: 0.2rem;
+// List group
+// Image thumbnails
+// Figures
+// Breadcrumbs
+$breadcrumb-border-radius: 0.2rem;
+$breadcrumb-bg: rgba(86, 196, 247, 0.5);
+// Carousel
+// Close
+// Code
+
+$nav-pills-border-radius: 0.2rem;
+
+// - - - - - - - - - -  - - - - - - Other variables, if any - - - - - - - - - - - - - - - - - //
+
+
+@mixin transform($transform) {
+  -webkit-transform: $transform;
+  -moz-transform: $transform;
+  -ms-transform: $transform;
+  -o-transform: $transform;
+  transform: $transform;
+}
+
+@mixin backface-visibility($transform) {
+  -webkit-backface-visibility: $transform;
+  -moz-backface-visibility: $transform;
+  backface-visibility: $transform;
+}
+
+@mixin display-flex {
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+}
