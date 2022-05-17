@@ -1,3 +1,4 @@
+
 <?php
 
 // (c) Copyright by authors of the Tiki Wiki CMS Groupware Project
@@ -7,5 +8,5 @@
 // $Id$
 
 // This redirects to the sites root to prevent directory browsing
-header("location: ../../../../../tiki-index.php");
+header("location: ../../../../../index.php");
 die;
