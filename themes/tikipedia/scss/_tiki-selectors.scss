@@ -1,0 +1,491 @@
+// $Id: _tiki-selectors.scss 61747 2017-03-18 18:28:58Z rjsmelo $
+// This file is for additional SCSS rules beyond what are in _bootstrap-variables.scss.
+// Image path example:
+$imagePath: "../images/";
+// body {
+//    background-image: url('#{$imagePath}bg.jpg');
+// }
+
+.label-success,
+.label-info,
+.label-warning {
+  color: $body-color;
+}
+
+.btn-secondary { border-color: #a2a9b1; }
+
+body {
+  background: #f6f6f6 url('#{$imagePath}page-base.png');
+}
+
+#bottom_modules {
+  margin-left: 16.66666667%;
+}
+
+.footer_liner {
+  color: #333333;
+  font-size: .9rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  border-bottom: 1px solid #aaaaaa;
+  color: #000000;
+  font-weight: normal;
+  padding-bottom: 0.17em;
+  padding-top: 0.5em;
+}
+
+#page-bar {
+  position: absolute;
+  top: -48px;
+  right: 15px;
+
+  .dropup .dropdown-menu, .navbar-fixed-bottom .dropdown .dropdown-menu {
+    top: 100%;
+    bottom: auto;
+    margin-top: 2px;
+  }
+
+  .dropup .caret //, .navbar-fixed-bottom .dropdown .caret
+  {
+    border-top: 4px dashed;
+    border-top: 4px solid \9
+  ;
+    border-bottom: 0;
+    content: "";
+  }
+}
+
+.text-right.side-col-toggle {
+  margin-top: 28px;
+  margin-bottom: -28px;
+}
+
+@media (min-width: 768px) {
+  .navbar-collapse {
+    padding-left: 4px;
+  }
+  .tikipedia_menu {
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    //        .navbar-nav {
+    //            margin-left: -11px;
+    //        }
+  }
+}
+
+@media (min-width: 980px) {
+  a.navbar-brand {
+    display: none;
+  }
+}
+
+//@media (max-width: 768px) {
+
+//.tiki_wiki_page #col1 { margin-top: 40px; } }
+
+.navbar-dark.bg-dark,
+.navbar-light.bg-light {
+  background: transparent !important;
+}
+
+.topbar,
+#topbar_modules {
+  min-height: 80px;
+  background: transparent !important;
+}
+
+.row-middle #page-bar .btn.btn-primary,
+.row-middle #page-bar .btn.btn-info,
+.row-middle #page-bar .btn.btn-secondary {
+  background-color: #f3f3f3;
+  background-position: bottom left;
+  background-repeat: repeat-x;
+  background-image: url('#{$imagePath}pagetop_button_bg.png');
+  margin: 0 0 0 -4px;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  color: #0645ad;
+  border: none;
+  border-bottom: 1px solid #ffffff;
+}
+
+.navbar-nav {
+  background: 100% 100% url('#{$imagePath}pagetop_buttons_border_bg.png') no-repeat;
+  padding-right: 1px;
+}
+
+.topbar > a,
+  //.topbar .bg-light .navbar-nav > li > a,
+.topbar .nav > li a {
+  color: #0645ad;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: .75rem;
+}
+
+.bg-light.navbar .nav-item.active a,
+.bg-light.navbar .nav-item.active > a:hover,
+.bg-light.navbar .nav-item.active > a:focus {
+  color: #0645ad;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+.bg-light.navbar .open a,
+.bg-light.navbar .open a:hover,
+.bg-light.navbar .open a:focus {
+  background-color: transparent;
+  color: #555555;
+  text-decoration: underline;
+}
+
+.pagetitle {
+  font-family: $headings-font-family;
+  line-height: 1.3;
+  margin-top: 0;
+  margin-bottom: 0.25em;
+  padding: 0;
+  color: #000000;
+
+  & > a {
+    color: $body-color;
+  }
+}
+
+.tiki_wiki_page:not(.manage) .pagetitle {
+  margin-top: -4px;
+}
+
+#col1,
+#col3 {
+  background: #ffffff url('#{$imagePath}border.png') repeat-y;
+  border: solid #a7d7f9;
+  border-width: 1px 0;
+  padding-top: 1.25em;
+  padding-bottom: 1.25em;
+}
+
+#col3 { background: #fff; }
+
+body.fullscreen #col1 {
+  background: #ffffff;
+  border: solid #a7d7f9;
+  border-width: 1px 0 0 0;
+}
+
+//.tiki .ui-widget-content .ui-widget-content:not(.elfinder-buttonset) {
+//    background: #f8eaba;
+//    border: 2px solid #f4c430;
+//}
+
+.manage #col1,
+.tiki_admin #col1,
+#admin_forums,
+.modal-content,
+.tiki .ui-widget-content.div:not(.elFinderDialog),
+.tiki .ui-widget-content.div:not(.elfinder-buttonset),
+.ui-widget-header.div:not(.elfinder-statusbar),
+.tiki .ui-widget-header.div:not(.elfinder-toolbar),
+.tiki .ui-widget-content.elfinder-dialog,
+.tiki .ui-widget-content.elfinder-dialog .ui-dialog-titlebar,
+.tiki .ui-widget-content.elfinder-dialog .ui-widget-content,
+.tiki .ui-widget-content.elfinder-dialog .ui-widget-header {
+  background: #f8eaba;
+  border: 2px solid #f4c430;
+}
+
+.tiki_admin #col1 .page-header,
+.modal-content .table,
+.tiki .ui-widget-content.elfinder-dialog .ui-state-default {
+  background: #f8eaba;
+}
+
+@media (min-width: 992px) {
+  #topbar_modules,
+  #topbar_modules_social, // Fixed top navbar 2
+  #col1.col-lg-9,
+  .hide_zone_right #col1.col-lg-8 {
+    max-width: 88.4210526%; // 83.33333333%; Actually col-md-11 width
+    flex: 0 0 88.4210526%;
+    //    left: 11.5789474%; // 16.66666667%;
+  }
+
+  //#col2 {
+  //    background: transparent url('#{$imagePath}border.png') 100% 0 repeat-y;
+  //}
+  #col2.col-lg-3,
+  #col2.col-lg-2 {
+    flex: 0 0 11.5789474%;
+    max-width: 11.5789474%;
+  }
+
+  body:not(.layout_social) #left_modules {
+    margin-top: -10px;
+  }
+}
+
+#col2 {
+  .box-logo {
+    text-align: center;
+  }
+
+  .box-logo:before,
+  .box-logo:after {
+    content: " ";
+    display: table;
+    clear: both;
+  }
+
+  .pull-left.sitelogo {
+    float: none !important;
+  }
+
+  .sitelogo {
+    margin: 0;
+    max-width: 135px;
+    max-height: 115px;
+  }
+
+  .box-logo > div > .sitelogo + .sitetitles {
+    padding-left: 0;
+    margin-left: 0;
+  }
+
+  .module {
+    margin-bottom: .35rem;
+  }
+
+  .card,
+  .card-header {
+    background: transparent;
+    border: none;
+  }
+
+  .card {
+    font-size: .75rem;
+    line-height: 1.125;
+  }
+
+  .card-header {
+    padding: 6px 8px 0 0;
+  }
+
+  .card-title {
+    font-size: .75rem;
+    color: #4d4d4d;
+    font-weight: 400;
+    padding: 0.25em 0 0 0.25em;
+    border-bottom: none;
+  }
+
+  .card-body {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAAABCAAAAAAphRnkAAAAJ0lEQVQIW7XFsQEAIAyAMPD/b7uLWz8wS5youFW1UREfiIpH1Q2VBz7fGPS1dOGeAAAAAElFTkSuQmCC);
+    background-repeat: no-repeat;
+    border: none;
+    padding: 4px 8px 8px;
+  }
+}
+
+/* Head */
+.page-header {
+  //    height: 5em;
+  background: #ffffff url('#{$imagePath}page-fade.png') repeat-x bottom left;
+  //    background-position: bottom left;
+}
+
+body.fullscreen .page-header {
+  background: transparent;
+}
+
+#mw-head-base {
+  margin-top: -5em;
+  margin-left: 10em;
+  height: 5em;
+  background: url('#{$imagePath}border.png') repeat-x bottom left;
+  //    background-position: bottom left;
+}
+
+h1.sitetitle {
+  border-bottom: none;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+h2.sitesubtitle {
+  font-size: 12px;
+  border-bottom: none;
+}
+
+// Cards
+
+h3.card-title {
+  border-bottom: none;
+  font-family: sans-serif;
+}
+
+// TOC
+#toc,
+.autotoc > .nav {
+  display: table;
+  padding: 7px;
+  background-color: #f9f9f9;
+  border: 1px solid #aaaaaa;
+  font-size: 95%;
+
+  h3 {
+    font-size: 100%;
+    text-align: center;
+    border-bottom: none;
+  }
+}
+
+// From Mediawiki Vector Less
+
+ul {
+  list-style-type: disc;
+  //    .list-style-image-svg("url('#{$imagePath}bullet-icon.svg'", "url('#{$imagePath}bullet-icon.png'");
+}
+
+article {
+  .card-header {
+    text-align: center;
+  }
+
+  .card-title {
+    font-weight: bold;
+    font-family: sans-serif;
+  }
+}
+
+// Fixed top navbar 2 Layout template
+
+#topbar_modules_social {
+  float: none;
+
+}
+
+// Blogs
+
+.blogpost,
+.top_post { // Forums
+  .card-header {
+    text-align: left;
+  }
+
+  .card-title {
+    font-family: $headings-font-family;
+    font-weight: normal;
+    font-size: 26px;
+    padding-top: 0;
+    margin-bottom: 8px;
+  }
+
+  .card-footer {
+    margin: 0 15px 15px 15px;
+    border: 1px solid #dddddd;
+  }
+}
+
+.blogactions .dropdown-actions,
+.blogactions .dropdown-menu,
+.page_actions .dropdown-menu-right,
+#page-bar .dropup .dropdown-menu,
+#page-bar .navbar-fixed-bottom .dropdown .dropdown-menu {
+  right: 0;
+  left: auto;
+}
+
+// Articles
+
+.articletitle {
+  margin-bottom: 15px;
+
+  h1, h2 {
+    margin-top: 0;
+    padding-top: 0;
+
+    a {
+      color: $body-color;
+    }
+  }
+}
+
+.wikiactions_wrapper.clearfix,
+.clearfix.articletrailer {
+  float: right;
+}
+
+// Forums
+.tiki_forums h1.pagetitle {
+  margin-top: 0;
+}
+
+a.forumnameread {
+  font-weight: bold;
+}
+
+.card-header.postbody-title,
+.blogpost .card-header {
+  background: transparent;
+  border-bottom: none;
+  padding-bottom: 0;
+  text-align: left;
+}
+
+.top_post .card-body.postbody-content {
+  padding-top: 0;
+
+  .author {
+    padding-bottom: 15px;
+  }
+}
+
+// Categories
+
+//.catblock {
+//  background: $card-default-heading-bg;
+//  border: 1px solid $card-default-border;
+//  padding: $card-body-padding;
+//}
+
+//.cattitle .label { background: $alert-info-bg; }
+
+// Mediawiki "infobox"
+
+.infobox {
+  border: 1px solid #aaa;
+  border-spacing: 3px;
+  background-color: #f9f9f9;
+  color: black;
+  margin: 0.5em 0 0.5em 1em;
+  padding: 0.2em;
+  font-size: 88%;
+  line-height: 1.5em;
+
+  img {
+    margin-top: 6px;
+  }
+
+  h3, h4 {
+    font-weight: bold;
+    background-color: #c0c0c0;
+    padding: 4px;
+    text-align: center;
+    font-family: $font-family-base;
+    margin: 0;
+  }
+
+  h3 {
+    font-size: 120%;
+  }
+
+  h4 {
+    font-size: 105%;
+  }
+}
+
+legend.table {
+  background: transparent;
+}
