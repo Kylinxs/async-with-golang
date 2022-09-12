@@ -1,0 +1,38 @@
+//--------------------------- Tiki CSS variables
+// The light background is changed from the original for more color variety in Tiki's themes.
+:root {
+    --tiki-top-light-bg: #f3969a;
+    --tiki-top-light-color: #5a5a5a;
+    --tiki-top-light-link-color: rgba(0, 0, 0, 0.3);
+    --tiki-top-light-link-hover-color: #5a5a5a;
+
+    --tiki-topbar-light-bg: #f3969a;
+    --tiki-topbar-light-color: #5a5a5a;
+    --tiki-topbar-light-link-color: rgba(0, 0, 0, 0.3);
+    --tiki-topbar-light-link-hover-color: #5a5a5a;
+
+    --tiki-top-dark-bg: rgba(120, 194, 173, 1);
+    --tiki-top-dark-color: #fff;
+    --tiki-top-dark-link-color: rgba(255, 255, 255, 0.8);
+    --tiki-top-dark-link-hover-color: #fff;
+
+    --tiki-topbar-dark-bg: rgba(120, 194, 173, 1);
+    --tiki-topbar-dark-color: #fff;
+    --tiki-topbar-dark-link-color: rgba(255, 255, 255, 0.8);
+    --tiki-topbar-dark-link-hover-color: #fff;
+}
+
+.tiki-admin {
+    --tiki-admin-navbar-dark-bg: var(--tiki-top-dark-bg) !important;
+    //    --tiki-admin-dropdown-dark-color: #{$dropdown-color};
+    --tiki-admin-dropdown-dark-hover-bg: #{$dropdown-dark-link-hover-bg};
+    --tiki-admin-dropdown-dark-bg: #{$dropdown-dark-bg};
+    --tiki-admin-navbar-light-bg: var(--tiki-top-light-bg);
+    --tiki-admin-dropdown-light-bg: #{$dropdown-bg};
+    --tiki-admin-dropdown-light-hover-color: #{$navbar-light-hover-color};
+    --tiki-admin-toggle-light-bg: #{$dropdown-bg};
+    --tiki-admin-navbar-dark-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-dark-highlight-color: #{$dropdown-link-hover-color};
+    --tiki-admin-navbar-light-highlight-bg: #{$dropdown-link-hover-bg};
+    --tiki-admin-navbar-light-highlight-color: #{$dropdown-link-hover-color};
+}
