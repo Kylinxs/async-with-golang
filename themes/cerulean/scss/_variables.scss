@@ -1,0 +1,74 @@
+// Cerulean 5.2.0 -- This is a copy of vendor/vendor_bundled/thomaspark/bootswatch/dist/cerulean/_variables.scss with
+// Tiki CSS variables added and color values updated to better comply with WCAG guidelines.
+
+$theme: "cerulean" !default;
+
+//
+// Color system
+//
+
+$white:    #fff !default;
+$gray-100: #f8f9fa !default;
+$gray-200: #e9ecef !default;
+$gray-300: #dee2e6 !default;
+$gray-400: #ced4da !default;
+$gray-500: #adb5bd !default;
+$gray-600: #868e96 !default;
+$gray-700: #495057 !default;
+$gray-800: #343a40 !default;
+$gray-900: #212529 !default;
+$black:    #000 !default;
+
+$blue:    #033c73 !default;
+$indigo:  #6610f2 !default;
+$purple:  #6f42c1 !default;
+$pink:    #e83e8c !default;
+$red:     #c71c22 !default;
+$orange:  #fd7e14 !default;
+$yellow:  #dd5600 !default;
+$green:   #73a839 !default;
+$teal:    #20c997 !default;
+$cyan:    #157BB7; //#2fa4e7 !default; Updated for Tiki
+
+$primary:       $cyan !default;
+$secondary:     $gray-200 !default;
+$success:       $green !default;
+$info:          $blue !default;
+$warning:       $yellow !default;
+$danger:        $red !default;
+$light:         $gray-100 !default;
+$dark:          $gray-800 !default;
+
+$min-contrast-ratio:   2.75 !default;
+
+// Body
+
+$body-color:    $gray-700 !default;
+
+// Fonts
+
+$headings-color:         $cyan !default;
+
+// Dropdowns
+
+$dropdown-link-color:           $body-color !default;
+$dropdown-link-hover-color:     $white !default;
+$dropdown-link-hover-bg:        $primary !default;
+
+// Navbar
+$navbar-dark-color:       #fff; // Updated for Tiki
+
+// Accordion (added for Tiki)
+$accordion-button-active-bg: #2fa4e7;
+$accordion-button-active-color: #fff;
+
+
+//--------------------------- Tiki SCSS variables
+$navbar-dark-bg: #343a40;
+$navbar-dark-link-color: $navbar-dark-color;
+$navbar-dark-link-hover-color:       $white !default;
+
+$navbar-bg-light: #2fa4e7;
+$navbar-light-color: #000;
+$navbar-light-link-color: #000;
+$navbar-light-link-hover-color: lighten(#000,10%);

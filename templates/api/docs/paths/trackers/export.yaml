@@ -1,0 +1,27 @@
+---
+get:
+  description: Export the tracker YAML profile
+  parameters:
+    - name: trackerId
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: tracker export response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              trackerId:
+                type: integer
+              yaml:
+                type: string
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
