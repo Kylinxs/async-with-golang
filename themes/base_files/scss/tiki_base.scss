@@ -1,0 +1,55 @@
+
+/* $Id$
+    This Tiki Wiki CMS Groupware file contains global design
+    and layout properties. */
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/functions";
+
+@import "../../default/scss/_variables.scss";
+
+// @import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss"; Already imported by vendor bootstrap.scss
+
+// Load bootstrap4c-chosen variables and svn to uri converter
+@import "../../../vendor_bundled/vendor/npm-asset/sass-svg-uri/_svg-uri.scss";
+
+
+//@import "_bs3-bs4-transition.scss"; obsolete
+@import "_tiki-variables.scss";
+@import "_tiki-selectors.scss";
+@import "_tiki-miscellaneous_global";
+@import "_tiki-modules";
+@import "_tiki-toolbars";
+@import "_tiki-boxes_and_cards";
+@import "_tiki-tabs_and_tables";
+
+@import "_tiki-articles";
+@import "_tiki-blogs";
+@import "_tiki-forums";
+@import "_tiki-comments";
+@import "_tiki-file_galleries";
+@import "_tiki-trackers";
+@import "_tiki-categories";
+@import "_tiki-search";
+@import "_tiki-sheets";
+@import "_tiki-calendar";
+@import "_tiki-translation";
+@import "_tiki-tags";
+@import "_tiki-minor_features";
+@import "_tiki-mytiki";
+@import "_tiki-admin";
+@import "_tiki-modal_and_managestream";
+@import "_tiki-maps";
+@import "_tiki-external_scripts_overrides.scss";
+@import "_tiki-bootstrap_overrides.scss";
+@import "_tablesorter-tiki.scss";
+@import "_tablesorter-custom.scss";
+@import "_tiki-media-print";
+@import "_tiki-wikipages_and_plugins";
+@import "_tiki-multilike";
+@import "_tiki-installer.scss";
+@import "_tiki-oauthserver.scss";
+@import "_tiki-menus.scss";
+//@import "_pivot-tiki.scss";
+//@import "_conversejs-tiki.scss";
+
+
+/* End of file */
