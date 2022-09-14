@@ -1,0 +1,187 @@
+
+---
+CasperJS:
+  licence: MIT
+  licenceUrl: "https://github.com/jerome-breton/casperjs-installer/blob/master/LICENSE"
+  name: jerome-breton/casperjs-installer
+  requiredBy:
+    - wikiplugin_casperjs
+  requiredVersion: dev-master
+  scripts:
+    post-install-cmd:
+      - "CasperJsInstaller\\Installer::install"
+    post-update-cmd:
+      - "CasperJsInstaller\\Installer::install"
+Dexie:
+  licence: Apache-2.0
+  licenceUrl: "https://github.com/dfahlander/Dexie.js/blob/v2.0.4/LICENSE"
+  name: npm-asset/dexie
+  link: 'https://asset-packagist.org/package/npm-asset/dexie'
+  requiredBy:
+    - pwa_feature
+  requiredVersion: "2.0.4"
+Expose:
+  licence: MIT
+  licenceUrl: "https://github.com/enygma/expose/blob/master/LICENSE"
+  name: enygma/expose
+  requiredBy:
+    - ids_enabled
+  requiredVersion: ^3.0
+FullCalendarSchedulerDeprecated:
+  actions:
+    - remove
+  licence: GPLv3
+  licenceUrl: "https://fullcalendar.io/scheduler/license/"
+  name: fullcalendar/fullcalendar-scheduler
+  requiredBy:
+    - "wikiplugin_trackercalendar"
+  requiredVersion: ^1.9
+  state: replaced
+  replacedBy:
+    - npm-asset/fullcalendar-scheduler
+FullCalendarScheduler:
+  licence: GPLv3
+  licenceUrl: "https://fullcalendar.io/scheduler/license/"
+  name: npm-asset/fullcalendar-scheduler
+  requiredBy:
+    - "wikiplugin_trackercalendar"
+  requiredVersion: ^5.11.0
+Faker:
+  licence: MIT
+  licenceUrl: "https://github.com/fzaninotto/Faker/blob/master/LICENSE"
+  name: fzaninotto/faker
+  requiredBy:
+    - "Trackers"
+  requiredVersion: dev-master
+  state: replaced
+  replacedBy:
+    - fakerphp/faker
+FakerPHP:
+  licence: MIT
+  licenceUrl: "https://github.com/FakerPHP/Faker"
+  name: fakerphp/faker
+  requiredBy:
+    - "Trackers"
+  requiredVersion: ^1.9.2
+GoogleApiClient:
+  licence: Apache-2.0
+  licenceUrl: "https://github.com/google/google-api-php-client/blob/master/LICENSE"
+  name: google/apiclient
+  requiredBy:
+    - wikiplugin_googlechart
+  requiredVersion: ^2.2.2
+Lozad:
+  licence: MIT
+  licenceUrl: "https://github.com/ApoorvSaxena/lozad.js/blob/master/LICENSE"
+  name: npm-asset/lozad
+  link: 'https://asset-packagist.org/package/npm-asset/lozad'
+  requiredBy:
+    - wikiplugin_img
+  requiredVersion: ^1.6.0
+mPDF:
+  licence: GPL
+  licenceUrl: "https://github.com/mpdf/mpdf/blob/master/LICENSE.txt"
+  name: mpdf/mpdf
+  requiredBy:
+    - "Tiki Print"
+  requiredVersion: ^8.0.0
+mxGraph:
+  actions:
+    - remove
+  licence: Apache-2.0
+  licenceUrl: "https://github.com/jgraph/mxgraph/blob/master/README.md"
+  name: xorti/mxgraph-editor
+  requiredBy:
+    - "wikiplugin_diagram"
+  requiredVersion: ^3.9.12.2
+  state: replaced
+  replacedBy:
+    - tikiwiki/diagram
+diagram:
+  licence: Apache-2.0
+  licenceUrl: "https://gitlab.com/tikiwiki/diagram/blob/master/README.md"
+  name: tikiwiki/diagram
+  requiredBy:
+    - "wikiplugin_diagram"
+  requiredVersion: ^12.5.1
+PHPSaml:
+  state: deprecated
+  actions:
+    - remove
+  licence: MIT
+  licenceUrl: "https://github.com/onelogin/php-saml/blob/master/LICENSE"
+  name: onelogin/php-saml
+  requiredBy:
+    - saml_auth_enabled
+  requiredVersion: ^3.2.1
+AwsSDK:
+  licence: Apache-2.0
+  licenceUrl: "https://github.com/aws/aws-sdk-php/blob/master/LICENSE"
+  name: aws/aws-sdk-php
+  requiredBy:
+    - "zend_mail_smtp_server"
+    - "Amazon SES mail sender"
+    - "S3 storage for direct mapping file gallery"
+  requiredVersion: ^3.208
+TesseractOCR:
+  licence: MIT
+  licenceUrl: "https://github.com/thiagoalessio/tesseract-ocr-for-php/blob/master/MIT-LICENSE"
+  name: thiagoalessio/tesseract_ocr
+  requiredBy:
+    - ocr_enable
+  requiredVersion: ^2.7.3
+  # Be sure to update TESSERACT_BINARY_VERSION in ocrlib.php if the requirements have changed.
+MathJax:
+  licence: Apache-2.0
+  licenceUrl: "https://github.com/mathjax/MathJax/blob/master/LICENSE"
+  name: mathjax/mathjax
+  requiredBy:
+    - "wikiplugin_equation"
+  requiredVersion: ^2.7
+MediaAlchemyst:
+  licence: MIT
+  licenceUrl: "https://github.com/alchemy-fr/Media-Alchemyst/blob/master/LICENSE"
+  name: media-alchemyst/media-alchemyst
+  requiredBy:
+    - wikiplugin_preview
+    - ocr_enable
+  requiredVersion: ^0.5.4
+PDFjsViewer:
+  licence: Apache-2.0
+  licenceUrl: "https://github.com/oci-labs/pdfjs-dist-viewer-min/blob/main/LICENSE"
+  name: npm-asset/pdfjs-dist-viewer-min
+  link: 'https://asset-packagist.org/package/npm-asset/pdfjs-dist-viewer-min'
+  requiredBy:
+    - fgal_pdfjs_feature
+    - fgal_convert_documents_pdf
+  requiredVersion: ^2.1.266
+WebODF:
+  licence: AGPL
+  licenceUrl: "https://github.com/kogmbh/webodf.js_release/blob/master/AGPL-3.0.txt"
+  name: bower-asset/wodo.texteditor
+  link: 'https://asset-packagist.org/package/detail?fullname=bower-asset/wodo.texteditor'
+  requiredBy:
+    - feature_docs
+  requiredVersion: ^0.5.9
+PhpReadability:
+  licence: Apache-2.0
+  licenceUrl: "https://github.com/j0k3r/php-readability/blob/master/LICENSE.md"
+  name: j0k3r/php-readability
+  requiredBy:
+    - "Fetch page content"
+  requiredVersion: ^1.1.10
+RecordRTC:
+  licence: MIT
+  licenceUrl: "https://github.com/muaz-khan/recordrtc/blob/master/LICENSE"
+  name: npm-asset/recordrtc
+  link: 'https://asset-packagist.org/package/npm-asset/recordrtc'
+  requiredBy:
+    - "Audio, Video, Screen Recording"
+  requiredVersion: ^5.6.1
+TikiManager:
+  licence: LGPL2
+  licenceUrl: "https://github.com/TikiWiki/tiki-manager/blob/master/LICENSE"
+  name: tikiwiki/tiki-manager
+  requiredBy:
+    - feature_tiki_manager
+  requiredVersion: dev-master

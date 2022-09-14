@@ -24,4 +24,17 @@
 @import "../../base_files/scss/_select2-tiki_colors.scss";
 
 // Increase navbar height to reinstate Bootswatch style
-.topbar
+.topbar_modules > * {
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+}
+
+.topbar .nav-link {
+    padding-top: .85rem;
+    padding-bottom: .85rem;
+}
+
+// Move border from navbar to parent
+.topbar-wrapper.bg-light-parent {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
