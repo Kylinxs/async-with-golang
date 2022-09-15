@@ -1,0 +1,13 @@
+/* The Bootstrap default theme, for Tiki Wiki CMS Groupware */
+
+@import "../../base_files/scss/_tiki-bootstrap_functions"; // Required Bootstrap
+
+@import "variables"; // Theme overrides of Bootstrap defaults plus any additional variables
+@import "../../base_files/scss/_tiki-variables.scss"; // Values/definitions for Tiki variables (outside of Bootstrap variables) such as _tiki-selectors.scss.
+@import "css-variables"; // Needs to be loaded after default variables to override them
+
+@import "../../base_files/scss/_tiki-bootstrap_layout_and_components"; // Optional Bootstrap
+
+@import "../../base_files/scss/_tiki-selectors.scss";
+@import "../../base_files/scss/_external-scripts.scss";
+@import "../../base_files/scss/_select2-tiki_colors.scss"; // Why isn't this imported by external scripts?

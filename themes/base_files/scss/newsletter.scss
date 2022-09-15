@@ -1,0 +1,85 @@
+// $Id$
+// For newsletter styling. Variables defined in tiki-variables.scss. A theme-specific newsletter.css file can be loaded with priority.
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/_functions.scss";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/variables.scss";
+@import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/mixins.scss";
+// $import "../../../vendor_bundled/vendor/twbs/bootstrap/less/panels.less";
+@import "_tiki-variables.scss";
+
+
+body {
+    background: $body-bg;
+    color : $body-color;
+    font-family: $font-family-base;
+    padding: 15px;
+}
+
+a,
+a:visited {
+    color: $link-color;
+    text-decoration: $link-hover-decoration;
+}
+
+a:hover {
+    color: $link-hover-color;
+    text-decoration: $link-hover-decoration;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: $headings-font-family;
+    font-weight: $headings-font-weight;
+    color: $headings-color
+}
+
+//
+// Panels (this section is a subset of vendor/twbs/bootstrap/less/panels.less)
+// --------------------------------------------------
+
+
+// Base class
+.card {
+    margin-bottom: $line-height-base;
+    background-color: $card-bg;
+    border: 1px solid transparent;
+    border-radius: $card-border-radius;
+    @include box-shadow(0 1px 1px rgba(0,0,0,.05));
+}
+
+// Panel contents
+.card-body {
+//    padding: $card-body-padding; Todo = find variable or method
+//    &:extend(.clearfix all); Todo
+}
+
+// Optional heading
+.card-header {
+//    padding: $card-header-padding; Todo = find variable or method
+    border-bottom: 1px solid transparent;
+//    .border-top-radius(($panel-border-radius - 1)); Todo
+}
+
+// Within heading, strip any `h*` tag of its default margins for spacing.
+.card-title {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: ceil(($font-size-base * 1.125));
+    color: inherit;
+
+    > a,
+    > small,
+    > .small,
+    > small > a,
+    > .small > a {
+        color: inherit;
+    }
+}
+
+// Optional footer (stays gray in every modifier class)
+//.panel-footer {
+//    padding: $card-footer-padding; Todo - find variable or method
+//    background-color: $panel-footer-bg; Todo - find variable or method
+//    border-top: 1px solid $card-border-color; Todo - find variable or method
+//    .border-bottom-radius(($panel-border-radius - 1)); Todo
+//}
+
+
