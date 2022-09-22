@@ -45,4 +45,30 @@
 <table class="table">
     <tr>
         <th>
-            <a href="tiki-quiz_result_stats.php?quizId={$quizId}&amp;offset={$offset}&amp;sort
+            <a href="tiki-quiz_result_stats.php?quizId={$quizId}&amp;offset={$offset}&amp;sort_mode={if $sort_mode eq 'question_desc'}question_asc{else}question_desc{/if}">{tr}Questions{/tr}</a>
+        </th>
+        <th>
+            <a href="tiki-quiz_result_stats.php?quizId={$quizId}&amp;offset={$offset}&amp;sort_mode={if $sort_mode eq 'optionText_desc'}optionText_asc{else}optionText_desc{/if}">{tr}Answer{/tr}</a>
+        </th>
+        <th>
+            <a href="tiki-quiz_result_stats.php?quizId={$quizId}&amp;offset={$offset}&amp;sort_mode={if $sort_mode eq 'points_desc'}points_asc{else}points_desc{/if}">{tr}Points{/tr}</a>
+        </th>
+        <th>
+            {tr}Upload{/tr}
+        </th>
+    </tr>
+    {cycle print=false values="odd,even"}
+    {section name=ix loop=$questions}
+        <tr>
+            <td class="text">{$questions[ix].question}</td>
+            <td class="text">{$questions[ix].options[0].optionText}</td>
+            <td class="integer">{$questions[ix].options[0].points}</td>
+            {if $questions[ix].options[0].filename}
+                <td class="action">
+                    <a href="tiki-quiz_download_answer.php?answerUploadId={$questions[ix].options[0].answerUploadId}">{$questions[ix].options[0].filename}</a>
+                </td>
+            {/if}
+        </tr>
+    {/section}
+</table>
+</div>
