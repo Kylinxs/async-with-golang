@@ -14,7 +14,7 @@
 @import "variables";
 @import "../../../vendor_bundled/vendor/twbs/bootstrap/scss/bootstrap.scss";
 @import "../../base_files/scss/_tiki-variables.scss"; // Values/definitions for Tiki variables (outside of Bootstrap variables) such as _tiki-selectors.scss.
-@import "../../../vendor_bundled/vendor/thomaspark/bootswatch/dist/minty/bootswatch";
+@import "../../../vendor_bundled/vendor/thomaspark/bootswatch/dist/pulse/bootswatch";
 //@import "../../base_files/scss/_tiki-bootstrap_layout_and_components";
 @import "css-variables"; // Needs to be loaded after default variables to override them
 
@@ -27,19 +27,4 @@
 .topbar_modules > * {
     margin-top: .5rem;
     margin-bottom: .5rem;
-}
-
-//.navbar-dark.bg-dark {
-//    background: #78c2ad !important;
-//}
-//
-.navbar-light.bg-light {
-  background: #f3969a !important;
-}
-
-.btn:not(.btn-link) {
-    color: #000 !important;
-}
-.navbar {
-    --bs-navbar-color: #3A826E; //$link-color;
 }

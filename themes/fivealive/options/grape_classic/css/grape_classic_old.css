@@ -1,0 +1,29 @@
+
+/* Grape Classic theme option for FiveAlive theme. */
+@import "../../grape/css/grape.css";
+
+.layout_classic .header_container {
+    -webkit-box-shadow: inset 0 44px 0 0 #49243c; /*#66112f;*/
+    -moz-box-shadow: inset 0 44px 0 0 #49243c;
+    box-shadow: inset 0 44px 0 0 #49243c;
+}
+
+.layout_classic .page-header .navbar {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.layout_classic .page-header .bg-dark {
+    background: #66112f !important;
+}
+
+.layout_classic .top_modules > div:first-child {
+    background: url('../images/siteheader2.png') no-repeat top right;
+    margin-left: -15px !important;
+}
+
+.layout_classic .sitetitle,
+.layout_classic .sitetitle a,
+.layout_classic .sitesubtitle {
+    color: #000 !important;
+}
