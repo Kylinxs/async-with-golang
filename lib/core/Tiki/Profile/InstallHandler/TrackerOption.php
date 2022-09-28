@@ -63,4 +63,8 @@ class Tiki_Profile_InstallHandler_TrackerOption extends Tiki_Profile_InstallHand
         }
 
         $trklib = TikiLib::lib('trk');
-        $trklib->replace_tracker_option($inp
+        $trklib->replace_tracker_option($input['tracker'], $name, $value);
+
+        return true;
+    }
+}
