@@ -1098,4 +1098,489 @@ class FileGalLib extends TikiLib
         $this->loadedGalleryDefinitions = [];
     }
 
-    public function notify($galleryId, $name, $filename, $description, $action, $use
+    public function notify($galleryId, $name, $filename, $description, $action, $user, $fileId = false)
+    {
+        global $prefs;
+        if ($prefs['feature_user_watches'] == 'y') {
+                        //  Deal with mail notifications.
+            include_once(__DIR__ . '/../notifications/notificationemaillib.php');
+            $galleryName = $this->table('tiki_file_galleries')->fetchOne('name', ['galleryId' => $galleryId]);
+
+            sendFileGalleryEmailNotification('file_gallery_changed', $galleryId, $galleryName, $name, $filename, $description, $action, $user, $fileId);
+        }
+    }
+    /**
+     * Lock a file
+     *
+     * @param $fileId
+     * @param $user
+     * @return TikiDb_Adodb_Result|TikiDb_Pdo_Result
+     */
+    public function lock_file($fileId, $user)
+    {
+        $result = $this->table('tiki_files')->update(['lockedby' => $user], ['fileId' => $fileId]);
+        return $result;
+    }
+    /**
+     * Unlock a file
+     *
+     * @param $fileId
+     * @return TikiDb_Adodb_Result|TikiDb_Pdo_Result
+     */
+    public function unlock_file($fileId)
+    {
+        return $this->lock_file($fileId, null);
+    }
+    /* get archives of a file */
+    public function get_archives($fileId, $offset = 0, $maxRecords = -1, $sort_mode = 'created_desc', $find = '')
+    {
+        return $this->get_files($offset, $maxRecords, $sort_mode, $find, $fileId, true, false, false, true, false, false, false, false, '', false, true);
+    }
+    public function duplicate_file_gallery($galleryId, $name, $description = '')
+    {
+        global $user;
+        $info = $this->get_file_gallery_info($galleryId);
+        $info['user'] = $user;
+        $info['galleryId'] = 0;
+        $info['description'] = $description;
+        $info['name'] = $name;
+        $newGalleryId = $this->replace_file_gallery($info);
+        return $newGalleryId;
+    }
+
+    public function get_download_limit($fileId)
+    {
+        return $this->table('tiki_files')->fetchOne('maxhits', ['fileId' => $fileId]);
+    }
+
+    public function set_download_limit($fileId, $limit)
+    {
+        $this->table('tiki_files')->update(['maxhits' => (int) $limit], ['fileId' => (int) $fileId]);
+    }
+    // not the best optimisation as using a library using files and not content
+    public function zip($fileIds, &$error, $zipName = '')
+    {
+        global $tiki_p_admin_file_galleries, $prefs, $user;
+        $userlib = TikiLib::lib('user');
+        $list = [];
+        $temp = '/' . md5(\Laminas\Math\Rand::getBytes(10)) . '/';
+        if (! mkdir(sys_get_temp_dir() . $temp)) {
+            $temp = sys_get_temp_dir() . $temp;
+        } elseif (mkdir('temp' . $temp)) {
+            $temp = 'temp' . $temp;
+        } else {
+            $error = "Can not create directory $temp";
+            return false;
+        }
+        $fileIds = array_unique($fileIds);
+        Perms::bulk(['type' => 'file'], 'object', $fileIds);
+        $filenames = [];
+        $padding = strlen(count($fileIds)) - 1;
+        foreach ($fileIds as $fileId) {
+            $file = TikiFile::id($fileId);
+            if ($tiki_p_admin_file_galleries == 'y' || $userlib->user_has_perm_on_object($user, $file->fileId, 'file', 'tiki_p_download_files')) {
+                if (empty($zipName)) {
+                    $zipName = $file->galleryId;
+                }
+                $filename = $file->filename;
+                $counter = 1;
+                while (in_array($filename, $filenames)) {
+                    $filename = $file->filename . '_' . str_pad($counter, $padding, '0', STR_PAD_LEFT);
+                    $counter++;
+                }
+                $filenames[] = $filename;
+                $tmp = $temp . $filename;
+                if (! copy($file->getWrapper()->getReadableFile(), $tmp)) {
+                    $error = "Can not copy to $tmp";
+                    return false;
+                }
+                $list[] = $tmp;
+                $info = $file->getParams();
+            }
+        }
+        if (empty($list)) {
+            $error = "No permission";
+            return null;
+        }
+        $info['filename'] = "$zipName.zip";
+        $zip = $temp . $info['filename'];
+        define(PCZLIB_SEPARATOR, '\001');
+        if (! $archive = new PclZip($zip)) {
+            $error = $archive->errorInfo(true);
+            return false;
+        }
+        if (! ($v_list = $archive->create($list, PCLZIP_OPT_REMOVE_PATH, $temp))) {
+            $error = $archive->errorInfo(true);
+            return false;
+        }
+        $info['data'] = file_get_contents($zip);
+        $info['path'] = '';
+        $info['filetype'] = 'application/x-zip-compressed';
+        $info['filesize'] = strlen($info['data']);
+        foreach ($list as $tmp) {
+            unlink($tmp);
+        }
+        unlink($zip);
+        rmdir($temp);
+        return $info;
+    }
+
+    /**
+     * Return a flat list with the gallery id and the parent id, keeping a cached version
+     *
+     * @return array
+     */
+    public function getGalleriesParentIds($skip_direct = false)
+    {
+        if (self::$getGalleriesParentIdsCache === null) {
+            self::$getGalleriesParentIdsCache = [null, null];
+        }
+        if (self::$getGalleriesParentIdsCache[intval($skip_direct)] === null) {
+            $conditions = [];
+            if ($skip_direct) {
+                $conditions['type'] = $this->table('tiki_file_galleries')->expr('$ != "direct"');
+            }
+            self::$getGalleriesParentIdsCache[intval($skip_direct)] = $this->table('tiki_file_galleries')->fetchAll(['galleryId', 'parentId'], []);
+        }
+
+        return self::$getGalleriesParentIdsCache[intval($skip_direct)];
+    }
+
+    /**
+     * Enables to clear the cache for the gallery parent ids
+     *
+     * @return void
+     */
+    public function cleanGalleriesParentIdsCache()
+    {
+        self::$getGalleriesParentIdsCache = null;
+    }
+
+    /**
+     * Recursively returns all ids of the children of the specifified parent gallery
+     * as a linear array (list).
+     *
+     * @param Array $allIds All ids of the Gallery
+     * @param Array &$subtree Output - The children Ids are appended
+     * @param int $parentId The parent whichs children are to be listed
+     */
+    protected function getGalleryChildrenIdsList($allIds, &$subtree, $parentId)
+    {
+        if (empty($allIds[$parentId])) {
+            return;
+        }
+
+        foreach ($allIds[$parentId] as $child) {
+            $galleryId = $child;
+            $subtree[] = (int)$galleryId;
+            $this->getGalleryChildrenIdsList($allIds, $subtree, $galleryId);
+        }
+    }
+
+    /**
+     * Recursively returns all Ids of the Children of the specifified parent gallery
+     * as a tree-array (sub-galleries are array as an element of the parent array).
+     * Thus the structure of the child galleries are preserved.
+     *
+     * @param Array $allIds All ids of the Gallery
+     * @param Array &$subtree Output - The children Ids are appended
+     * @param int $parentId The parent whichs children are to be listed
+     */
+    protected function getGalleryChildrenIdsTree($allIds, &$subtree, $parentId)
+    {
+        if (empty($allIds[$parentId])) {
+            return;
+        }
+
+        foreach ($allIds[$parentId] as $child) {
+            $galleryId = $child;
+            $subtree[ (int)$galleryId ] = [];
+            $this->getGalleryChildrenIdsTree($allIds, $subtree[$galleryId], $galleryId);
+        }
+    }
+    // Get a tree or a list of a gallery children ids, optionnally under a specific parentId
+    // To avoid a query to the database for each node, this function retrieves all gallery ids and recursively build the tree using this info
+    public function getGalleryChildrenIds(&$subtree, $parentId = -1, $format = 'tree', $skip_direct = false)
+    {
+        $allIds = $this->getGalleriesParentIds($skip_direct);
+
+        $allChildIds = [];
+        foreach ($allIds as $v) {
+            $allChildIds[$v['parentId']][] = $v['galleryId'];
+        }
+
+        switch ($format) {
+            case 'list':
+                $this->getGalleryChildrenIdsList($allChildIds, $subtree, $parentId);
+                break;
+            case 'tree':
+            default:
+                $this->getGalleryChildrenIdsTree($allChildIds, $subtree, $parentId);
+        }
+    }
+
+    // Get a tree or a list of ids of the specified gallery and its children
+    public function getGalleryIds(&$subtree, $parentId = -1, $format = 'tree', $skip_direct = false)
+    {
+
+        switch ($format) {
+            case 'list':
+                $subtree[] = $parentId;
+                $childSubtree =& $subtree;
+                break;
+            case 'tree':
+            default:
+                $subtree[$parentId] = [];
+                $childSubtree =& $subtree[$parentId];
+        }
+
+        return $this->getGalleryChildrenIds($childSubtree, $parentId, $format, $skip_direct);
+    }
+
+    /* Get the subgalleries of a gallery, the one identified by $parentId if $wholeSpecialGallery is false, or the special gallery containing the gallery identified by $parentId if $wholeSpecialGallery is true.
+     *
+     * @param int $parentId Identifier of a gallery
+     * @param bool $wholeSpecialGallery If true, will return the subgalleries of the special gallery (User File Galleries, Wiki Attachment Galleries, File Galleries, ...) that contains the $parentId gallery
+     * @param string $permission If set, will limit the list of subgalleries to those having this permission for the current user
+     */
+    public function getSubGalleries($parentId = 0, $wholeSpecialGallery = true, $permission = 'view_file_gallery', $skipDirect = false)
+    {
+
+        // Use the special File Galleries root if no other special gallery root id is specified
+        if ($parentId == 0) {
+            global $prefs;
+            $parentId = $prefs['fgal_root_id'];
+        }
+
+        // If needed, get the id of the special gallery that contains the $parentId gallery
+        if ($wholeSpecialGallery) {
+            $parentId = $this->getGallerySpecialRoot($parentId);
+            $useCache = true;
+        }
+
+        global $user;
+        $cachelib = TikiLib::lib('cache');
+
+        if ($useCache) {
+            $cacheName = 'pid' . $parentId . '_' . $this->get_all_galleries_cache_name($user) . '_' . intval($skipDirect);
+            $cacheType = $this->get_all_galleries_cache_type();
+        }
+        if (! $useCache || ! $return = $cachelib->getSerialized($cacheName, $cacheType)) {
+            $return = $this->list_file_galleries(0, -1, 'name_asc', $user, '', $parentId, false, true, false, false, false, true, false, true, $skipDirect);
+            if (is_array($return)) {
+                $return['parentId'] = $parentId;
+            }
+            if ($useCache) {
+                $cachelib->cacheItem($cacheName, serialize($return), $cacheType);
+            }
+        }
+
+        if ($permission != '') {
+            if (! is_array($return['data'])) {
+                $return['data'] = [];
+            }
+            $return['data'] = Perms::filter(['type' => 'file gallery'], 'object', $return['data'], ['object' => 'id'], $permission);
+        }
+
+        return $return;
+    }
+
+    /**
+     * Get the Id of the gallery special root, which will be a gallery of type 'special' with the parentId '-1'
+     *    (i.e. 'File Galleries', 'Users File Galleries', ...)
+     *
+     * @param int $galleryId The id of the gallery
+     * @return The special root gallery Id
+     */
+    // WARNING: Semi-private function. "Public callers" should only pass the galleryId parameter.
+    public function getGallerySpecialRoot($galleryId, $treeParentId = null, &$tree = null /* Pass by reference for performance */)
+    {
+        global $prefs;
+
+        if (( $treeParentId === null xor $tree === null ) || $galleryId <= 0) {
+            // If parameters are not valid, return false (they should be null at first call and not empty when recursively called)
+            return false;
+        } elseif ($treeParentId === null) {
+            // Initialize the full tree and the top root of all galleries
+            $tree = [];
+            $treeParentId = -1;
+            $this->getGalleryChildrenIds($tree, $treeParentId, 'tree');
+        } elseif ($treeParentId == $galleryId) {
+            // If the searched gallery is the same as the current tree parent id, then return tree (we found the right branch of the tree)
+            return true;
+        }
+
+        if (! empty($tree)) {
+            foreach ($tree as $subGalleryId => $childs) {
+                if ($result = $this->getGallerySpecialRoot($galleryId, $subGalleryId, $childs)) {
+                    if (is_integer($result)) {
+                        return $result;
+                    } elseif ($treeParentId == -1) {
+                        //
+                        // If the parent is :
+                        //   - either the User File Gallery, stop here to keep only the user gallery instead of all users galleries
+                        //   - or already the top root of all galleries, it means that the gallery is a special gallery root
+                        //
+                        return (int)$subGalleryId;
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Get the tree of 'Wiki Attachment File Galleries' filegal of the specified wiki page
+    public function getWikiAttachmentFilegalsIdsTree($pageName)
+    {
+        $return = [];
+        $this->getGalleryIds($return, $this->get_wiki_attachment_gallery($pageName), 'tree');
+        return $return;
+    }
+
+    // Get the tree of 'Users File Galleries' filegal of the current user
+    public function getUserFilegalsIdsTree()
+    {
+        $return = [];
+        $this->getGalleryIds($return, $this->get_user_file_gallery(), 'tree');
+        return $return;
+    }
+
+    // Get the tree of 'File Galleries' filegal
+    public function getFilegalsIdsTree()
+    {
+        global $prefs;
+        $return = [];
+        $this->getGalleryIds($return, $prefs['fgal_root_id'], 'tree');
+        return $return;
+    }
+
+    // Return HTML code to display the complete file galleries tree for the special root containing the given gallery.
+    // If $galleryIdentifier is not given, default to the "default" / normal / "File Galleries" file galleries.
+    public function getTreeHTML($galleryIdentifier = null)
+    {
+        global $prefs;
+        $smarty = TikiLib::lib('smarty');
+        require_once('lib/tree/BrowseTreeMaker.php');
+        $galleryIdentifier = is_null($galleryIdentifier) ? $prefs['fgal_root_id'] : $galleryIdentifier;
+        $subGalleries = $this->getSubGalleries($galleryIdentifier, true, 'view_file_gallery', true);
+
+        $smarty->loadPlugin('smarty_function_icon');
+        $icon = '&nbsp;' . smarty_function_icon(['name' => 'file-archive-open'], $smarty->getEmptyInternalTemplate()) . '&nbsp;';
+
+        $smarty->loadPlugin('smarty_block_self_link');
+        $linkParameters = ['_script' => 'tiki-list_file_gallery.php', '_class' => 'fgalname'];
+        if (! empty($_REQUEST['filegals_manager'])) {
+            $linkParameters['filegals_manager'] = $_REQUEST['filegals_manager'];
+        }
+        $nodes = [];
+        foreach ($subGalleries['data'] as $subGallery) {
+            $linkParameters['galleryId'] = $subGallery['id'];
+            $nodes[] = [
+                'id' => $subGallery['id'],
+                'parent' => $subGallery['parentId'],
+                'data' => smarty_block_self_link($linkParameters, $icon . htmlspecialchars($subGallery['name']), $smarty),
+            ];
+        }
+        $browseTreeMaker = new BrowseTreeMaker('Galleries');
+        return $browseTreeMaker->make_tree($this->getGallerySpecialRoot($galleryIdentifier), $nodes);
+    }
+
+    // Return the given gallery's path relative to its special root. The path starts with a constant component, File Galleries for default galleries.
+    // It would be File Galleries > Foo for a root default file gallery named "Foo". Other constant components are "User File Galleries" and "Wiki Attachment File Galleries".
+    // Returns an array with 2 elements, "Array" and "HTML".
+    // Array is a numerically-indexed array with one element per path component. Each value is the name of the component (usually a file gallery name). Keys are file gallery OIDs.
+    // HTML is a string of HTML code to display the path.
+    public function getPath($galleryIdentifier)
+    {
+        global $prefs, $user;
+        $rootIdentifier = $this->getGallerySpecialRoot($galleryIdentifier);
+        $root = $this->get_file_gallery_info($galleryIdentifier);
+        if ($user != '' && $prefs['feature_use_fgal_for_user_files'] == 'y') {
+            $userGallery = $this->get_user_file_gallery();
+            if ($userGallery == $prefs['fgal_root_user_id']) {
+                $rootIdentifier = $userGallery;
+            }
+        }
+        $path = [];
+        for ($node = $this->get_file_gallery_info($galleryIdentifier); $node && $node['galleryId'] != $rootIdentifier; $node = $this->get_file_gallery_info($node['parentId'])) {
+            $path[$node['galleryId']] = $node['name'];
+        }
+        if (isset($userGallery) && $rootIdentifier == $prefs['fgal_root_user_id']) {
+            $path[$rootIdentifier] = tra('User File Galleries');
+        } elseif ($rootIdentifier == $prefs['fgal_root_wiki_attachments_id']) {
+            $path[$rootIdentifier] = tra('Wiki Attachment File Galleries');
+        } else {
+            $path[$rootIdentifier] = tra('File Galleries');
+        }
+        $path = array_reverse($path, true);
+
+        $pathHtml = '';
+        foreach ($path as $identifier => $name) {
+            if ($pathHtml != '') {
+                $pathHtml .= ' &nbsp;&gt;&nbsp;';
+            }
+            $pathHtml .= '<a href="tiki-list_file_gallery.php?galleryId=' . $identifier . (! empty($_REQUEST['filegals_manager']) ? '&amp;filegals_manager=' . urlencode($_REQUEST['filegals_manager']) : '') . '">' . htmlspecialchars($name) . '</a>';
+        }
+
+        return [
+            'HTML' => $pathHtml,
+            'Array' => $path
+        ];
+    }
+
+    // get the size in k used in a fgal and its children
+    public function getUsedSize($galleryId = 0)
+    {
+        $files = $this->table('tiki_files');
+
+        $conditions = [];
+        if (! empty($galleryId)) {
+            $galleryIds = [];
+            $this->getGalleryIds($galleryIds, $galleryId, 'list');
+
+            $conditions['galleryId'] = $files->in($galleryIds);
+        }
+
+        return $files->fetchOne($files->sum('filesize'), $conditions);
+    }
+
+    // get the min quota in M of a fgal and its parents
+    public function getQuota($galleryId = 0)
+    {
+        global $prefs;
+        if (empty($galleryId) || $prefs['fgal_quota_per_fgal'] == 'n') {
+            return $prefs['fgal_quota'];
+        }
+        $list = $this->getGalleryParentsColumns($galleryId, ['galleryId', 'quota']);
+        $quota = $prefs['fgal_quota'];
+        foreach ($list as $fgal) {
+            if (empty($fgal['quota'])) {
+                continue;
+            }
+            $quota = min($quota, $fgal['quota']);
+        }
+        return $quota;
+    }
+
+    /**
+     * get the max quota in MB of the children of a fgal,
+     * or total contents size where no quota is set
+     *
+     * @param int $galleryId
+     * @return float
+     */
+
+    public function getMaxQuotaDescendants($galleryId = 0)
+    {
+        if (empty($galleryId)) {
+            return 0;
+        }
+        $this->getGalleryChildrenIds($subtree, $galleryId, 'list');
+        if (is_array($subtree) && ! empty($subtree)) {
+            $files = $this->table('tiki_files');
+            $gals = $this->table('tiki_file_galleries');
+            $size = 0;
+            foreach ($subtree as $sub
