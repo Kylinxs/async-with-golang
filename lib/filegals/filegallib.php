@@ -1583,4 +1583,452 @@ class FileGalLib extends TikiLib
             $files = $this->table('tiki_files');
             $gals = $this->table('tiki_file_galleries');
             $size = 0;
-            foreach ($subtree as $sub
+            foreach ($subtree as $subGalleryId) {
+                $quota = $gals->fetchOne('quota', ['galleryId' => $subGalleryId]);
+                if ($quota) {
+                    $size += $quota;
+                } else {
+                    $size += $files->fetchOne($files->sum('filesize'), ['galleryId' => $subGalleryId]) / (1024 * 1024);
+                }
+            }
+            return $size;
+        } else {
+            return 0.0;
+        }
+    }
+    // check quota is smaller than parent quotas and bigger than children quotas
+    // return -1: too small, 0: ok, +1: too big
+    public function checkQuotaSetting($quota, $galleryId = 0, $parentId = 0)
+    {
+        if (empty($quota)) {
+            return 0;
+        }
+        $limit = $this->getQuota($parentId);
+        if (! empty($limit) && $quota > $limit) {
+            return 1;// too big
+        }
+        if (! empty($galleryId)) {
+            $limit = $this->getMaxQuotaDescendants($galleryId);
+            if (! empty($limit) && $quota < $limit) {
+                return -1;//too small
+            }
+        }
+        return 0;
+    }
+    // get specific columns for a gallery and its parents
+    public function getGalleryParentsColumns($galleryId, $columns)
+    {
+        $cols = array_diff($columns, ['size', 'galleryId', 'parentId']);
+        $cols[] = 'galleryId';
+        $cols[] = 'parentId';
+
+        $all = $this->table('tiki_file_galleries')->fetchAll($cols, []);
+        $list = [];
+        $this->internalGetGalleryParentsColumns($all, $list, $galleryId, $columns);
+        return $list;
+    }
+    protected function internalGetGalleryParentsColumns($all, &$list, $galleryId, $columns = [])
+    {
+        foreach ($all as $fgal) {
+            if ($fgal['galleryId'] == $galleryId) {
+                if (in_array('size', $columns)) { // to be optimized
+                    $fgal['size'] = $this->getUsedSize($galleryId);
+                }
+                $list[] = $fgal;
+                $this->internalGetGalleryParentsColumns($all, $list, $fgal['parentId'], $columns);
+                return;
+            }
+        }
+    }
+    // check a size in K can be added to a gallery return false if problem
+    public function checkQuota($size, $galleryId, &$error)
+    {
+        global $prefs;
+        $smarty = TikiLib::lib('smarty');
+        $error = '';
+        if (! empty($prefs['fgal_quota'])) {
+            $use = $this->getUsedSize();
+            if ($use + $size > $prefs['fgal_quota'] * 1024 * 1024) {
+                $error = tra('The upload was not completed.') . ' ' . tra('Reason: The global quota has been reached');
+                $diff = $use + $size - $prefs['fgal_quota'] * 1024 * 1024;
+            }
+        }
+        if (empty($error) && $prefs['fgal_quota_per_fgal'] == 'y') {
+            $list = $this->getGalleryParentsColumns($galleryId, ['galleryId', 'quota', 'size', 'name']);
+            //echo '<pre>';print_r($list);echo '</pre>';
+            foreach ($list as $fgal) {
+                if (! empty($fgal['quota']) && $fgal['size'] + $size > $fgal['quota'] * 1024 * 1024) {
+                    $error = tra('The upload was not completed.') . ' ' . sprintf(tra('Reason: The quota has been reached in "%s"'), $fgal['name']);
+                    $smarty->assign('mail_fgal', $fgal);
+                    $diff = $fgal['size'] + $size - $fgal['quota'] * 1024 * 1024;
+                    break;
+                }
+            }
+        }
+        if (! empty($error)) {
+            global $tikilib;
+            $nots = $tikilib->get_event_watches('fgal_quota_exceeded', '*');
+            if (! empty($nots)) {
+                include_once('lib/webmail/tikimaillib.php');
+                $mail = new TikiMail();
+                $foo = parse_url($_SERVER["REQUEST_URI"]);
+                $machine = $tikilib->httpPrefix(true) . dirname($foo["path"]);
+                $machine = preg_replace("!/$!", "", $machine); // just incase
+                $smarty->assign('mail_machine', $machine);
+                $smarty->assign('mail_diff', $diff);
+                foreach ($nots as $not) {
+                    $lg = $tikilib->get_user_preference($not['user'], 'language', $prefs['site_language']);
+                    $mail->setSubject(tra('File gallery quota exceeded', $lg));
+                    $mail->setText($smarty->fetchLang($lg, 'mail/fgal_quota_exceeded.tpl'));
+                    $mail->send([$not['email']]);
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+    // update backlinks of an object
+    public function replaceBacklinks($context, $fileIds = [])
+    {
+        $objectlib = TikiLib::lib('object');
+        $objectId = $objectlib->get_object_id($context['type'], $context['object']);
+        if (empty($objectId) && ! empty($fileIds)) {
+            $context = array_merge($context, [
+                'description' => null,
+                'name' => null,
+                'href' => null,
+            ]);
+            $objectId = $objectlib->add_object($context['type'], $context['object'], false, $context['description'], $context['name'], $context['href']);
+        }
+        if (! empty($objectId)) {
+            $this->internalReplaceBacklinks($objectId, $fileIds);
+        }
+        //echo 'REPLACEBACKLINK'; print_r($context);print_r($fileIds);echo '<pre>'; debug_print_backtrace(); echo '</pre>';die;
+    }
+    protected function internalReplaceBacklinks($objectId, $fileIds = [])
+    {
+        $backlinks = $this->table('tiki_file_backlinks');
+        $this->internalDeleteBacklinks($objectId);
+
+        foreach ($fileIds as $fileId) {
+            $backlinks->insert(['objectId' => (int) $objectId, 'fileId' => (int) $fileId]);
+        }
+    }
+    // delete backlinks associated to an object
+    public function deleteBacklinks($context, $fileId = null)
+    {
+        if (empty($fileId)) {
+            $objectlib = TikiLib::lib('object');
+            $objectId = $objectlib->get_object_id($context['type'], $context['object']);
+            if (! empty($objectId)) {
+                $this->internalDeleteBacklinks($objectId);
+            }
+        } else {
+            $this->internalDeleteBacklinks(null, $fileId);
+        }
+    }
+    protected function internalDeleteBacklinks($objectId, $fileId = null)
+    {
+        $backlinks = $this->table('tiki_file_backlinks');
+        if (empty($fileId)) {
+            $backlinks->delete(['objectId' => (int) $objectId]);
+        } else {
+            $backlinks->delete(['fileId' => (int) $fileId]);
+        }
+    }
+    // get the backlinks of an object
+    public function getFileBacklinks($fileId, $sort_mode = 'type_asc')
+    {
+        $query = 'select tob.* from `tiki_file_backlinks` tfb left join `tiki_objects` tob on (tob.`objectId`=tfb.`objectId`) where `fileId`=? order by ' . $this->convertSortMode($sort_mode);
+        return $this->fetchAll($query, [(int)$fileId]);
+    }
+
+    /**
+     * "can not see a file if all its backlinks are not viewable"
+     *
+     * Checks if a file is used in various object types and all the uses of it are "private"
+     *
+     * @param int $fileId    numeric id of the file in question
+     *
+     * @return bool          true:  if all the uses of a file are _not_ visible to the current user,
+     *                       false: if any objects using of the file are visible or the file is not used
+     *
+     * @throws Exception
+     */
+
+    public function hasOnlyPrivateBacklinks($fileId)
+    {
+        $objects = $this->getFileBacklinks($fileId);
+        if (empty($objects)) {
+            return false;
+        }
+        $pobjects = [];
+        foreach ($objects as $object) {
+            $pobjects[$object['type']][] = $object;
+        }
+
+        TikiLib::lib('object');
+        $map = ObjectLib::map_object_type_to_permission();
+        foreach ($pobjects as $type => $list) {
+            if ($type == 'blog post') {
+                $this->parentObjects($list, 'tiki_blog_posts', 'postId', 'blogId');
+                $filtered = Perms::filter(['type' => 'blog'], 'object', $list, ['object' => 'blogId'], str_replace('tiki_p_', '', $map['blog']));
+            } elseif (strstr($type, 'comment')) {
+                $this->parentObjects($list, 'tiki_comments', 'threadId', 'object');
+                $t = str_replace(' comment', '', $type);
+                $filtered = Perms::filter(['type' => $t], 'object', $list, ['object' => 'object'], str_replace('tiki_p_', '', $map[$t]));
+            } elseif ($type == 'forum post') {
+                $this->parentObjects($list, 'tiki_comments', 'threadId', 'object');
+                $filtered = Perms::filter(['type' => 'forum'], 'object', $list, ['object' => 'object'], str_replace('tiki_p_', '', $map['forum']));
+            } elseif ($type == 'trackeritem') {
+                foreach ($list as $object) {
+                    $item = Tracker_Item::fromId($object['itemId']);
+                    if ($item->canView()) {
+                        return false;
+                    }
+                }
+            } else {
+                $filtered = Perms::filter(['type' => $type], 'object', $list, ['object' => 'itemId'], str_replace('tiki_p_', '', $map[$type]));
+            }
+
+            if (! empty($filtered)) {   // some objects linkling to this file are visible
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Finds out of a file is backlinked from a tracker item that is viewable by the current user.
+     * This is useful if user doesn't have permissions to download files in the corresponding file
+     * gallery but still can view the file through the tracker item.
+     */
+    public function isBacklinkedFromAViewableTrackerItem($fileId)
+    {
+        $objects = $this->getFileBacklinks($fileId);
+        foreach ($objects as $object) {
+            if ($object['type'] == 'trackeritem') {
+                $item = Tracker_Item::fromId($object['itemId']);
+                if ($item->canView()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // sync the backlinks used by a text of an object
+    public function syncFileBacklinks($data, $context)
+    {
+        $fileIds = [];
+        $parserlib = TikiLib::lib('parser');
+        $plugins = $parserlib->getPlugins($data, ['IMG', 'FILE']);
+        foreach ($plugins as $plugin) {
+            if (! empty($plugin['arguments']['fileId'])) {
+                $fileIds[] = $plugin['arguments']['fileId'];
+            }
+            if (! empty($plugin['arguments']['src']) && $fileId = $this->getLinkFileId($plugin['arguments']['src'])) {
+                $fileIds[] = $fileId;
+            }
+        }
+        if (preg_match_all('/\[(.+)\]/Umi', $data, $matches, PREG_PATTERN_ORDER)) {
+            foreach ($matches[1] as $match) {
+                if ($fileId = $this->getLinkFileId($match)) {
+                    $fileIds[] = $fileId;
+                }
+            }
+        }
+        if (preg_match_all('/<a[^>]*href=(\'|\")?([^>*])/Umi', $data, $matches, PREG_PATTERN_ORDER)) {
+            foreach ($matches[2] as $match) {
+                if ($fileId = $this->getLinkFileId($match)) {
+                    $fileIds[] = $fileId;
+                }
+            }
+        }
+        if ($context['type'] == 'trackeritem') {
+            $relationlib = TikiLib::lib('relation');
+            $relations = $relationlib->get_relations_from('trackeritem', $context['object'], 'tiki.file.attach');
+            foreach ($relations as $relation) {
+                if ($relation['type'] === 'file') {
+                    $fileIds[] = $relation['itemId'];
+                }
+            }
+        }
+        $fileIds = array_unique($fileIds);
+        //if (!empty($fileIds)) {echo '<pre>'; print_r($context); print_r($fileIds); echo '</pre>';}
+        $this->replaceBacklinks($context, $fileIds);
+        return $fileIds;
+    }
+
+    public function save_sync_file_backlinks($args)
+    {
+        $content = [];
+        if (isset($args['values'])) {
+            $content = $args['values'];
+        }
+        if (isset($args['data'])) {
+            $content[] = $args['data'];
+        }
+        if (! isset($args['values']) && ! isset($args['data'])) {
+            // skip events that don't provide enough content
+            return;
+        }
+        $content = implode(' ', $content);
+
+        $this->syncFileBacklinks($content, $args);
+    }
+
+    public function getLinkFileId($url)
+    {
+        if (preg_match('/^tiki-download_file.php\?.*fileId=([0-9]+)/', $url, $matches)) {
+            return $matches[1];
+        }
+        if (preg_match('/^(dl|preview|thumbnail|thumb||display)([0-9]+)/', $url, $matches)) {
+            return $matches[2];
+        }
+    }
+    private function syncParsedText($data, $context)
+    {
+        // Compatbility function
+        $this->object_post_save($context, [ 'content' => $data ]);
+    }
+    public function refreshBacklinks()
+    {
+        $result = $this->table('tiki_pages')->fetchAll(['data', 'description', 'pageName'], []);
+        foreach ($result as $res) {
+            $this->syncParsedText($res['data'], ['type' => 'wiki page', 'object' => $res['pageName'], 'description' => $res['description'], 'name' => $res['pageName'], 'href' => 'tiki-index.php?page=' . $res['pageName']]);
+        }
+
+        $result = $this->table('tiki_articles')->fetchAll(['heading', 'body', 'articleId', 'title'], []);
+        foreach ($result as $res) {
+            $this->syncParsedText($res['body'] . ' ' . $res['heading'], ['type' => 'article', 'object' => $res['articleId'], 'description' => substr($res['heading'], 0, 200), 'name' => $res['title'], 'href' => 'tiki-read_article.php?articleId=' . $res['articleId']]);
+        }
+
+        $result = $this->table('tiki_submissions')->fetchAll(['heading', 'body', 'subId', 'title'], []);
+        foreach ($result as $res) {
+            $this->syncParsedText($res['heading'] . ' ' . $res['body'], ['type' => 'submission', 'object' => $res['subId'], 'description' => substr($res['heading'], 0, 200), 'name' => $res['title'], 'href' => 'tiki-edit_submission.php?subId=' . $res['subId']]);
+        }
+
+        $result = $this->table('tiki_blogs')->fetchAll(['blogId', 'heading', 'description', 'title'], []);
+        foreach ($result as $res) {
+            $this->syncParsedText($res['heading'], ['type' => 'blog', 'object' => $res['blogId'], 'description' => $res['description'], 'name' => $res['title'], 'href' => 'tiki-view_blog.php?blogId=' . $res['blogId']]);
+        }
+
+        $result = $this->table('tiki_blog_posts')->fetchAll(['blogId', 'data', 'postId', 'title'], []);
+        foreach ($result as $res) {
+            $this->syncParsedText($res['data'], ['type' => 'blog post', 'object' => $res['postId'], 'description' => substr($res['data'], 0, 200), 'name' => $res['title'], 'href' => 'tiki-view_blog_post.php?postId=' . $res['postId']]);
+        }
+
+        $result = $this->table('tiki_comments')->fetchAll(['objectType', 'object', 'threadId', 'title', 'data'], []);
+        $commentslib = TikiLib::lib('comments');
+        foreach ($result as $res) {
+            if ($res['objectType'] == 'forum') {
+                $type = 'forum post';
+            } else {
+                $type = $res['objectType'] . ' comment';
+            }
+            $this->syncParsedText($res['data'], ['type' => $type, 'object' => $res['threadId'], 'description' => '', 'name' => $res['title'], 'href' => $commentslib->getHref($res['objectType'], $res['object'], $res['threadId'])]);
+        }
+
+        $result = $this->table('tiki_trackers')->fetchAll(['description', 'name', 'trackerId'], ['descriptionIsParsed' => 'y']);
+        foreach ($result as $res) {
+            $this->syncParsedText($res['description'], ['type' => 'tracker', 'object' => $res['trackerId'], 'description' => $res['description'], 'name' => $res['name'], 'href' => 'tiki-view_tracker.php?trackerId=' . $res['trackerId']]);
+        }
+        //TODO field description
+        $query = 'select `value`, `itemId` from `tiki_tracker_item_fields` ttif left join `tiki_tracker_fields` ttf on (ttif.`fieldId`=ttf.`fieldId`) where ttf.`type`=?';
+        $result = $this->query($query, ['a']);
+        while ($res = $result->fetchRow()) {
+            //TODO: get the name of the item
+            $this->syncParsedText($res['value'], ['type' => 'trackeritem', 'object' => $res['itemId'], 'description' => '', 'name' => '', 'href' => 'tiki-view_tracker_item.php?itemId=' . $res['itemId']]);
+        }
+    }
+    /* move files to file system
+     * return '' if ok otherwise error message */
+    public function moveFiles($to = 'to_fs', &$feedbacks = [])
+    {
+        $files = $this->table('tiki_files');
+
+        if ($to == 'to_db') {
+            $result = $files->fetchColumn('fileId', ['path' => $files->not('')]);
+            $msg = tra('Number of files transferred to the database:');
+        } else {
+            $result = $files->fetchColumn('fileId', ['path' => '', 'filetype' => $files->not('image/svg+xml')]);
+            $msg = tra('Number of files transferred to the file system:');
+        }
+
+        $nb = 0;
+        foreach ($result as $fileId) {
+            if (($errors = $this->moveFile($fileId, $to)) != '') {
+                $feedbacks[] = "$msg $nb";
+                return $errors;
+            }
+            ++$nb;
+        }
+        $feedbacks[] = "$msg $nb";
+        return '';
+    }
+    public function moveFile($file_id, $to = 'to_fs')
+    {
+        global $prefs;
+        $files = $this->table('tiki_files');
+
+        $file = TikiFile::id($file_id);
+        $file->galleryDefinition()->fixFileLocation($file);
+        $files->update($file->getParamsForDB(), ['fileId' => $file->fileId]);
+
+        return '';
+    }
+    // find the fileId in the pool of fileId archives files that is closer before the date
+    public function getArchiveJustBefore($fileId, $date)
+    {
+        $files = $this->table('tiki_files');
+
+        $archiveId = $files->fetchOne('archiveId', ['fileId' => $fileId]);
+        if (empty($archiveId)) {
+            $archiveId = $fileId;
+        }
+
+        return $files->fetchOne(
+            'fileId',
+            [
+                'anyOf' => $files->expr('(`fileId`=? or `archiveId`=?)', [$archiveId, $archiveId]),
+                'created' => $files->lesserThan($date + 1)
+            ],
+            1,
+            0,
+            ['created' => 'DESC']
+        );
+    }
+
+    public function get_objectid_from_virtual_path($path, $parentId = -1)
+    {
+        if (empty($path) || $path[0] != '/') {
+            return false;
+        }
+
+        if ($path == '/') {
+            //      global $prefs;
+            //      return array('type' => 'filegal', 'id' => $prefs['fgal_root_id']);
+            return ['type' => 'filegal', 'id' => -1];
+        }
+
+        $pathParts = explode('/', $path, 3);
+
+        $files = $this->table('tiki_files');
+
+        // Path detected as a file
+        if (count($pathParts) < 3) {
+            // If we ask for a previous version (name?version)
+            if (preg_match('/^([^?]*)\?(\d*)$/', $pathParts[1], $matches)) {
+                $result = $files->fetchAll(
+                    ['fileId'],
+                    ['filename' => $matches[1], 'galleryId' => (int) $parentId, 'archiveId' => $files->greaterThan(0)],
+                    1,
+                    $matches[2],
+                    ['fileId' => 'ASC']
+                );
+            } else {
+                $result = $files->fetchOne(
+                    'fileId',
+                    ['filename' => $pathParts[1], 'galleryId' => (int) $parentId, 'archiveId' => 0],
+      
