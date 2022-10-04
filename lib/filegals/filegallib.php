@@ -3928,4 +3928,193 @@ class FileGalLib extends TikiLib
                     if ($key === 'src' && strpos($val, 'img/wiki_up') !== false) {
                         //first time the wiki_up file is found
                         if (! isset($this->wikiupMoved[$val])) {
-                 
+                            if (false === $data = @file_get_contents($val)) {
+                                $feedback['error'][] = tr('%0 on page %1 could not be opened', $val, $page_info['pageName']);
+                                continue;
+                            }
+                            $name = preg_replace('|.*/([^/]*)|', '$1', $val);
+                            $file = new TikiFile([
+                                'galleryId' => $fgalId,
+                                'description' => 'Used in ' . $page_info['pageName'],
+                                'user' => $user,
+                                'comment' => 'wiki_up conversion',
+                            ]);
+                            $fileId = $file->replace($data, $mimelib->from_path($name, $val), $name, $name);
+                            if (empty($fileId)) {
+                                $feedback['error'][] = tr(
+                                    '%0 on page %1 could not be uploaded into the file gallery',
+                                    $val,
+                                    $page_info['pageName']
+                                );
+                                continue;
+                            } else {
+                                $files[] = $val;
+                                $modif = true;
+                                $newArgs[] = 'fileId="' . $fileId . '"';
+                                //save wiki_up file name and fileId pair in case there are more instances using this file
+                                $this->wikiupMoved[$val] = $fileId;
+                                $feedback['success'][] = tr(
+                                    '%0 used on page %1 was moved and given the file ID %2.',
+                                    $name,
+                                    $page_info['pageName'],
+                                    $fileId
+                                );
+                            }
+                        //wiki_up file was already moved to file galleries
+                        } else {
+                            $name = preg_replace('|.*/([^/]*)|', '$1', $val);
+                            $files[] = $val;
+                            $modif = true;
+                            $fileId = $this->wikiupMoved[$val];
+                            $newArgs[] = 'fileId="' . $fileId . '"';
+                            $feedback['success'][] = tr(
+                                '%0 used on page %1 was moved and given the file ID %2.',
+                                $name,
+                                $page_info['pageName'],
+                                $fileId
+                            );
+                        }
+                    } else {
+                        $newArgs[] = "$key=\"$val\"";
+                    }
+                }
+                if ($modif) {
+                    $match->replaceWith('{img ' . implode(' ', $newArgs) . '}');
+                }
+            }
+        }
+        if (! empty($files)) {
+            $tikilib->update_page(
+                $page_info['pageName'],
+                $matches->getText(),
+                'wiki_up conversion',
+                $user,
+                $tikilib->get_ip_address()
+            );
+            $files = array_unique($files);
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
+        }
+        return $feedback;
+    }
+
+    public function fixMime($filetype, $filename)
+    {
+        global $prefs;
+        if ($prefs['fgal_fix_mime_type'] != 'y') {
+            return $filetype;
+        }
+        if ($filetype != "application/octet-stream") {
+            return $filetype;
+        }
+
+        $mimelib = TikiLib::lib('mime');
+        return $mimelib->from_filename($filename);
+    }
+
+    /**
+     * Get basic and extended metadata included in the file itself and return as JSON string
+     *
+     * @param    string         $file              path to file or content of file
+     * @param    bool           $ispath            indicates whether $file is a path (true) or the file contents (false)
+     * @param    bool           $extended          indicates whether to retrieve extended metadata information
+     *
+     * @return   string         $filemeta          JSON string of metadata
+     */
+    public function extractMetadataJson($file, $ispath = true, $extended = true)
+    {
+        include_once __DIR__ . '/../metadata/metadatalib.php';
+        $metadata = new FileMetadata();
+        $filemeta = json_encode($metadata->getMetadata($file, $ispath, $extended)->typemeta['best']);
+        return $filemeta;
+    }
+
+    /**
+     * Perform actions with file metadata stored in the database
+     *
+     * @param       numeric     $fileId                 fileId of the file in the file gallery
+     * @param       string      $action                 action to perform regarding metadata
+     *
+     * The following actions are handled:
+     *      'get_array'         Get file metadata from database column or, if that is empty, extract metadata from the
+     *                          file, update the database and return an array of the data.
+     *
+     *      'refresh'           Extract metadata from the file and update database
+     *
+     * @return      array|TikiDb_Pdo_Result|TikiDb_Adodb_Result     $metadata   array of metadata is returned if
+     *      action is 'get_array', otherwise result class
+     */
+    public function metadataAction($fileId, $action = 'get_array')
+    {
+        //get the tiki_files table
+        $filesTable = $this->table('tiki_files');
+        if ($action == 'get_array') {
+            //get metadata for the file from the database
+            $metacol = $filesTable->fetchColumn('metadata', ['fileId' => $fileId]);
+        }
+        //if metadata field is empty, or if a refresh, extract from the file
+        if (($action == 'get_array' && empty($metacol[0])) || $action == 'refresh') {
+            //extract metadata
+            $file = TikiFile::id($fileId);
+            $metadata = $this->extractMetadataJson($file->getWrapper()->getReadableFile());
+            //update database for newly extracted metadata
+            $result = $filesTable->update(['metadata' => $metadata], ['fileId' => $fileId]);
+            // update search index
+            require_once('lib/search/refresh-functions.php');
+            refresh_index('files', $fileId);
+        } else {
+            $metadata = $metacol[0];
+        }
+        if ($action == 'get_array') {
+            //return metadata as an array
+            return json_decode($metadata, true);
+        } else {
+            return $result;
+        }
+    }
+
+    /**
+     * Attempts to create the directory structure speficied, along with an empty index.php file.
+     *
+     * @param $directory string The directory path that files will be stored at.
+     */
+
+    public function setupDirectory($directory)
+    {
+        // if a directory structure selected is not present
+        if (! file_exists($directory)) {
+            // attempt to create directory structure
+            mkdir($directory, 0777, true);
+        }
+        // if index.php file is not present in home directory, attempt to create it
+        if (! file_exists($directory . 'index.php')) {
+            file_put_contents($directory . 'index.php', '');
+        }
+    }
+
+    // Return HTML code to display the hierarchy of sub-galleries when the PluginDiagram {diagram} is used in a wiki page
+    public function getNodes($nodes, $id, $sub = '')
+    {
+        $htmlnodes = "";
+        foreach ($nodes as $node) {
+            if ($node['parentId'] == $id) {
+                // If the current user has permission to access the gallery, then add gallery to the hierarchy.
+                if ($node['perms']['tiki_p_view_file_gallery'] == 'y') {
+                    $htmlnodes .= "<option value='" . $node['id'] . "'>" . $sub . '&nbsp;' . htmlentities($node['name']);
+                    $htmlnodes .= $this->getNodes($nodes, $node['id'], $sub . '&mdash;');
+                }
+            }
+        }
+        return $htmlnodes;
+    }
+}
+
+/**
+ *
+ */
+class FileIsNotSafeException extends Exception
+{
+}
