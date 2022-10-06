@@ -155,4 +155,76 @@
                 {preference name=memcache_servers}
                 {preference name=memcache_wiki_data}
                 {preference name=memcache_wiki_output}
-    
+                {preference name=memcache_forum_output}
+            </div>
+        {/tab}
+
+        {tab name="{tr}Redis{/tr}"}
+            {preference name="redis_enabled"}
+            <div class="adminoptionboxchild" id="redis_enabled_childcontainer">
+                {preference name="redis_host"}
+                {preference name="redis_port"}
+                {preference name="redis_timeout"}
+                {preference name="redis_prefix"}
+                {preference name="redis_expiry"}
+            </div>
+        {/tab}
+
+        {tab name="{tr}Plugins{/tr}"}
+            <br>
+            {preference name=wikiplugin_snarf_cache}
+        {/tab}
+
+        {tab name="{tr}Major Slowdown{/tr}"}
+            <br>
+            {remarksbox type="note" title="{tr}Major slowdown{/tr}"}
+                {tr}These are reported to slow down Tiki. If you have a high-volume site, you may want to deactivate them{/tr}
+            {/remarksbox}
+            {preference name=wikiplugin_sharethis}
+            {preference name=log_sql}
+            {preference name=log_mail}
+            {preference name=log_tpl}
+            {preference name=category_browse_count_objects}
+            {preference name=categories_cache_refresh_on_object_cat}
+            {preference name=feature_actionlog_bytes}
+            {preference name=search_parsed_snippet}
+            {preference name=feature_blog_heading}
+            {preference name=error_reporting_level}
+            {preference name=feature_typo_enable}
+            {remarksbox type="tip" title="{tr}Tip{/tr}"}
+                {tr _0='<a href="tiki-admin.php?page=search" class="alert-link">' _1=''}Many search options impact performance. Please see %0Search admin panel%1.{/tr}
+            {/remarksbox}
+        {/tab}
+
+        {tab name="{tr}Sessions{/tr}"}
+            <br>
+            {preference name=session_silent}
+            {preference name=tiki_cachecontrol_nosession}
+        {/tab}
+
+        {tab name="{tr}Newsletter{/tr}"}
+            <br>
+            {preference name=newsletter_throttle}
+            <div class="adminoptionboxchild" id="newsletter_throttle_childcontainer">
+                {preference name=newsletter_pause_length}
+                {preference name=newsletter_batch_size}
+            </div>
+        {/tab}
+
+        {tab name="{tr}Time and Memory Limits{/tr}"}
+            <br>
+            {preference name=allocate_memory_php_execution}
+            {preference name=allocate_time_php_execution}
+            {preference name=allocate_memory_tracker_export_items}
+            {preference name=allocate_time_tracker_export_items}
+            {preference name=allocate_time_tracker_clear_items}
+            {preference name=allocate_memory_print_pdf}
+            {preference name=allocate_time_print_pdf}
+            {preference name='allocate_memory_unified_rebuild'}
+            {preference name='allocate_time_unified_rebuild'}
+            {preference name='allocate_time_secdb_check'}
+        {/tab}
+
+    {/tabset}
+    {include file='admin/include_apply_bottom.tpl'}
+</form>
