@@ -1,0 +1,47 @@
+
+---
+get:
+  description: List translations for an object
+  parameters:
+    - name: type
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: source
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    '200':
+      description: translations response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              type:
+                type: string
+              source:
+                type: string
+              filters:
+                type: object
+              translations:
+                type: object
+              canAttach:
+                type: boolean
+              canDetach:
+                type: boolean
+    '400':
+      description: bad request
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
