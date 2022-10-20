@@ -7,4 +7,18 @@
     </div>
     <fieldset>
         <legend>{tr}Activate the feature{/tr}</legend>
-        {preference name=feature_copyright visible="alwa
+        {preference name=feature_copyright visible="always"}
+    </fieldset>
+    <div class="adminoptionboxchild" id="feature_copyright_childcontainer">
+        <fieldset>
+            <legend>{tr}Features{/tr}</legend>
+            {preference name=wikiLicensePage}
+            {preference name=wikiSubmitNotice}
+            {preference name=wiki_feature_copyrights}
+            {preference name=article_feature_copyrights}
+            {preference name=blog_feature_copyrights}
+            {preference name=faq_feature_copyrights}
+        </fieldset>
+    </div>
+    {include file='admin/include_apply_bottom.tpl'}
+</form>
