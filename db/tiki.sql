@@ -590,4 +590,566 @@ DROP TABLE IF EXISTS `tiki_categories_roles_available`;
 CREATE TABLE `tiki_categories_roles_available` (
     `categId` int(12) NOT NULL,
     `categRoleId` int(12) NOT NULL,
-    PRIMARY KEY (
+    PRIMARY KEY (`categId`,`categRoleId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_objects`;
+CREATE TABLE `tiki_objects` (
+  `objectId` int(12) NOT NULL auto_increment,
+  `type` varchar(50) default NULL,
+  `itemId` varchar(255) default NULL,
+  `description` text,
+  `created` int(14) default NULL,
+  `name` varchar(200) default NULL,
+  `href` varchar(256) default NULL,
+  `hits` int(8) default NULL,
+  `comments_locked` char(1) NOT NULL default 'n',
+  PRIMARY KEY (`objectId`),
+  KEY (`type`, `objectId`),
+  KEY (`itemId`(141), `type`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_categorized_objects`;
+CREATE TABLE `tiki_categorized_objects` (
+  `catObjectId` int(11) NOT NULL default '0',
+  PRIMARY KEY (`catObjectId`)
+) ENGINE=MyISAM ;
+
+DROP TABLE IF EXISTS `tiki_category_objects`;
+CREATE TABLE `tiki_category_objects` (
+  `catObjectId` int(12) NOT NULL default '0',
+  `categId` int(12) NOT NULL default '0',
+  PRIMARY KEY (`catObjectId`,`categId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_object_ratings`;
+CREATE TABLE `tiki_object_ratings` (
+  `catObjectId` int(12) NOT NULL default '0',
+  `pollId` int(12) NOT NULL default '0',
+  PRIMARY KEY (`catObjectId`,`pollId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_category_sites`;
+CREATE TABLE `tiki_category_sites` (
+  `categId` int(10) NOT NULL default '0',
+  `siteId` int(14) NOT NULL default '0',
+  PRIMARY KEY (`categId`,`siteId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_chat_channels`;
+CREATE TABLE `tiki_chat_channels` (
+  `channelId` int(8) NOT NULL auto_increment,
+  `name` varchar(30) default NULL,
+  `description` varchar(250) default NULL,
+  `max_users` int(8) default NULL,
+  `mode` char(1) default NULL,
+  `moderator` varchar(200) default NULL,
+  `active` char(1) default NULL,
+  `refresh` int(6) default NULL,
+  PRIMARY KEY (`channelId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_chat_messages`;
+CREATE TABLE `tiki_chat_messages` (
+  `messageId` int(8) NOT NULL auto_increment,
+  `channelId` int(8) NOT NULL default '0',
+  `data` varchar(255) default NULL,
+  `poster` varchar(200) NOT NULL default 'anonymous',
+  `timestamp` int(14) default NULL,
+  PRIMARY KEY (`messageId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_chat_users`;
+CREATE TABLE `tiki_chat_users` (
+  `nickname` varchar(200) NOT NULL default '',
+  `channelId` int(8) NOT NULL default '0',
+  `timestamp` int(14) default NULL,
+  PRIMARY KEY (`nickname`(183),`channelId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_comments`;
+CREATE TABLE `tiki_comments` (
+  `threadId` int(14) NOT NULL auto_increment,
+  `object` varchar(255) NOT NULL default '',
+  `objectType` varchar(32) NOT NULL default '',
+  `parentId` int(14) default NULL,
+  `userName` varchar(200) default '',
+  `commentDate` int(14) default NULL,
+  `hits` int(8) default NULL,
+  `type` char(1) default NULL,
+  `points` decimal(8,2) default NULL,
+  `votes` int(8) default NULL,
+  `average` decimal(8,4) default NULL,
+  `title` varchar(255) default NULL,
+  `data` text,
+  `email` varchar(200) default NULL,
+  `website` varchar(200) default NULL,
+  `user_ip` varchar(39) default NULL,
+  `summary` varchar(240) default NULL,
+  `smiley` varchar(80) default NULL,
+  `message_id` varchar(128) default NULL,
+  `in_reply_to` varchar(128) default NULL,
+  `comment_rating` tinyint(2) default NULL,
+  `archived` char(1) default NULL,
+  `approved` char(1) NOT NULL default 'y',
+  `locked` char(1) NOT NULL default 'n',
+  PRIMARY KEY (`threadId`),
+  UNIQUE KEY `no_repeats` (`parentId`, `userName`(40), `title`(43), `commentDate`, `message_id`(40), `in_reply_to`(40)),
+  KEY `title` (`title`(191)),
+  KEY `data` (`data`(191)),
+  KEY `hits` (hits),
+  KEY `tc_pi` (`parentId`),
+  KEY `objectType` (object(160), `objectType`),
+  KEY `commentDate` (`commentDate`),
+  KEY `threaded` (message_id(89), in_reply_to(88), `parentId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_content`;
+CREATE TABLE `tiki_content` (
+  `contentId` int(8) NOT NULL auto_increment,
+  `description` text,
+  `contentLabel` varchar(255) NOT NULL default '',
+  PRIMARY KEY (`contentId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_content_templates`;
+CREATE TABLE `tiki_content_templates` (
+  `templateId` int(10) NOT NULL auto_increment,
+  `template_type` VARCHAR( 20 ) NOT NULL DEFAULT 'static',
+  `content` longblob,
+  `name` varchar(200) default NULL,
+  `created` int(14) default NULL,
+  PRIMARY KEY (`templateId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_content_templates_sections`;
+CREATE TABLE `tiki_content_templates_sections` (
+  `templateId` int(10) NOT NULL default '0',
+  `section` varchar(250) NOT NULL default '',
+  PRIMARY KEY (`templateId`,`section`(181))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_cookies`;
+CREATE TABLE `tiki_cookies` (
+  `cookieId` int(10) NOT NULL auto_increment,
+  `cookie` text,
+  PRIMARY KEY (`cookieId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_copyrights`;
+CREATE TABLE `tiki_copyrights` (
+  `copyrightId` int(12) NOT NULL auto_increment,
+  `page` varchar(200) default NULL,
+  `title` varchar(200) default NULL,
+  `year` int(11) default NULL,
+  `authors` varchar(200) default NULL,
+  `holder` varchar(200) default NULL,
+  `copyright_order` int(11) default NULL,
+  `userName` varchar(200) default '',
+  PRIMARY KEY (`copyrightId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_custom_route`;
+CREATE TABLE `tiki_custom_route` (
+  `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `description` varchar(255) NULL,
+  `type` varchar(255) NOT NULL,
+  `from` varchar(255) NOT NULL,
+  `redirect` text NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  `short_url` tinyint(1) DEFAULT '0'
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_directory_categories`;
+CREATE TABLE `tiki_directory_categories` (
+  `categId` int(10) NOT NULL auto_increment,
+  `parent` int(10) default NULL,
+  `name` varchar(240) default NULL,
+  `description` text,
+  `childrenType` char(1) default NULL,
+  `sites` int(10) default NULL,
+  `viewableChildren` int(4) default NULL,
+  `allowSites` char(1) default NULL,
+  `showCount` char(1) default NULL,
+  `editorGroup` varchar(200) default NULL,
+  `hits` int(12) default NULL,
+  PRIMARY KEY (`categId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_directory_search`;
+CREATE TABLE `tiki_directory_search` (
+  `term` varchar(250) NOT NULL default '',
+  `hits` int(14) default NULL,
+  PRIMARY KEY (`term`(191))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_directory_sites`;
+CREATE TABLE `tiki_directory_sites` (
+  `siteId` int(14) NOT NULL auto_increment,
+  `name` varchar(240) default NULL,
+  `description` text,
+  `url` varchar(255) default NULL,
+  `country` varchar(255) default NULL,
+  `hits` int(12) default NULL,
+  `isValid` char(1) default NULL,
+  `created` int(14) default NULL,
+  `lastModif` int(14) default NULL,
+  `cache` longblob,
+  `cache_timestamp` int(14) default NULL,
+  PRIMARY KEY (`siteId`),
+  KEY (`isValid`),
+  KEY (url(191))
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_dsn`;
+CREATE TABLE `tiki_dsn` (
+  `dsnId` int(12) NOT NULL auto_increment,
+  `name` varchar(200) NOT NULL default '',
+  `dsn` varchar(255) default NULL,
+  PRIMARY KEY (`dsnId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_dynamic_variables`;
+CREATE TABLE `tiki_dynamic_variables` (
+  `name` varchar(40) NOT NULL,
+  `data` text,
+  `lang` VARCHAR(16) NULL
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_encryption_keys`;
+CREATE TABLE `tiki_encryption_keys` (
+  `keyId` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) NOT NULL,
+  `description` text NULL,
+  `algo` varchar(50) NULL,
+  `shares` int(11) NOT NULL,
+  `users` text NULL,
+  `secret` varchar(191) NOT NULL,
+  PRIMARY KEY  (`keyId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_extwiki`;
+CREATE TABLE `tiki_extwiki` (
+  `extwikiId` int(12) NOT NULL auto_increment,
+  `name` varchar(200) NOT NULL default '',
+  `extwiki` varchar(255) default NULL,
+  `indexname` varchar(255) default NULL,
+  `groups` varchar(1024) default NULL,
+  PRIMARY KEY (`extwikiId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_faq_questions`;
+CREATE TABLE `tiki_faq_questions` (
+  `questionId` int(10) NOT NULL auto_increment,
+  `faqId` int(10) default NULL,
+  `position` int(4) default NULL,
+  `question` text,
+  `answer` text,
+  `created` int(14) default NULL,
+  PRIMARY KEY (`questionId`),
+  KEY `faqId` (`faqId`),
+  KEY `question` (question(191)),
+  KEY `answer` (answer(191)),
+  KEY `created` (`created`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_faqs`;
+CREATE TABLE `tiki_faqs` (
+  `faqId` int(10) NOT NULL auto_increment,
+  `title` varchar(200) default NULL,
+  `description` text,
+  `created` int(14) default NULL,
+  `questions` int(5) default NULL,
+  `hits` int(8) default NULL,
+  `canSuggest` char(1) default NULL,
+  PRIMARY KEY (`faqId`),
+  KEY `title` (title(191)),
+  KEY `description` (description(191)),
+  KEY `hits` (hits)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_featured_links`;
+CREATE TABLE `tiki_featured_links` (
+  `url` varchar(200) NOT NULL default '',
+  `title` varchar(200) default NULL,
+  `description` text,
+  `hits` int(8) default NULL,
+  `position` int(6) default NULL,
+  `type` char(1) default NULL,
+  PRIMARY KEY (`url`(191))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_file_galleries`;
+CREATE TABLE `tiki_file_galleries` (
+  `galleryId` int(14) NOT NULL auto_increment,
+  `name` varchar(80) NOT NULL default '',
+  `type` varchar(20) NOT NULL default 'default',
+  `direct` text,
+  `template` int(10) default NULL,
+  `description` text,
+  `created` int(14) default NULL,
+  `visible` char(1) default NULL,
+  `lastModif` int(14) default NULL,
+  `user` varchar(200) default '',
+  `hits` int(14) default NULL,
+  `votes` int(8) default NULL,
+  `points` decimal(8,2) default NULL,
+  `maxRows` int(10) default NULL,
+  `public` char(1) default NULL,
+  `show_id` char(1) default NULL,
+  `show_icon` char(1) default NULL,
+  `show_name` char(1) default NULL,
+  `show_size` char(1) default NULL,
+  `show_description` char(1) default NULL,
+  `max_desc` int(8) default NULL,
+  `show_created` char(1) default NULL,
+  `show_hits` char(1) default NULL,
+  `show_lastDownload` char(1) default NULL,
+  `parentId` int(14) NOT NULL default -1,
+  `lockable` char(1) default 'n',
+  `show_lockedby` char(1) default NULL,
+  `archives` int(4) default 0,
+  `sort_mode` char(20) default NULL,
+  `show_modified` char(1) default NULL,
+  `show_author` char(1) default NULL,
+  `show_creator` char(1) default NULL,
+  `subgal_conf` varchar(200) default NULL,
+  `show_last_user` char(1) default NULL,
+  `show_comment` char(1) default NULL,
+  `show_files` char(1) default NULL,
+  `show_explorer` char(1) default NULL,
+  `show_path` char(1) default NULL,
+  `show_slideshow` char(1) default NULL,
+  `show_ocr_state` char(1) default NULL,
+  `default_view` varchar(20) default NULL,
+  `quota` int(8) default 0,
+  `size` int(14) default NULL,
+  `wiki_syntax` varchar(200) default NULL,
+  `backlinkPerms` char(1) default 'n',
+  `show_backlinks` char(1) default NULL,
+  `show_deleteAfter` char(1) default NULL,
+  `show_checked` char(1) default NULL,
+  `show_share` char(1) default NULL,
+  `image_max_size_x` int(8) NOT NULL default '0',
+  `image_max_size_y` int(8) NOT NULL default '0',
+  `show_source` char(1) NOT NULL DEFAULT 'o',
+  `icon_fileId` int(14) UNSIGNED NULL DEFAULT NULL,
+  `ocr_lang` VARCHAR(255) default NULL,
+  PRIMARY KEY (`galleryId`),
+  KEY `parentIdAndName` (`parentId`, name)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+INSERT INTO `tiki_file_galleries` (`galleryId`, `name`, `type`, `description`, `visible`, `user`, `public`, `parentId`) VALUES ('1','File Galleries', 'system', '', 'y', 'admin', 'y', -1);
+INSERT INTO `tiki_file_galleries` (`galleryId`, `name`, `type`, `description`, `visible`, `user`, `public`, `parentId`) VALUES ('2','Users File Galleries', 'system', '', 'y', 'admin', 'y', -1);
+INSERT INTO `tiki_file_galleries` (`galleryId`, `name`, `type`, `description`, `visible`, `user`, `public`, `parentId`) VALUES ('3','Wiki Attachments', 'system', '', 'y', 'admin', 'y', -1);
+
+
+DROP TABLE IF EXISTS `tiki_files`;
+CREATE TABLE `tiki_files` (
+  `fileId` int(14) NOT NULL auto_increment,
+  `galleryId` int(14) NOT NULL default '0',
+  `name` varchar(200) NOT NULL default '',
+  `description` text,
+  `created` int(14) default NULL,
+  `filename` varchar(80) default NULL,
+  `filesize` int(14) default NULL,
+  `filetype` varchar(250) default NULL,
+  `data` longblob,
+  `user` varchar(200) default '',
+  `author` varchar(40) default NULL,
+  `hits` int(14) default NULL,
+  `maxhits` INT( 14 ) default NULL,
+  `lastDownload` int(14) default NULL,
+  `votes` int(8) default NULL,
+  `points` decimal(8,2) default NULL,
+  `path` varchar(255) default NULL,
+  `reference_url` varchar(250) default NULL,
+  `is_reference` char(1) default NULL,
+  `hash` varchar(32) default NULL,
+  `search_data` longtext,
+  `metadata` longtext,
+  `lastModif` integer(14) DEFAULT NULL,
+  `lastModifUser` varchar(200) DEFAULT NULL,
+  `lockedby` varchar(200) default '',
+  `comment` varchar(200) default NULL,
+  `archiveId` int(14) default 0,
+  `deleteAfter` int(14) default NULL,
+  `ocr_state` TINYINT(1) default NULL,
+  `ocr_lang` VARCHAR(255) default NULL,
+  `ocr_data` MEDIUMTEXT default NULL,
+  PRIMARY KEY (`fileId`),
+  KEY `name` (name(191)),
+  KEY `description` (description(191)),
+  KEY `created` (created),
+  KEY `archiveId` (`archiveId`),
+  KEY `galleryIdAndPath` (`galleryId`, `path`(188)),
+  KEY `hits` (hits)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_file_drafts`;
+CREATE TABLE `tiki_file_drafts` (
+  `fileId` int(14) NOT NULL,
+  `filename` varchar(80) default NULL,
+  `filesize` int(14) default NULL,
+  `filetype` varchar(250) default NULL,
+  `data` longblob,
+  `user` varchar(200) default '',
+  `path` varchar(255) default NULL,
+  `hash` varchar(32) default NULL,
+  `metadata` longtext,
+  `lastModif` integer(14) DEFAULT NULL,
+  `lockedby` varchar(200) default '',
+  PRIMARY KEY (`fileId`, `user`(177))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_forum_attachments`;
+CREATE TABLE `tiki_forum_attachments` (
+  `attId` int(14) NOT NULL auto_increment,
+  `threadId` int(14) NOT NULL default '0',
+  `qId` int(14) NOT NULL default '0',
+  `forumId` int(14) default NULL,
+  `filename` varchar(250) default NULL,
+  `filetype` varchar(250) default NULL,
+  `filesize` int(12) default NULL,
+  `data` longblob,
+  `dir` varchar(200) default NULL,
+  `created` int(14) default NULL,
+  `path` varchar(250) default NULL,
+  PRIMARY KEY (`attId`),
+  KEY `threadId` (`threadId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_forum_reads`;
+CREATE TABLE `tiki_forum_reads` (
+  `user` varchar(200) NOT NULL default '',
+  `threadId` int(14) NOT NULL default '0',
+  `forumId` int(14) default NULL,
+  `timestamp` int(14) default NULL,
+  PRIMARY KEY (`user`(177),`threadId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_forums`;
+CREATE TABLE `tiki_forums` (
+  `forumId` int(8) NOT NULL auto_increment,
+  `parentId` int(8) NOT NULL default 0,
+  `forumOrder` int(8) NOT NULL default 0,
+  `name` varchar(255) default NULL,
+  `description` text,
+  `created` int(14) default NULL,
+  `lastPost` int(14) default NULL,
+  `threads` int(8) default NULL,
+  `comments` int(8) default NULL,
+  `controlFlood` char(1) default NULL,
+  `floodInterval` int(8) default NULL,
+  `moderator` varchar(200) default NULL,
+  `hits` int(8) default NULL,
+  `mail` varchar(200) default NULL,
+  `useMail` char(1) default NULL,
+  `section` varchar(200) default NULL,
+  `usePruneUnreplied` char(1) default NULL,
+  `pruneUnrepliedAge` int(8) default NULL,
+  `usePruneOld` char(1) default NULL,
+  `pruneMaxAge` int(8) default NULL,
+  `topicsPerPage` int(6) default NULL,
+  `topicOrdering` varchar(100) default NULL,
+  `threadOrdering` varchar(100) default NULL,
+  `att` varchar(80) default NULL,
+  `att_store` varchar(4) default NULL,
+  `att_store_dir` varchar(250) default NULL,
+  `att_max_size` int(12) default NULL,
+  `att_list_nb` char(1) default NULL,
+  `ui_level` char(1) default NULL,
+  `forum_password` varchar(32) default NULL,
+  `forum_use_password` char(1) default NULL,
+  `moderator_group` varchar(200) default NULL,
+  `approval_type` varchar(20) default NULL,
+  `outbound_address` varchar(250) default NULL,
+  `outbound_mails_for_inbound_mails` char(1) default NULL,
+  `outbound_mails_reply_link` char(1) default NULL,
+  `outbound_from` varchar(250) default NULL,
+  `inbound_pop_server` varchar(250) default NULL,
+  `inbound_pop_port` int(4) default NULL,
+  `inbound_pop_user` varchar(200) default NULL,
+  `inbound_pop_password` varchar(80) default NULL,
+  `topic_smileys` char(1) default NULL,
+  `ui_avatar` char(1) default NULL,
+  `ui_rating_choice_topic` char(1) DEFAULT NULL,
+  `ui_flag` char(1) default NULL,
+  `ui_posts` char(1) default NULL,
+  `ui_email` char(1) default NULL,
+  `ui_online` char(1) default NULL,
+  `topic_summary` char(1) default NULL,
+  `show_description` char(1) default NULL,
+  `topics_list_replies` char(1) default NULL,
+  `topics_list_reads` char(1) default NULL,
+  `topics_list_pts` char(1) default NULL,
+  `topics_list_lastpost` char(1) default NULL,
+  `topics_list_lastpost_title` char(1) default NULL,
+  `topics_list_lastpost_avatar` char(1) default NULL,
+  `topics_list_author` char(1) default NULL,
+  `topics_list_author_avatar` char(1) default NULL,
+  `vote_threads` char(1) default NULL,
+  `forum_last_n` int(2) default 0,
+  `threadStyle` varchar(100) default NULL,
+  `commentsPerPage` varchar(100) default NULL,
+  `is_flat` char(1) default NULL,
+  `mandatory_contribution` char(1) default NULL,
+  `forumLanguage` varchar(255) default NULL,
+  PRIMARY KEY (`forumId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_forums_queue`;
+CREATE TABLE `tiki_forums_queue` (
+  `qId` int(14) NOT NULL auto_increment,
+  `object` varchar(32) default NULL,
+  `parentId` int(14) default NULL,
+  `forumId` int(14) default NULL,
+  `timestamp` int(14) default NULL,
+  `user` varchar(200) default '',
+  `title` varchar(240) default NULL,
+  `data` text,
+  `type` varchar(60) default NULL,
+  `hash` varchar(32) default NULL,
+  `topic_smiley` varchar(80) default NULL,
+  `topic_title` varchar(240) default NULL,
+  `summary` varchar(240) default NULL,
+  `in_reply_to` varchar(128) default NULL,
+  `tags` varchar(255) default NULL,
+  `email` varchar(255) default NULL,
+  PRIMARY KEY (`qId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_forums_reported`;
+CREATE TABLE `tiki_forums_reported` (
+  `threadId` int(12) NOT NULL default '0',
+  `forumId` int(12) NOT NULL default '0',
+  `parentId` int(12) NOT NULL default '0',
+  `user` varchar(200) default '',
+  `timestamp` int(14) default NULL,
+  `reason` varchar(250) default NULL,
+  PRIMARY KEY (`threadId`, `forumId`, `parentId`, `user`(182))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_group_inclusion`;
+CREATE TABLE `tiki_group_inclusion` (
+  `groupName` varchar(255) NOT NULL default '',
+  `includeGroup` varchar(255) NOT NULL default '',
+  PRIMARY KEY (`groupName`(120),`includeGroup`(120))
+) ENGINE=MyISAM;
+INSERT INTO  `tiki_group_inclusion` (`groupName` ,`includeGroup`) VALUES ('Registered','Anonymous');
+
+DROP TABLE IF EXISTS `tiki_group_watches`;
+CREATE TABLE `tiki_group_watches` (
+  `watchId` int(12) NOT NULL auto_increment,
+  `group` varchar(200) NOT NULL default '',
+  `event` varchar(40) NOT NULL default '',
+  `object` varchar(200) NOT NULL default '',
+  `title` varchar(250) default NULL,
+  `type` varchar(200) default NULL,
+  `url` varchar(250) default NULL,
+  PRIMARY KEY (`watchId`),
+  INDEX `event-object-group` ( `event` , `object` ( 100 ) , `group` ( 50 ) )
+) ENGINE=MyISAM;
+
+# Keep track of h5p content entities > Pending in Tiki: Add FileId
+DR
