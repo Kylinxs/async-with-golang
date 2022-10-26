@@ -1152,4 +1152,431 @@ CREATE TABLE `tiki_group_watches` (
 ) ENGINE=MyISAM;
 
 # Keep track of h5p content entities > Pending in Tiki: Add FileId
-DR
+DROP TABLE IF EXISTS `tiki_h5p_contents`;
+CREATE TABLE tiki_h5p_contents (
+    id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    file_id             INT UNSIGNED NOT NULL,    # reference to the file gallery object in tiki_files table
+    created_at   TIMESTAMP    NULL,
+    updated_at   TIMESTAMP    NULL,
+    user_id      INT UNSIGNED NOT NULL,
+    title        VARCHAR(255) NOT NULL,
+    library_id   INT UNSIGNED NOT NULL,
+    parameters   LONGTEXT     NOT NULL,
+    filtered     LONGTEXT     NULL,
+    slug         VARCHAR(127) NOT NULL,
+    embed_type   VARCHAR(127) NOT NULL,
+    disable      INT UNSIGNED NOT NULL DEFAULT 0,
+    content_type VARCHAR(127) NULL,
+    authors      MEDIUMTEXT   NULL,
+    license      VARCHAR(32)  NULL DEFAULT NULL,
+    keywords     TEXT         NULL,
+    description  TEXT         NULL,
+    source       VARCHAR(2083) NULL,
+    year_from    INT UNSIGNED NULL,
+    year_to      INT UNSIGNED NULL,
+    license_version VARCHAR(10) NULL,
+    license_extras  LONGTEXT NULL,
+    author_comments LONGTEXT NULL,
+    changes      MEDIUMTEXT NULL,
+    default_language VARCHAR(32) NULL,
+    a11y_title VARCHAR(255) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY `fileId` (`file_id`)
+)    ENGINE = MyISAM;
+
+# Keep track of content dependencies
+DROP TABLE IF EXISTS `tiki_h5p_contents_libraries`;
+CREATE TABLE tiki_h5p_contents_libraries (
+    content_id      INT UNSIGNED      NOT NULL,
+    library_id      INT UNSIGNED      NOT NULL,
+    dependency_type VARCHAR(31)       NOT NULL,
+    weight          SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    drop_css        TINYINT UNSIGNED  NOT NULL,
+    PRIMARY KEY (content_id, library_id, dependency_type)
+)    ENGINE = MyISAM;
+
+# Keep track of h5p libraries
+DROP TABLE IF EXISTS `tiki_h5p_libraries`;
+CREATE TABLE tiki_h5p_libraries (
+    id               INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    created_at       TIMESTAMP     NULL,
+    updated_at       TIMESTAMP     NULL,
+    name             VARCHAR(127)  NOT NULL,
+    title            VARCHAR(255)  NOT NULL,
+    major_version    INT UNSIGNED  NOT NULL,
+    minor_version    INT UNSIGNED  NOT NULL,
+    patch_version    INT UNSIGNED  NOT NULL,
+    runnable         INT UNSIGNED  NOT NULL,
+    restricted       INT UNSIGNED  NOT NULL DEFAULT 0,
+    fullscreen       INT UNSIGNED  NOT NULL,
+    embed_types      VARCHAR(255)  NOT NULL,
+    preloaded_js     TEXT          NULL,
+    preloaded_css    TEXT          NULL,
+    drop_library_css TEXT          NULL,
+    semantics        TEXT          NOT NULL,
+    tutorial_url     VARCHAR(1023) NOT NULL,
+    has_icon         INT  UNSIGNED  NOT NULL  DEFAULT '0',
+    metadata_settings TEXT NULL,
+    add_to           TEXT DEFAULT NULL,
+    PRIMARY KEY (id),
+    KEY name_version (name, major_version, minor_version, patch_version),
+    KEY runnable (runnable)
+)    ENGINE = MyISAM;
+
+DROP TABLE IF EXISTS `tiki_h5p_libraries_hub_cache`;
+CREATE TABLE tiki_h5p_libraries_hub_cache (
+  id                INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  machine_name      VARCHAR(127) NOT NULL,
+  major_version     INT UNSIGNED NOT NULL,
+  minor_version     INT UNSIGNED NOT NULL,
+  patch_version     INT UNSIGNED NOT NULL,
+  h5p_major_version INT UNSIGNED,
+  h5p_minor_version INT UNSIGNED,
+  title             VARCHAR(255) NOT NULL,
+  summary           TEXT         NOT NULL,
+  description       TEXT         NOT NULL,
+  icon              VARCHAR(511) NOT NULL,
+  created_at        INT UNSIGNED NOT NULL,
+  updated_at        INT UNSIGNED NOT NULL,
+  is_recommended    INT UNSIGNED NOT NULL,
+  popularity        INT UNSIGNED NOT NULL,
+  screenshots       TEXT,
+  license           TEXT,
+  example           VARCHAR(511) NOT NULL,
+  tutorial          VARCHAR(511),
+  keywords          TEXT,
+  categories        TEXT,
+  owner             VARCHAR(511),
+  PRIMARY KEY (id),
+  KEY name_version (machine_name, major_version, minor_version, patch_version)
+) ENGINE = MyISAM;
+
+# Keep track of h5p library dependencies
+DROP TABLE IF EXISTS `tiki_h5p_libraries_libraries`;
+CREATE TABLE tiki_h5p_libraries_libraries (
+    library_id          INT UNSIGNED NOT NULL,
+    required_library_id INT UNSIGNED NOT NULL,
+    dependency_type     VARCHAR(31)  NOT NULL,
+    PRIMARY KEY (library_id, required_library_id)
+)    ENGINE = MyISAM;
+
+# Keep track of h5p library translations
+DROP TABLE IF EXISTS `tiki_h5p_libraries_languages`;
+CREATE TABLE tiki_h5p_libraries_languages (
+    library_id    INT UNSIGNED NOT NULL,
+    language_code VARCHAR(31)  NOT NULL,
+    translation   TEXT         NOT NULL,
+    PRIMARY KEY (library_id, language_code)
+)    ENGINE = MyISAM;
+
+# Keep track of temporary files uploaded in editor before saving content
+DROP TABLE IF EXISTS `tiki_h5p_tmpfiles`;
+CREATE TABLE tiki_h5p_tmpfiles (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    path       VARCHAR(255) NOT NULL,
+    created_at INT UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    KEY created_at (created_at),
+    KEY path (path(191))
+) ENGINE = MyISAM;
+
+# Keep track of results (contents >-< users)
+DROP TABLE IF EXISTS `tiki_h5p_results`;
+CREATE TABLE tiki_h5p_results (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    content_id INT UNSIGNED NOT NULL,
+    user_id    INT UNSIGNED NOT NULL,
+    score      INT UNSIGNED NOT NULL,
+    max_score  INT UNSIGNED NOT NULL,
+    opened     INT UNSIGNED NOT NULL,
+    finished   INT UNSIGNED NOT NULL,
+    time       INT UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    KEY content_user (content_id, user_id)
+)    ENGINE = MyISAM;
+
+# Cache table for h5p libraries so we can reuse the existing h5p code for caching
+DROP TABLE IF EXISTS `tiki_h5p_libraries_cachedassets`;
+CREATE TABLE tiki_h5p_libraries_cachedassets (
+    library_id INT UNSIGNED NOT NULL,
+    hash       VARCHAR(64)  NOT NULL,
+    PRIMARY KEY (library_id, hash)
+) ENGINE = MyISAM;
+
+DROP TABLE IF EXISTS `tiki_history`;
+CREATE TABLE `tiki_history` (
+  `historyId` int(12) NOT NULL auto_increment,
+  `pageName` varchar(160) NOT NULL default '',
+  `version` int(8) NOT NULL default '0',
+  `version_minor` int(8) NOT NULL default '0',
+  `lastModif` int(14) default NULL,
+  `description` varchar(200) default NULL,
+  `user` varchar(200) not null default '',
+  `ip` varchar(39) default NULL,
+  `comment` varchar(255) default NULL,
+  `data` longblob,
+  `type` varchar(50) default NULL,
+  `is_html` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`pageName`,`version`),
+  KEY `user` (`user`(191)),
+  KEY (`historyId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_hotwords`;
+CREATE TABLE `tiki_hotwords` (
+  `word` varchar(255) NOT NULL default '',
+  `url` varchar(255) NOT NULL default '',
+  PRIMARY KEY (`word`(191))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_html_pages`;
+CREATE TABLE `tiki_html_pages` (
+  `pageName` varchar(200) NOT NULL default '',
+  `content` longblob,
+  `refresh` int(10) default NULL,
+  `type` char(1) default NULL,
+  `created` int(14) default NULL,
+  PRIMARY KEY (`pageName`(191))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_html_pages_dynamic_zones`;
+CREATE TABLE `tiki_html_pages_dynamic_zones` (
+  `pageName` varchar(40) NOT NULL default '',
+  `zone` varchar(80) NOT NULL default '',
+  `type` char(2) default NULL,
+  `content` text,
+  PRIMARY KEY (`pageName`,`zone`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_language`;
+CREATE TABLE `tiki_language` (
+  `id` int(14) NOT NULL auto_increment,
+  `source` text NOT NULL,
+  `lang` char(16) NOT NULL default '',
+  `tran` text,
+  `changed` bool,
+  `general` bool DEFAULT NULL COMMENT 'true if this translation is general and can be contributed to the Tiki community, false if it is specific to this instance',
+  `userId` int(8),
+  `lastModif` int(14) NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_link_cache`;
+CREATE TABLE `tiki_link_cache` (
+  `cacheId` int(14) NOT NULL auto_increment,
+  `url` varchar(250) default NULL,
+  `data` longblob,
+  `refresh` int(14) default NULL,
+  PRIMARY KEY (`cacheId`),
+  KEY `url` (url(191))
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+CREATE INDEX urlindex ON tiki_link_cache (url(191));
+
+DROP TABLE IF EXISTS `tiki_links`;
+CREATE TABLE `tiki_links` (
+  `fromPage` varchar(160) NOT NULL default '',
+  `toPage` varchar(160) NOT NULL default '',
+  `lastModif` int(14) NOT NULL,
+  PRIMARY KEY (`fromPage`(96),`toPage`(95)),
+  KEY `toPage` (`toPage`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_live_support_events`;
+CREATE TABLE `tiki_live_support_events` (
+  `eventId` int(14) NOT NULL auto_increment,
+  `reqId` varchar(32) NOT NULL default '',
+  `type` varchar(40) default NULL,
+  `seqId` int(14) default NULL,
+  `senderId` varchar(32) default NULL,
+  `data` text,
+  `timestamp` int(14) default NULL,
+  PRIMARY KEY (`eventId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_live_support_message_comments`;
+CREATE TABLE `tiki_live_support_message_comments` (
+  `cId` int(12) NOT NULL auto_increment,
+  `msgId` int(12) default NULL,
+  `data` text,
+  `timestamp` int(14) default NULL,
+  PRIMARY KEY (`cId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_live_support_messages`;
+CREATE TABLE `tiki_live_support_messages` (
+  `msgId` int(12) NOT NULL auto_increment,
+  `data` text,
+  `timestamp` int(14) default NULL,
+  `user` varchar(200) not null default '',
+  `username` varchar(200) default NULL,
+  `priority` int(2) default NULL,
+  `status` char(1) default NULL,
+  `assigned_to` varchar(200) default NULL,
+  `resolution` varchar(100) default NULL,
+  `title` varchar(200) default NULL,
+  `module` int(4) default NULL,
+  `email` varchar(250) default NULL,
+  PRIMARY KEY (`msgId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_live_support_modules`;
+CREATE TABLE `tiki_live_support_modules` (
+  `modId` int(4) NOT NULL auto_increment,
+  `name` varchar(90) default NULL,
+  PRIMARY KEY (`modId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+INSERT INTO tiki_live_support_modules(name) VALUES('wiki');
+INSERT INTO tiki_live_support_modules(name) VALUES('forums');
+INSERT INTO tiki_live_support_modules(name) VALUES('file galleries');
+INSERT INTO tiki_live_support_modules(name) VALUES('directory');
+
+DROP TABLE IF EXISTS `tiki_live_support_operators`;
+CREATE TABLE `tiki_live_support_operators` (
+  `user` varchar(200) NOT NULL default '',
+  `accepted_requests` int(10) default NULL,
+  `status` varchar(20) default NULL,
+  `longest_chat` int(10) default NULL,
+  `shortest_chat` int(10) default NULL,
+  `average_chat` int(10) default NULL,
+  `last_chat` int(14) default NULL,
+  `time_online` int(10) default NULL,
+  `votes` int(10) default NULL,
+  `points` int(10) default NULL,
+  `status_since` int(14) default NULL,
+  PRIMARY KEY (`user`(191))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_live_support_requests`;
+CREATE TABLE `tiki_live_support_requests` (
+  `reqId` varchar(32) NOT NULL default '',
+  `user` varchar(200) NOT NULL default '',
+  `tiki_user` varchar(200) default NULL,
+  `email` varchar(200) default NULL,
+  `operator` varchar(200) default NULL,
+  `operator_id` varchar(32) default NULL,
+  `user_id` varchar(32) default NULL,
+  `reason` text,
+  `req_timestamp` int(14) default NULL,
+  `timestamp` int(14) default NULL,
+  `status` varchar(40) default NULL,
+  `resolution` varchar(40) default NULL,
+  `chat_started` int(14) default NULL,
+  `chat_ended` int(14) default NULL,
+  PRIMARY KEY (`reqId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_logs`;
+CREATE TABLE `tiki_logs` (
+  `logId` int(8) NOT NULL auto_increment,
+  `logtype` varchar(20) NOT NULL,
+  `logmessage` text NOT NULL,
+  `loguser` varchar(40) NOT NULL,
+  `logip` varchar(200),
+  `logclient` text NOT NULL,
+  `logtime` int(14) NOT NULL,
+  PRIMARY KEY (`logId`),
+  KEY `logtype` (logtype)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_machine_learning_models`;
+CREATE TABLE `tiki_machine_learning_models` (
+  `mlmId` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) NOT NULL,
+  `description` text NULL,
+  `sourceTrackerId` int(11) NOT NULL,
+  `trackerFields` text NULL,
+  `labelField` varchar(191) NULL,
+  `ignoreEmpty` tinyint(1) NULL,
+  `payload` text NULL,
+  PRIMARY KEY  (`mlmId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_mail_events`;
+CREATE TABLE `tiki_mail_events` (
+  `event` varchar(200) default NULL,
+  `object` varchar(200) default NULL,
+  `email` varchar(200) default NULL
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_mailin_accounts`;
+CREATE TABLE `tiki_mailin_accounts` (
+  `accountId` int(12) NOT NULL auto_increment,
+  `user` varchar(200) NOT NULL default '',
+  `account` varchar(50) NOT NULL default '',
+  `protocol` varchar(10) NOT NULL DEFAULT 'pop',
+  `host` varchar(255) default NULL,
+  `port` int(4) default NULL,
+  `username` varchar(100) default NULL,
+  `pass` varchar(100) default NULL,
+  `active` char(1) default NULL,
+  `type` varchar(40) default NULL,
+  `anonymous` char(1) NOT NULL default 'y',
+  `admin` char(1) NOT NULL default 'y',
+  `attachments` char(1) NOT NULL default 'n',
+  `routing` char(1) NOT NULL default 'y',
+  `article_topicId` int(4) default NULL,
+  `article_type` varchar(50) default NULL,
+  `discard_after` varchar(255) default NULL,
+  `show_inlineImages` char(1) NULL,
+  `save_html` char(1) NULL default 'y',
+  `categoryId` int(12) NULL,
+  `namespace` varchar(20) default NULL,
+  `respond_email` char(1) NOT NULL default 'y',
+  `leave_email` char(1) NOT NULL default 'n',
+  `galleryId` int(11) NULL DEFAULT NULL,
+  `trackerId` int(11) NULL DEFAULT NULL,
+  `preferences` TEXT NULL DEFAULT NULL,
+  PRIMARY KEY (`accountId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_menu_languages`;
+CREATE TABLE `tiki_menu_languages` (
+  `menuId` int(8) NOT NULL auto_increment,
+  `language` char(16) NOT NULL default '',
+  PRIMARY KEY (`menuId`,`language`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_menu_options`;
+CREATE TABLE `tiki_menu_options` (
+  `optionId` int(8) NOT NULL auto_increment,
+  `menuId` int(8) default NULL,
+  `type` char(1) default NULL,
+  `name` varchar(200) default NULL,
+  `url` varchar(255) default NULL,
+  `position` int(4) default NULL,
+  `section` text default NULL,
+  `perm` text default NULL,
+  `groupname` text default NULL,
+  `userlevel` int(4) default 0,
+  `icon` varchar(200),
+  `class` text default NULL,
+  PRIMARY KEY (`optionId`),
+  UNIQUE KEY `uniq_menu` (`menuId`,`name`(30),`url`(50),`position`,`section`(60),`perm`(50),`groupname`(50))
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+-- when adding new inserts, order commands by position
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Home','./',10,'','','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Search','tiki-searchresults.php',13,'feature_search_fulltext','tiki_p_search','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Search','tiki-searchindex.php',13,'feature_search','tiki_p_search','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Contact Us','tiki-contact.php',20,'feature_contact,feature_messages','','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Stats','tiki-stats.php',23,'feature_stats','tiki_p_view_stats','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Categories','tiki-browse_categories.php',25,'feature_categories','tiki_p_view_category','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Tags','tiki-browse_freetags.php',27,'feature_freetags','tiki_p_view_freetags','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Calendar','tiki-calendar.php',35,'feature_calendar','tiki_p_view_calendar','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Tiki Calendar','tiki-action_calendar.php',37,'feature_action_calendar','tiki_p_view_tiki_calendar','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Payments','tiki-payment.php',39,'payment_feature','tiki_p_payment_view','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Payments','tiki-payment.php',39,'payment_feature','tiki_p_payment_request','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','(debug)','javascript:toggle(\'debugconsole\')',40,'feature_debug_console','tiki_p_admin','',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','User Wizard','tiki-wizard_user.php',45,'feature_wizard_user','','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'s','My Account','tiki-my_tiki.php',50,'feature_mytiki','','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','My Account Home','tiki-my_tiki.php',51,'feature_mytiki','','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Preferences','tiki-user_preferences.php',55,'feature_mytiki,feature_userPreferences','','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Messages','messu-mailbox.php',60,'feature_mytiki,feature_messages','tiki_p_messages','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Tasks','tiki-user_tasks.php',65,'feature_mytiki,feature_tasks','tiki_p_tasks','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Bookmarks','tiki-user_bookmarks.php',70,'feature_mytiki,feature_user_bookmarks','tiki_p_create_bookmarks','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Modules','tiki-user_assigned_modules.php',75,'feature_mytiki,user_assigned_modules','tiki_p_configure_modules','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Webmail','tiki-webmail.php',85,'feature_mytiki,feature_webmail','tiki_p_use_webmail','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Contacts','tiki-contacts.php',87,'feature_mytiki,feature_contacts','','Registered',0);
+INSERT INTO `tiki_menu_options` (`menuId`, `type`, `name`, `url`, `position`, `section`, `perm`, `groupname`, `userlevel`) VALUES (42,'o','Mail-in','tiki-user_mailin.php',88,'feature_mytiki,feature_mailin','','Registered',0);
+INSERT INTO `tiki_men
