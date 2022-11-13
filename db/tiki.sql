@@ -3608,3 +3608,547 @@ CREATE TABLE `tiki_discount` (
     `comment` TEXT,
     PRIMARY KEY(`id`),
     KEY `code` (`code`(191))
+) ENGINE=MyISAM;
+DROP TABLE IF EXISTS `tiki_translations_in_progress`;
+CREATE TABLE `tiki_translations_in_progress` (
+   `page_id` int(14) NOT NULL,
+   `language` char(2) NOT NULL,
+   KEY `page_id` (`page_id`),
+   KEY `language` (`language`),
+   UNIQUE (`page_id`, `language`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_rss_items`;
+CREATE TABLE `tiki_rss_items` (
+    `rssItemId` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `rssId` INT NOT NULL,
+    `guid` VARCHAR(255) NOT NULL,
+    `url` TEXT NOT NULL,
+    `publication_date` INT UNSIGNED NOT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `author` VARCHAR(255),
+    `description` TEXT,
+    `content` TEXT,
+    `categories` TEXT,
+    KEY `tiki_rss_items_rss` (`rssId`),
+    KEY `tiki_rss_items_item` (`rssId`, `guid`(177))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_object_attributes`;
+CREATE TABLE `tiki_object_attributes` (
+    `attributeId` INT PRIMARY KEY AUTO_INCREMENT,
+    `type` varchar(50) NOT NULL,
+    `itemId` varchar(160) NOT NULL,
+    `attribute` varchar(70) NOT NULL,
+    `value` varchar(255),
+    `comment` varchar(255),
+    UNIQUE `item_attribute_uq` ( `type`, `itemId`(91), `attribute`(50) ),
+    KEY `attribute_lookup_ix` (`attribute`, `value`(121))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_rating_configs`;
+CREATE TABLE `tiki_rating_configs` (
+    `ratingConfigId` INT PRIMARY KEY AUTO_INCREMENT,
+    `name` VARCHAR(50) NOT NULL,
+    `expiry` INT NOT NULL DEFAULT 3600,
+    `formula` TEXT NOT NULL,
+    `callbacks` TEXT
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_rating_obtained`;
+CREATE TABLE `tiki_rating_obtained` (
+    `ratingId` INT PRIMARY KEY AUTO_INCREMENT,
+    `ratingConfigId` INT NOT NULL,
+    `type` VARCHAR(50) NOT NULL,
+    `object` INT NOT NULL,
+    `expire` INT NOT NULL,
+    `value` FLOAT NOT NULL,
+    UNIQUE `tiki_obtained_rating_uq` (`type`, `object`, `ratingConfigId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_object_relations`;
+CREATE TABLE `tiki_object_relations` (
+    `relationId` INT PRIMARY KEY AUTO_INCREMENT,
+    `relation` varchar(70) NOT NULL,
+    `source_type` varchar(50) NOT NULL,
+    `source_itemId` varchar(160) NOT NULL,
+    `target_type` varchar(50) NOT NULL,
+    `target_itemId` varchar(160) NOT NULL,
+    KEY `relation_source_ix` (`source_type`, `source_itemId`),
+    KEY `relation_target_ix` (`target_type`, `target_itemId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_todo`;
+CREATE TABLE `tiki_todo` (
+    `todoId` INT(12) NOT NULL auto_increment,
+    `after` INT(12) NOT NULL,
+    `event` VARCHAR(50) NOT NULL,
+    `objectType` VARCHAR(50),
+    `objectId` VARCHAR(255) default NULL,
+    `from` VARCHAR(255) default NULL,
+    `to` VARCHAR(255) default NULL,
+    PRIMARY KEY (`todoId`),
+    KEY `what` (`objectType`, `objectId`(141)),
+    KEY `after` (`after`)
+) ENGINE=MyISAM;
+DROP TABLE IF EXISTS `tiki_todo_notif`;
+CREATE TABLE `tiki_todo_notif` (
+    `todoId` INT(12) NOT NULL,
+    `objectType` VARCHAR(50),
+    `objectId` VARCHAR(255) default NULL,
+    KEY `todoId` (`todoId`),
+    KEY `objectId` (`objectId`(191))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_url_shortener`;
+CREATE TABLE `tiki_url_shortener` (
+  `urlId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user` varchar(200) NOT NULL,
+  `longurl` tinytext NOT NULL,
+  `longurl_hash` varchar(32) NOT NULL,
+  `service` varchar(32) NOT NULL,
+  `shorturl` varchar(63) NOT NULL,
+  PRIMARY KEY (`urlId`),
+  UNIQUE KEY `shorturl` (`shorturl`),
+  KEY `longurl_hash` (`longurl_hash`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 ;
+
+DROP TABLE IF EXISTS `tiki_invite`;
+CREATE TABLE `tiki_invite` (
+  `id` int(11) NOT NULL auto_increment,
+  `inviter` varchar(200) NOT NULL,
+  `groups` varchar(255) default NULL,
+  `ts` int(11) NOT NULL,
+  `emailsubject` varchar(255) NOT NULL,
+  `emailcontent` text NOT NULL,
+  `wikicontent` text,
+  `wikipageafter` varchar(255) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_invited`;
+CREATE TABLE `tiki_invited` (
+  `id` int(11) NOT NULL auto_increment,
+  `id_invite` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `firstname` varchar(24) NOT NULL,
+  `lastname` varchar(24) NOT NULL,
+  `used` enum('no','registered','logged') NOT NULL,
+  `used_on_user` varchar(200) default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `id_invite` (`id_invite`),
+  KEY `used_on_user` (`used_on_user`(191))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_credits`;
+CREATE TABLE `tiki_credits` (
+    `creditId` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+    `userId` INT( 8 ) NOT NULL ,
+    `credit_type` VARCHAR( 25 ) NOT NULL ,
+    `creation_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+    `expiration_date` TIMESTAMP NULL ,
+    `total_amount` FLOAT NOT NULL DEFAULT 0,
+    `used_amount` FLOAT NOT NULL DEFAULT 0,
+    `product_id` INT( 8 ) NULL ,
+    `goalId` INT NULL ,
+    PRIMARY KEY ( `creditId` ) ,
+    INDEX ( `userId` , `credit_type` )
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_credits_usage`;
+CREATE TABLE `tiki_credits_usage` (
+    `usageId` INT NOT NULL AUTO_INCREMENT,
+    `userId` INT NOT NULL,
+    `usage_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `credit_type` VARCHAR( 25 ) NOT NULL,
+    `used_amount` FLOAT NOT NULL DEFAULT 0,
+    `product_id` INT( 8 ) NULL ,
+    PRIMARY KEY ( `usageId` )
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_credits_types`;
+CREATE TABLE `tiki_credits_types` (
+    `credit_type` VARCHAR( 25 ) NOT NULL,
+    `display_text` VARCHAR( 50 ) DEFAULT NULL,
+    `unit_text` VARCHAR( 25 ) DEFAULT NULL,
+    `is_static_level` CHAR( 1 ) DEFAULT 'n',
+    `scaling_divisor` FLOAT NOT NULL DEFAULT 1,
+    PRIMARY KEY ( `credit_type` )
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_account`;
+CREATE TABLE `tiki_acct_account` (
+  `accountBookId` int(10) unsigned NOT NULL,
+  `accountId` int(10) unsigned NOT NULL DEFAULT '0',
+  `accountName` varchar(255) NOT NULL,
+  `accountNotes` text NOT NULL,
+  `accountBudget` double NOT NULL DEFAULT '0',
+  `accountLocked` int(1) NOT NULL DEFAULT '0',
+  `accountTax` int(11) NOT NULL DEFAULT '0',
+  `accountUserId` int(8) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`accountBookId`,`accountId`),
+  KEY `accountTax` (`accountTax`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_bankaccount`;
+CREATE TABLE `tiki_acct_bankaccount` (
+  `bankBookId` int(10) unsigned NOT NULL,
+  `bankAccountId` int(10) unsigned NOT NULL,
+  `externalNumber` int(10) NOT NULL,
+  `bankCountry` varchar(2) NOT NULL,
+  `bankCode` varchar(11) NOT NULL,
+  `bankIBAN` varchar(63) NOT NULL,
+  `bankBIC` varchar(63) NOT NULL,
+  `bankDelimeter` varchar(15) NOT NULL DEFAULT ';',
+  `bankDecPoint` varchar(1) NOT NULL DEFAULT ',',
+  `bankThousand` varchar(1) NOT NULL DEFAULT '.',
+  `bankHasHeader` tinyint(1) NOT NULL DEFAULT '1',
+  `fieldNameAccount` varchar(63) NOT NULL,
+  `fieldNameBookingDate` varchar(63) NOT NULL,
+  `formatBookingDate` varchar(31) NOT NULL,
+  `fieldNameValueDate` varchar(63) NOT NULL,
+  `formatValueDate` varchar(31) NOT NULL,
+  `fieldNameBookingText` varchar(63) NOT NULL,
+  `fieldNameReason` varchar(63) NOT NULL,
+  `fieldNameCounterpartName` varchar(63) NOT NULL,
+  `fieldNameCounterpartAccount` varchar(63) NOT NULL,
+  `fieldNameCounterpartBankCode` varchar(63) NOT NULL,
+  `fieldNameAmount` varchar(63) NOT NULL,
+  `amountType` int(10) unsigned NOT NULL,
+  `fieldNameAmountSign` varchar(63) NOT NULL,
+  `SignPositive` varchar(7) NOT NULL,
+  `SignNegative` varchar(7) NOT NULL,
+  PRIMARY KEY (`bankBookId`,`bankAccountId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_book`;
+CREATE TABLE `tiki_acct_book` (
+  `bookId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `bookName` varchar(255) NOT NULL,
+  `bookClosed` enum('y','n') NOT NULL DEFAULT 'n',
+  `bookStartDate` date NULL,
+  `bookEndDate` date NULL,
+  `bookCurrency` varchar(3) NOT NULL DEFAULT 'EUR',
+  `bookCurrencyPos` int(11) NOT NULL,
+  `bookDecimals` int(11) NOT NULL DEFAULT '2',
+  `bookDecPoint` varchar(1) NOT NULL DEFAULT ',',
+  `bookThousand` varchar(1) NOT NULL DEFAULT '.',
+  `exportSeparator` varchar(4) NOT NULL DEFAULT ';',
+  `exportEOL` varchar(4) NOT NULL DEFAULT 'LF',
+  `exportQuote` varchar(4) NOT NULL DEFAULT '"',
+  `bookAutoTax` enum('y','n') NOT NULL DEFAULT 'y',
+  PRIMARY KEY (`bookId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_item`;
+CREATE TABLE `tiki_acct_item` (
+  `itemId` int(11) NOT NULL AUTO_INCREMENT,
+  `itemBookId` int(10) unsigned NOT NULL,
+  `itemJournalId` int(10) unsigned NOT NULL DEFAULT '0',
+  `itemAccountId` int(10) unsigned NOT NULL DEFAULT '0',
+  `itemType` int(1) NOT NULL DEFAULT '-1',
+  `itemAmount` double NOT NULL DEFAULT '0',
+  `itemText` varchar(255) NOT NULL DEFAULT '',
+  `itemTs` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`itemId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_journal`;
+CREATE TABLE `tiki_acct_journal` (
+  `journalBookId` int(10) unsigned NOT NULL,
+  `journalId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `journalDate` date NULL,
+  `journalDescription` varchar(255) NOT NULL,
+  `journalCancelled` int(1) NOT NULL DEFAULT '0',
+  `journalTs` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`journalId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_stack`;
+CREATE TABLE `tiki_acct_stack` (
+  `stackBookId` int(10) unsigned NOT NULL,
+  `stackId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `stackDate` date NULL,
+  `stackDescription` varchar(255) NOT NULL,
+  `stackTs` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`stackId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_stackitem`;
+CREATE TABLE `tiki_acct_stackitem` (
+  `stackBookId` int(10) unsigned NOT NULL,
+  `stackItemStackId` int(10) unsigned NOT NULL DEFAULT '0',
+  `stackItemAccountId` int(10) unsigned NOT NULL DEFAULT '0',
+  `stackItemType` int(1) NOT NULL DEFAULT '-1',
+  `stackItemAmount` double NOT NULL DEFAULT '0',
+  `stackItemText` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`stackBookId`,`stackItemStackId`,`stackItemAccountId`,`stackItemType`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_statement`;
+CREATE TABLE `tiki_acct_statement` (
+  `statementBookId` int(10) unsigned NOT NULL,
+  `statementAccountId` int(10) unsigned NOT NULL DEFAULT '0',
+  `statementId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `statementBookingDate` date NULL,
+  `statementValueDate` date NULL,
+  `statementBookingText` varchar(255) NOT NULL,
+  `statementReason` varchar(255) NOT NULL,
+  `statementCounterpart` varchar(63) NOT NULL,
+  `statementCounterpartAccount` varchar(63) NOT NULL,
+  `statementCounterpartBankCode` varchar(63) NOT NULL,
+  `statementAmount` double NOT NULL,
+  `statementJournalId` int(10) unsigned NOT NULL DEFAULT '0',
+  `statementStackId` int(11) NOT NULL,
+  PRIMARY KEY (`statementId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_acct_tax`;
+CREATE TABLE `tiki_acct_tax` (
+  `taxBookId` int(10) unsigned NOT NULL,
+  `taxId` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `taxText` varchar(63) NOT NULL,
+  `taxAmount` double NOT NULL DEFAULT '0',
+  `taxIsFix` enum('y','n') NOT NULL DEFAULT 'n',
+  PRIMARY KEY (`taxId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_queue`;
+CREATE TABLE `tiki_queue` (
+    `entryId` INT PRIMARY KEY AUTO_INCREMENT,
+    `queue` VARCHAR(25) NOT NULL,
+    `timestamp` INT NOT NULL,
+    `handler` VARCHAR(64) NULL,
+    `message` TEXT NOT NULL,
+    KEY `queue_name_ix` (`queue`),
+    KEY `queue_handler_ix` (`handler`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_cart_inventory_hold`;
+CREATE TABLE `tiki_cart_inventory_hold` (
+    `productId` INT( 14 ) NOT NULL,
+    `quantity` INT( 14 ) NOT NULL,
+    `timeHeld` INT( 14 ) NOT NULL,
+    `hash` CHAR( 32 ) NOT NULL
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_source_auth`;
+CREATE TABLE `tiki_source_auth` (
+    `identifier` VARCHAR(50) PRIMARY KEY,
+    `scheme` VARCHAR(20) NOT NULL,
+    `domain` VARCHAR(200) NOT NULL,
+    `path` VARCHAR(200) NOT NULL,
+    `method` VARCHAR(20) NOT NULL,
+    `arguments` TEXT NOT NULL,
+    `user` VARCHAR(200),
+    KEY `tiki_source_auth_ix` (`scheme`, `domain`(171))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_connect`;
+CREATE TABLE `tiki_connect` (
+    `id` INT(11) unsigned NOT NULL AUTO_INCREMENT,
+    `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `type` VARCHAR(64) NOT NULL DEFAULT '',
+    `data` TEXT,
+    `guid` VARCHAR(64) DEFAULT NULL,
+    `server` TINYINT(1) NOT NULL DEFAULT '0',
+    PRIMARY KEY (`id`),
+    KEY `server` (`server`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_areas`;
+CREATE TABLE `tiki_areas` (
+    `categId` int(11) NOT NULL,
+    `perspectives` text,
+    `exclusive` char(1) NOT NULL DEFAULT 'n',
+    `share_common` char(1) NOT NULL DEFAULT 'y',
+    `enabled` char(1)  NOT NULL DEFAULT 'y',
+    KEY `categId` (`categId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_page_references`;
+CREATE TABLE `tiki_page_references` (
+  `ref_id` INT(14) NOT NULL AUTO_INCREMENT,
+  `page_id` INT(14) DEFAULT NULL,
+  `biblio_code` VARCHAR(50) DEFAULT NULL,
+  `author` VARCHAR(255) DEFAULT NULL,
+  `title` VARCHAR(255) DEFAULT NULL,
+  `part` VARCHAR(255) DEFAULT NULL,
+  `uri` VARCHAR(255) DEFAULT NULL,
+  `code` VARCHAR(255) DEFAULT NULL,
+  `year` VARCHAR(255) DEFAULT NULL,
+  `publisher` VARCHAR(255) DEFAULT NULL,
+  `location` VARCHAR(255)  DEFAULT NULL,
+  `style` VARCHAR(30) DEFAULT NULL,
+  `template` varchar(255) DEFAULT NULL,
+  `last_modified` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`ref_id`),
+  KEY `PageId` (`page_id`)
+) ENGINE=MyISAM;
+ALTER TABLE tiki_page_references ADD UNIQUE INDEX uk1_tiki_page_ref_biblio_code (page_id, biblio_code);
+ALTER TABLE tiki_page_references ADD INDEX idx_tiki_page_ref_title (title(191));
+ALTER TABLE tiki_page_references ADD INDEX idx_tiki_page_ref_author (author(191));
+
+DROP TABLE IF EXISTS `tiki_db_status`;
+CREATE TABLE `tiki_db_status` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `objectId` varchar(100) NOT NULL,
+  `tableName` varchar(100) NOT NULL,
+  `status` varchar(100) NOT NULL,
+  `other` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `tiki_mail_queue`;
+CREATE TABLE `tiki_mail_queue` (
+  `messageId` INT NOT NULL AUTO_INCREMENT ,
+  `message`   LONGTEXT NULL ,
+  `attempts`  INT NOT NULL DEFAULT 0 ,
+  PRIMARY KEY (`messageId`)
+) ENGINE=MyISAM AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `tiki_workspace_templates`;
+CREATE TABLE `tiki_workspace_templates` (
+    `templateId` INT PRIMARY KEY AUTO_INCREMENT,
+    `name` VARCHAR(50),
+    `definition` TEXT,
+    `is_advanced` CHAR(1) NOT NULL DEFAULT 'n'
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_user_mailin_struct`;
+CREATE TABLE `tiki_user_mailin_struct` (
+    `mailin_struct_id` int(12) NOT NULL auto_increment,
+    `username` varchar(200) NOT NULL,
+    `subj_pattern` varchar(255) NULL,
+    `body_pattern` varchar(255) NULL,
+    `structure_id` int(14) NOT NULL,
+    `page_id` int(14) NULL,
+    `is_active` char(1) NULL DEFAULT 'n',
+   PRIMARY KEY (`mailin_struct_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `tiki_search_queries`;
+CREATE TABLE `tiki_search_queries` (
+    `queryId` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `userId` INT NOT NULL,
+    `lastModif` INT,
+    `label` VARCHAR(100) NOT NULL,
+    `priority` VARCHAR(15) NOT NULL,
+    `query` BLOB,
+    `description` TEXT,
+    INDEX `query_userId` (`userId`),
+    UNIQUE KEY `tiki_user_query_uq` (`userId`, `label`)
+) ENGINE=MyISAM AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `tiki_user_monitors`;
+CREATE TABLE `tiki_user_monitors` (
+    `monitorId` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `userId` INT NOT NULL,
+    `event` VARCHAR(50) NOT NULL,
+    `priority` VARCHAR(10) NOT NULL,
+    `target` VARCHAR(25) NOT NULL,
+    INDEX `userid_target_ix` (`userId`, `target`),
+    UNIQUE `event_target_uq` (`event`, `target`, `userId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_output`;
+CREATE TABLE `tiki_output` (
+  `entityId` varchar(160) NOT NULL default '',
+  `objectType` varchar(32) NOT NULL default '',
+  `outputType` varchar(32) NOT NULL default '',
+  `version` int(8) NOT NULL default '0',
+  `outputId` INT NOT NULL PRIMARY KEY AUTO_INCREMENT
+) ENGINE=MyISAM AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `tiki_goals`;
+CREATE TABLE `tiki_goals` (
+    `goalId` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `name` VARCHAR(50) NOT NULL,
+    `type` VARCHAR(10) NOT NULL DEFAULT 'user',
+    `description` TEXT,
+    `enabled` INT NOT NULL DEFAULT 0,
+    `daySpan` INT NOT NULL DEFAULT 14,
+    `from` DATETIME,
+    `to` DATETIME,
+    `eligible` BLOB,
+    `conditions` BLOB,
+    `rewards` BLOB
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_goal_events`;
+CREATE TABLE `tiki_goal_events` (
+    `eventId` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `eventDate` INT NOT NULL,
+    `eventType` VARCHAR(50) NOT NULL,
+    `targetType` VARCHAR(50),
+    `targetObject` VARCHAR(255),
+    `user` VARCHAR(200) NOT NULL,
+    `groups` BLOB NOT NULL
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_tabular_formats`;
+CREATE TABLE `tiki_tabular_formats` (
+    `tabularId` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `trackerId` INT NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `format_descriptor` TEXT,
+    `filter_descriptor` TEXT,
+    `config` TEXT,
+    `odbc_config` TEXT,
+    `api_config` TEXT,
+    KEY `tabular_tracker_ix` (`trackerId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_scheduler`;
+CREATE TABLE `tiki_scheduler` (
+  `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `name` VARCHAR(255),
+  `description` VARCHAR(255),
+  `task`VARCHAR(255),
+  `params` TEXT,
+  `run_time` VARCHAR(255),
+  `status` VARCHAR(10),
+  `re_run` TINYINT,
+  `run_only_once` TINYINT,
+  `creation_date` INT(14),
+  `user_run_now` VARCHAR(255) NULL DEFAULT NULL
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_scheduler_run`;
+CREATE TABLE `tiki_scheduler_run` (
+  `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `scheduler_id` INT NOT NULL,
+  `start_time` INT(14),
+  `end_time` INT(14),
+  `status` VARCHAR(10),
+  `output` TEXT,
+  `stalled` TINYINT DEFAULT 0,
+  `healed` TINYINT DEFAULT 0
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_oauthserver_clients`;
+CREATE TABLE `tiki_oauthserver_clients` (
+    `id` INT(14) NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(128) NOT NULL DEFAULT '',
+    `client_id` VARCHAR(128) UNIQUE NOT NULL DEFAULT '',
+    `client_secret` VARCHAR(255) NOT NULL DEFAULT '',
+    `redirect_uri` VARCHAR(255) NOT NULL DEFAULT '',
+    `user` VARCHAR(200) NULL DEFAULT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `tiki_performance`;
+CREATE TABLE `tiki_performance` (
+    `id` int(12) NOT NULL AUTO_INCREMENT,
+    `url` varchar (255) NOT NULL,
+    `time_taken` int(12) NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_password_blacklist`;
+CREATE TABLE `tiki_password_blacklist` (
+    `password` VARCHAR(30) NOT NULL,
+    PRIMARY KEY (`password`) USING HASH
+) ENGINE=MyISAM;
+
+SET FOREIGN_KEY_CHECKS = 1;
