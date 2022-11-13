@@ -3270,4 +3270,341 @@ CREATE TABLE `tiki_pages_changes` (
   `segments_added` int(10),
   `segments_removed` int(10),
   `segments_total` int(10),
-  PRIMARY KEY (p
+  PRIMARY KEY (page_id, version)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_minichat`;
+CREATE TABLE `tiki_minichat` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `channel` varchar(31),
+  `ts` int(10) unsigned NOT NULL,
+  `user` varchar(31) default NULL,
+  `nick` varchar(31) default NULL,
+  `msg` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `channel` (`channel`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_profile_symbols`;
+CREATE TABLE `tiki_profile_symbols` (
+  `domain` VARCHAR(50) NOT NULL,
+  `profile` VARCHAR(100) NOT NULL,
+  `object` VARCHAR(150) NOT NULL,
+  `type` VARCHAR(20) NOT NULL,
+  `value` VARCHAR(160) NOT NULL,
+  `named` ENUM('y','n') NOT NULL,
+  `creation_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ( `domain`, `profile`(70), `object`(71) ),
+  INDEX(`named`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_feature`;
+CREATE TABLE `tiki_feature` (
+  `feature_id` mediumint(9) NOT NULL auto_increment,
+  `feature_name` varchar(150) NOT NULL,
+  `parent_id` mediumint(9) NOT NULL,
+  `status` varchar(12) NOT NULL default 'active',
+  `setting_name` varchar(50) default NULL,
+  `feature_type` varchar(30) NOT NULL default 'feature',
+  `template` varchar(50) default NULL,
+  `permission` varchar(50) default NULL,
+  `ordinal` mediumint(9) NOT NULL default '1',
+  `depends_on` mediumint(9) default NULL,
+  `keyword` varchar(30) default NULL,
+  `tip` text NULL,
+  `feature_count` mediumint(9) NOT NULL default '0',
+  `feature_path` varchar(20) NOT NULL default '0',
+  PRIMARY KEY (`feature_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `tiki_schema`;
+CREATE TABLE `tiki_schema` (
+  `patch_name` VARCHAR(100) PRIMARY KEY,
+  `install_date` TIMESTAMP
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_semantic_tokens`;
+CREATE TABLE `tiki_semantic_tokens` (
+  `token` VARCHAR(15) PRIMARY KEY,
+  `label` VARCHAR(25) NOT NULL,
+  `invert_token` VARCHAR(15)
+) ENGINE=MyISAM ;
+
+INSERT INTO tiki_semantic_tokens (token, label) VALUES('alias', 'Page Alias');
+INSERT INTO tiki_semantic_tokens (token, label) VALUES('prefixalias', 'Page Prefix Alias');
+INSERT INTO tiki_semantic_tokens (token, label) VALUES('titlefieldid', 'Field Id for Page Title'),('trackerid', 'Id of Embedded Tracker');
+
+
+DROP TABLE IF EXISTS `tiki_webservice`;
+CREATE TABLE `tiki_webservice` (
+  `service` VARCHAR(25) NOT NULL PRIMARY KEY,
+  `url` VARCHAR(250),
+  `wstype` CHAR(4),
+  `operation` VARCHAR(250),
+  `body` TEXT,
+  `schema_version` VARCHAR(5),
+  `schema_documentation` VARCHAR(250)
+) ENGINE=MyISAM ;
+
+DROP TABLE IF EXISTS `tiki_webservice_template`;
+CREATE TABLE `tiki_webservice_template` (
+  `service` VARCHAR(25) NOT NULL,
+  `template` VARCHAR(25) NOT NULL,
+  `engine` VARCHAR(15) NOT NULL,
+  `output` VARCHAR(15) NOT NULL,
+  `content` TEXT NOT NULL,
+  `last_modif` INT,
+  PRIMARY KEY ( service, template )
+) ENGINE=MyISAM ;
+
+DROP TABLE IF EXISTS `tiki_groupalert`;
+CREATE TABLE `tiki_groupalert` (
+  `groupName` varchar(255) NOT NULL default '',
+  `objectType` varchar( 20 ) NOT NULL default '',
+  `objectId` varchar(10) NOT NULL default '',
+  `displayEachuser` char( 1 ) default NULL ,
+  PRIMARY KEY (`groupName`(161), `objectType`, `objectId` )
+) ENGINE=MyISAM ;
+
+DROP TABLE IF EXISTS `tiki_sent_newsletters_files`;
+CREATE TABLE `tiki_sent_newsletters_files` (
+  `id` int(11) NOT NULL auto_increment,
+  `editionId` int(11) NOT NULL,
+  `name` varchar(256) NOT NULL,
+  `type` varchar(64) NOT NULL,
+  `size` int(11) NOT NULL,
+  `filename` varchar(256) NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `editionId` (`editionId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_sefurl_regex_out`;
+CREATE TABLE `tiki_sefurl_regex_out` (
+  `id` int(11) NOT NULL auto_increment,
+  `left` varchar(256) NOT NULL,
+  `right` varchar(256) NULL default NULL,
+  `type` varchar(32) NULL default NULL,
+  `silent` char(1) NULL default 'n',
+  `feature` varchar(256) NULL default NULL,
+  `comment` varchar(256),
+  `order` int(11) NULL default 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `left` (`left`(128)),
+  INDEX `idx1` (silent, type, feature(30))
+) ENGINE=MyISAM;
+
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-index.php\\?page=(.+)', '$1', 'wiki', 'feature_wiki');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-slideshow.php\\?page=(.+)', 'show:$1', '', 'feature_wiki');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-read_article.php\\?articleId=(\\d+)', 'article$1', 'article', 'feature_articles');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-browse_categories.php\\?parentId=(\\d+)', 'cat$1', 'category', 'feature_categories');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-view_blog.php\\?blogId=(\\d+)', 'blog$1', 'blog', 'feature_blogs');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-view_blog_post.php\\?postId=(\\d+)', 'blogpost$1', 'blogpost', 'feature_blogs');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-directory_browse.php\\?parent=(\\d+)', 'directory$1', 'directory', 'feature_directory');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-view_faq.php\\?faqId=(\\d+)', 'faq$1', 'faq', 'feature_faqs');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-download_file.php\\?fileId=(\\d+)', 'dl$1', 'file', 'feature_file_galleries', 10);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-download_file.php\\?fileId=(\\d+)&amp;thumbnail', 'thumbnail$1', 'thumbnail', 'feature_file_galleries');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-download_file.php\\?fileId=(\\d+)&amp;display', 'display$1', 'display', 'feature_file_galleries');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-download_file.php\\?fileId=(\\d+)&amp;preview', 'preview$1', 'preview', 'feature_file_galleries');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-view_forum.php\\?forumId=(\\d+)', 'forum$1', 'forum', 'feature_forums');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-newsletters.php\\?nlId=(\\d+)', 'newsletter$1', 'newsletter', 'feature_newsletters');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-take_quiz.php\\?quizId=(\\d+)', 'quiz$1', 'quiz', 'feature_quizzes');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-take_survey.php\\?surveyId=(\\d+)', 'survey$1', 'survey', 'feature_surveys');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-view_tracker.php\\?trackerId=(\\d+)', 'tracker$1', 'tracker', 'feature_trackers');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-integrator.php\\?repID=(\\d+)', 'int$1', '', 'feature_integrator');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-view_sheets.php\\?sheetId=(\\d+)', 'sheet$1', 'sheet', 'feature_sheet');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`) VALUES('tiki-directory_redirect.php\\?siteId=(\\d+)', 'dirlink$1', 'directory', 'feature_directory');
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `comment`, `type`, `feature`, `order`) VALUES('tiki-calendar.php\\?calIds\\[\\]=(\\d+)\&calIds\\[\\]=(\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)', 'cal$1,$2,$3,$4,$5,$6,$7', '7', 'calendar', 'feature_calendar', 100);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `comment`, `type`, `feature`, `order`) VALUES('tiki-calendar.php\\?calIds\\[\\]=(\\d+)\&calIds\\[\\]=(\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)', 'cal$1,$2,$3,$4,$5,$6', '6', 'calendar', 'feature_calendar', 101);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `comment`, `type`, `feature`, `order`) VALUES('tiki-calendar.php\\?calIds\\[\\]=(\\d+)\&calIds\\[\\]=(\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)', 'cal$1,$2,$3,$4,$5', '5', 'calendar', 'feature_calendar', 102);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `comment`, `type`, `feature`, `order`) VALUES('tiki-calendar.php\\?calIds\\[\\]=(\\d+)\&calIds\\[\\]=(\\d+)\&callIds\\[\\](\\d+)\&callIds\\[\\](\\d+)', 'cal$1,$2,$3,$4', '4', 'calendar', 'feature_calendar', 103);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `comment`, `type`, `feature`, `order`) VALUES('tiki-calendar.php\\?calIds\\[\\]=(\\d+)\&calIds\\[\\]=(\\d+)\&callIds\\[\\](\\d+)', 'cal$1,$2,$3', '3', 'calendar', 'feature_calendar', 104);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `comment`, `type`, `feature`, `order`) VALUES('tiki-calendar.php\\?calIds\\[\\]=(\\d+)&calIds\\[\\]=(\\d+)', 'cal$1,$2', '2', 'calendar', 'feature_calendar', 105);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `comment`, `type`, `feature`, `order`) VALUES('tiki-calendar.php\\?calIds\\[\\]=(\\d+)', 'cal$1', '1', 'calendar', 'feature_calendar', 106);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-calendar.php', 'calendar', 'calendar', 'feature_calendar', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-view_articles.php', 'articles', '', 'feature_articles', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-list_blogs.php', 'blogs', '', 'feature_blogs', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-browse_categories.php', 'categories', '', 'feature_categories', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-contact.php', 'contact', '', 'feature_contact', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-directory_browse.php', 'directories', '', 'feature_directory', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-list_faqs.php', 'faqs', '', 'feature_faqs', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-file_galleries.php', 'files', '', 'feature_file_galleries', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-forums.php', 'forums', '', 'feature_forums', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-login_scr.php', 'login', '', '', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-my_tiki.php', 'my', '', '', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-newsletters.php', 'newsletters', 'newsletter', 'feature_newsletters', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-list_quizzes.php', 'quizzes', '', 'feature_quizzes', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-stats.php', 'statistics', '', 'feature_stats', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-list_surveys.php', 'surveys', '', 'feature_surveys', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-list_trackers.php', 'trackers', 'tracker', 'feature_trackers', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-sheets.php', 'sheets', '', 'feature_sheet', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-view_tracker_item.php\\?trackerId=(\\d+)\\&itemId=(\\d+)', 'item$2', 'trackeritem', 'feature_trackers', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-view_tracker_item.php\\?itemId=(\\d+)', 'item$1', 'trackeritem', 'feature_trackers', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-list_file_gallery.php\\?galleryId=(\\d+)', 'file$1', 'file gallery', 'feature_file_galleries', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-user_information.php\\?userId=(\\d+)','user$1', '', '', 200);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-view_forum_thread.php\\?comments_parentId=(\\d+)', 'forumthread$1', 'forumthread', 'feature_forums', 0);
+INSERT INTO `tiki_sefurl_regex_out` (`left`, `right`, `type`, `feature`, `order`) VALUES('tiki-admin_tracker_fields.php\\?trackerId=(\\d+)','trackerfields$1', 'trackerfields', 'feature_trackers', 200);
+
+UPDATE tiki_menu_options SET icon = 'icon-configuration48x48' WHERE name = 'Settings';
+UPDATE tiki_menu_options SET icon = 'xfce4-appfinder48x48' WHERE name = 'Search';
+UPDATE tiki_menu_options SET icon = 'wikipages48x48' WHERE name = 'Wiki';
+UPDATE tiki_menu_options SET icon = 'blogs48x48' WHERE name = 'Blogs';
+UPDATE tiki_menu_options SET icon = 'file-manager48x48' WHERE name = 'File Galleries';
+UPDATE tiki_menu_options SET icon = 'stock_bold48x48' WHERE name = 'Articles';
+UPDATE tiki_menu_options SET icon = 'stock_index48x48' WHERE name = 'Forums';
+UPDATE tiki_menu_options SET icon = 'gnome-settings-font48x48' WHERE name = 'Trackers';
+UPDATE tiki_menu_options SET icon = 'users48x48' WHERE name = 'Community';
+UPDATE tiki_menu_options SET icon = 'stock_dialog_question48x48' WHERE name = 'FAQs';
+UPDATE tiki_menu_options SET icon = 'maps48x48' WHERE name = 'Maps';
+UPDATE tiki_menu_options SET icon = 'messages48x48' WHERE name = 'Newsletters';
+UPDATE tiki_menu_options SET icon = 'vcard48x48' WHERE name = 'Tags';
+UPDATE tiki_menu_options SET icon = 'date48x48' WHERE name = 'Calendar' AND url = 'tiki-calendar.php';
+UPDATE tiki_menu_options SET icon = 'userfiles48x48' WHERE name = 'My Account';
+UPDATE tiki_menu_options SET icon = 'home48x48' WHERE name = 'Home';
+UPDATE tiki_menu_options SET icon = 'categories48x48' WHERE name = 'Categories';
+UPDATE tiki_menu_options SET icon = 'accounting48x48' WHERE name = 'Accounting';
+UPDATE tiki_menu_options SET icon = 'directory48x48' WHERE name = 'Directory';
+UPDATE tiki_menu_options SET icon = 'invoice48x48' WHERE name = 'Invoice';
+UPDATE tiki_menu_options SET icon = 'quizzes48x48' WHERE name = 'Quizzes';
+UPDATE tiki_menu_options SET icon = 'reports48x48' WHERE name = 'Reports';
+UPDATE tiki_menu_options SET icon = 'stats48x48' WHERE name = 'Stats';
+UPDATE tiki_menu_options SET icon = 'surveys48x48' WHERE name = 'Surveys';
+UPDATE tiki_menu_options SET icon = 'spreadsheet48x48' WHERE name = 'Spreadsheets';
+UPDATE tiki_menu_options SET icon = 'timesheet48x48' WHERE name = 'Timesheet';
+UPDATE tiki_menu_options SET icon = 'usersmap48x48' WHERE name = 'Users Map';
+UPDATE tiki_menu_options SET icon = 'contactus48x48' WHERE name = 'Contact Us';
+UPDATE tiki_menu_options SET icon = 'debug48x48' WHERE name = '(debug)';
+UPDATE tiki_menu_options SET icon = 'kaltura48x48' WHERE name = 'Kaltura Video';
+UPDATE tiki_menu_options SET icon = 'tikicalendar48x48' WHERE name = 'Tiki Calendar';
+UPDATE tiki_menu_options SET icon = 'wizard_user48x48' WHERE name = 'User Wizard';
+UPDATE tiki_menus SET use_items_icons='y' WHERE `menuId`=42;
+
+DROP TABLE IF EXISTS `tiki_plugin_security`;
+CREATE TABLE `tiki_plugin_security` (
+  `fingerprint` VARCHAR(200) NOT NULL,
+  `status` VARCHAR(10) NOT NULL,
+  `added_by` VARCHAR(200) NULL,
+  `approval_by` VARCHAR(200) NULL,
+  `last_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_objectType` VARCHAR(20) NOT NULL,
+  `last_objectId` VARCHAR(200) NOT NULL,
+  `body` text,
+  `arguments` text,
+  PRIMARY KEY (`fingerprint`(191)),
+  KEY `last_object` (last_objectType, last_objectId(171))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_user_reports`;
+CREATE TABLE `tiki_user_reports` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` varchar(200) NOT NULL,
+  `interval` varchar(20) NOT NULL,
+  `view` varchar(8) NOT NULL,
+  `type` varchar(5) NOT NULL,
+  `always_email` tinyint(1) NOT NULL,
+  `last_report` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_user_reports_cache`;
+CREATE TABLE `tiki_user_reports_cache` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user` varchar(200) NOT NULL,
+  `event` varchar(200) NOT NULL,
+  `data` text NOT NULL,
+  `time` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_perspectives`;
+CREATE TABLE `tiki_perspectives` (
+  `perspectiveId` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY ( `perspectiveId` )
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_perspective_preferences`;
+CREATE TABLE `tiki_perspective_preferences` (
+  `perspectiveId` int NOT NULL,
+  `pref` varchar(40) NOT NULL,
+  `value` text,
+  PRIMARY KEY ( `perspectiveId`, pref )
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_transitions`;
+CREATE TABLE `tiki_transitions` (
+    `transitionId` int NOT NULL AUTO_INCREMENT,
+    `preserve` int(1) NOT NULL DEFAULT 0,
+    `name` varchar(50),
+    `type` varchar(20) NOT NULL,
+    `from` varchar(255) NOT NULL,
+    `to` varchar(255) NOT NULL,
+    `guards` text,
+    PRIMARY KEY(`transitionId`),
+    KEY `transition_lookup` (`type`, `from`(171))
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_auth_tokens`;
+CREATE TABLE `tiki_auth_tokens` (
+    `tokenId` INT NOT NULL AUTO_INCREMENT,
+    `creation` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `timeout` INT NOT NULL DEFAULT 0,
+    `hits` INT NOT NULL DEFAULT 1,
+    `maxhits` INT NOT NULL DEFAULT 1,
+    `token` CHAR(32),
+    `entry` VARCHAR(50),
+    `email` varchar(255) NOT NULL,
+    `parameters` VARCHAR(255),
+    `groups` TEXT,
+    `createUser` CHAR(1) DEFAULT 'n',
+    `userPrefix` VARCHAR(200) DEFAULT '_token',
+    PRIMARY KEY( `tokenId` ),
+    KEY `tiki_auth_tokens_token` (`token`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_file_backlinks`;
+CREATE TABLE `tiki_file_backlinks` (
+       `fileId` int(14) NOT NULL,
+       `objectId` int(12) NOT NULL,
+       KEY `objectId` (`objectId`),
+       KEY `fileId` (`fileId`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_payment_requests`;
+CREATE TABLE `tiki_payment_requests` (
+    `paymentRequestId` INT NOT NULL AUTO_INCREMENT,
+    `amount` DECIMAL(7,2) NOT NULL,
+    `amount_paid` DECIMAL(7,2) NOT NULL DEFAULT 0.0,
+    `currency` CHAR(3) NOT NULL,
+    `request_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `due_date` TIMESTAMP NULL,
+    `authorized_until` TIMESTAMP NULL,
+    `cancel_date` TIMESTAMP NULL,
+    `description` VARCHAR(100) NOT NULL,
+    `actions` TEXT,
+    `detail` TEXT,
+    `userId` int(8),
+    PRIMARY KEY( `paymentRequestId` )
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tiki_payment_received`;
+CREATE TABLE `tiki_payment_received` (
+    `paymentReceivedId` INT NOT NULL AUTO_INCREMENT,
+    `paymentRequestId` INT NOT NULL,
+    `payment_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `amount` DECIMAL(7,2),
+    `type` VARCHAR(15),
+    `status` VARCHAR(15) NOT NULL DEFAULT 'paid',
+    `details` TEXT,
+    `userId` int(8),
+    PRIMARY KEY(`paymentReceivedId`),
+    KEY `payment_request_ix` (`paymentRequestId`)
+) ENGINE=MyISAM;
+DROP TABLE IF EXISTS `tiki_discount`;
+CREATE TABLE `tiki_discount` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `code` VARCHAR(255),
+    `value` VARCHAR(255),
+    `max` INT,
+    `comment` TEXT,
+    PRIMARY KEY(`id`),
+    KEY `code` (`code`(191))
