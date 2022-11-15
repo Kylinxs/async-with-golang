@@ -914,4 +914,59 @@ class Services_Wiki_Controller
         //first pass - show confirm modal popup
         if ($util->notConfirmPost()) {
             $util->setVars($input, $this->filters, 'checked');
-            if ($util->itemsCount >
+            if ($util->itemsCount > 0) {
+                if ($util->itemsCount === 1) {
+                    $msg = tr('Add page name as header of the following page?');
+                } else {
+                    $msg = tr('Add page name as header of the following pages?');
+                }
+                return $util->confirm($msg, tra('Add'));
+            } else {
+                Services_Utilities::modalException(tra('No pages were selected. Please select one or more pages.'));
+            }
+        //after confirm submit - perform action
+        } elseif ($util->checkCsrf()) {
+            $util->setVars($input, $this->filters, 'items');
+            $errorpages = [];
+            foreach ($util->items as $page) {
+                $pageinfo = TikiLib::lib('tiki')->get_page_info($page);
+                if ($pageinfo) {
+                    $pageinfo['data'] = "!$page\r\n" . $pageinfo['data'];
+                    $table = TikiLib::lib('tiki')->table('tiki_pages');
+                    $table->update(['data' => $pageinfo['data']], ['page_id' => $pageinfo['page_id']]);
+                } else {
+                    $errorpages[] = $page;
+                }
+            }
+            if (count($errorpages) > 0) {
+                if (count($errorpages) === 1) {
+                    $msg1 = tr('The following page was not found:');
+                } else {
+                    $msg1 = tr('The following pages were not found:');
+                }
+                $feedback1 = [
+                    'tpl' => 'action',
+                    'mes' => $msg1,
+                    'items' => $errorpages,
+                ];
+                Feedback::error($feedback1);
+            }
+            $fitems = array_diff($util->items, $errorpages);
+            if (count($fitems) > 0) {
+                if (count($fitems) === 1) {
+                    $msg2 = tr('The page name was added as header to the following page:');
+                } else {
+                    $msg2 = tr('The page name was added as header to the following pages:');
+                }
+                $feedback2 = [
+                    'tpl' => 'action',
+                    'mes' => $msg2,
+                    'items' => $fitems,
+                ];
+                Feedback::success($feedback2);
+            }
+            //return to page
+            return Services_Utilities::refresh($util->extra['referer']);
+        }
+    }
+}

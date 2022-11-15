@@ -1,0 +1,276 @@
+
+// $Id$
+
+// jquery-ui dialogs help
+.ui-dialog {
+    webkit-box-shadow: 0 0 1rem rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0 1rem rgba(0, 0, 0, 0.25);
+}
+
+.ui-dialog label {
+    display: block;
+}
+
+.ui-datepicker, .ui-dialog {
+    z-index: 1024;
+}
+
+h4.ui-accordion-header {
+    padding-left: 2.2em;
+}
+
+// jquery validation
+div.mb-3 label.error {
+    font-weight: normal !important;
+}
+
+// Select2
+.select2-container.select2-container--open {
+    display: inline-block;
+    // make sure the dropdown appears on top of jquery-ui dialogs
+    z-index: 2001;
+}
+/* Fixes hidden placeholder on select2 multiple when first initialization */
+.select2-container .select2-selection__rendered > *:first-child.select2-search--inline {
+    width: 100% !important;
+}
+.select2-container .select2-selection__rendered > *:first-child.select2-search--inline .select2-search__field {
+    width: 100% !important;
+}
+/* Fixes select2 multiple selection choices overflow */
+.select2-container .select2-selection--multiple .select2-selection__choice {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Fixes select2 multiple search when select2 continer opened/closed */
+.select2-container .select2-selection--multiple .select2-selection__choice + .select2-search {
+  width: 0;
+}
+
+.select2-container.select2-container--open .select2-selection--multiple .select2-selection__choice + .select2-search {
+  width: auto;
+}
+
+/* Fixes 'clear' button overlap though must load after select2 bootstrap4 theme to take precedence */
+.select2-container--bootstrap4 .select2-selection--multiple .select2-selection__clear {
+  position: relative !important;
+  float: right;
+}
+
+// Cypht
+.inline-cypht {
+    .select2-container {
+        margin-bottom: 10px;
+    }
+}
+
+// elFinder tiki overrides
+
+/* prevents elFinder dialog appearing under the embedded pane */
+.std42-dialog.elfinder-dialog {
+    position:absolute;
+}
+
+.elFinderDialog.elfinder {
+    visibility: visible;
+}
+
+// for the error dialogs
+
+.ui-dialog.elfinder-dialog-error .ui-dialog-content,
+.ui-dialog.elfinder-dialog-confirm .ui-dialog-content { padding-left: 56px; min-height:35px; }
+
+.elfinder-rtl .ui-dialog.elfinder-dialog-error .ui-dialog-content,
+.elfinder-rtl .ui-dialog.elfinder-dialog-confirm .ui-dialog-content { padding-left:0; padding-right: 56px; }
+
+// quicklook titlebar was behind the image
+.elfinder-quicklook-titlebar {
+    z-index: 1;
+}
+
+// toolbar layout fix
+.tiki .elfinder .elfinder-button-search {
+    padding-top: 2px;
+    margin-right: 50px;
+}
+
+.tiki .elfinder-button-search input[type=text] {
+    width: 115px;
+}
+
+.tiki .elfinder-button-search.ui-state-active input[type=text] {
+    width: 100%;
+}
+
+.tiki .elfinder-ltr .elfinder-button-search .ui-icon-close {
+    right: -40px;
+}
+
+// prevent hover making the filenames bold which messes the layout up
+.tiki .elfinder .elfinder-cwd-filename.ui-state-active {
+    font-weight: normal;
+}
+
+.tiki .elfinder .elfinder-cwd-file.ui-state-hover {
+    border: none;
+}
+
+// h5p tweaks
+
+.tiki-h5p-edit .form-item-title {
+    display: none;
+}
+
+// site close page tiki-error_simple.php(site_closed.html)
+
+.page-closed {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    display: -webkit-flex;
+    justify-content: center;
+    -o-justify-content: center;
+    -ms-justify-content: center;
+    -moz-justify-content: center;
+    -webkit-justify-content: center;
+    align-items: center;
+    -o-align-items: center;
+    -ms-align-items: center;
+    -moz-align-items: center;
+-webkit-align-items: center;
+}
+.form-v4-content {
+    background: #fff;
+    width: 850px;
+    border-radius: 10px;
+    -o-border-radius: 10px;
+    -ms-border-radius: 10px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
+    -o-box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
+    -ms-box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
+    -moz-box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
+    -webkit-box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.15);
+    margin: 175px 0;
+    position: relative;
+    display: flex;
+    display: -webkit-flex;
+    font-family: 'Open Sans', sans-serif;
+}
+.form-v4-content h2 {
+    font-weight: 700;
+    font-size: 30px;
+    padding: 6px 0 0;
+    margin-bottom: 34px;
+}
+.form-v4-content .form-left {
+    background: #3786bd;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    padding: 20px 40px;
+    position: relative;
+    width: 100%;
+    color: #fff;
+}
+.form-v4-content .form-left p {
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.5;
+}
+.form-v4-content .form-left .text-2 {
+    margin: 20px 0 25px;
+}
+.form-v4-content .form-left .text-1 {
+    font-weight: 700;
+    color: #fff;
+    text-decoration: underline;
+}
+.form-v4-content .form-detail {
+    padding: 20px 40px;
+    position: relative;
+    width: 100%;
+}
+.form-v4-content .form-detail .form-row {
+    width: 100%;
+    position: relative;
+}
+.form-v4-content .form-detail label {
+    font-weight: 600;
+    font-size: 15px;
+    color: #666;
+    display: block;
+    margin-bottom: 8px;
+}
+.form-v4-content .form-detail .input-text {
+    margin-bottom: 27px;
+}
+.form-v4-content .form-detail input {
+    width: 100%;
+    padding: 11.5px 15px;
+    border: 1px solid #e5e5e5;
+    border-top-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    appearance: unset;
+    -moz-appearance: unset;
+    -webkit-appearance: unset;
+    -o-appearance: unset;
+    -ms-appearance: unset;
+    outline: none;
+    -moz-outline: none;
+    -webkit-outline: none;
+    -o-outline: none;
+    -ms-outline: none;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 15px;
+    color: #333;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -o-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+}
+.form-v4-content .form-detail .form-row input:focus {
+    border: 1px solid #3786bd;
+}
+.form-v4-content .form-detail .register {
+    background: #3786bd;
+    border-top-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    width: 130px;
+    border: none;
+    margin: 6px 0 50px 0px;
+    cursor: pointer;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+}
+.form-v4-content .form-detail .register:hover {
+    background: #2f73a3;
+}
+.form-v4-content .form-detail .form-row-last input {
+    padding: 12.5px;
+}
+@media screen and (max-width: 991px) {
+    .form-v4-content {
+        margin: 3em 20px;
+        flex-direction: column;
+        -o-flex-direction: column;
+        -ms-flex-direction: column;
+        -moz-flex-direction: column;
+        -webkit-flex-direction: column;
+    }
+    .form-v4-content .form-left {
+        width: auto;
+        border-top-right-radius: 10px;
+        border-bottom-left-radius: 0;
+    }
+    .form-v4-content .form-detail {
+        padding: 30px 20px 30px 20px;
+        width: auto;
+    }
+}
