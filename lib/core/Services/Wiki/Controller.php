@@ -451,4 +451,467 @@ class Services_Wiki_Controller
                             }
                             $page_data .= $appendString;
                             // Create a new page
-                            TikiLib::lib('tiki')->create_page($destinationPage, 0, $page_data, TikiLib::lib('tiki')->now, $comment, $user, TikiLib::lib('tiki')->get_ip_address())
+                            TikiLib::lib('tiki')->create_page($destinationPage, 0, $page_data, TikiLib::lib('tiki')->now, $comment, $user, TikiLib::lib('tiki')->get_ip_address());
+                            if (count($util->items) > 1) {
+                                $msg = tr('The following page and 301 Redirects to it were created:');
+                            } else {
+                                $msg = tr('The following page and a 301 Redirect to it were created:');
+                            }
+                        }
+                        $feedback = [
+                            'tpl' => 'link',
+                            'mes' => $msg,
+                            'items' => $destinationPage,
+                        ];
+                        Feedback::note($feedback);
+                    }
+                }
+            }
+            //return to page
+            if (
+                count($util->items) === 1 && ($all || $util->extra['one'])
+                && strpos($_SERVER['HTTP_REFERER'], $allinfo['pageName']) !== false
+            ) {
+                //go to tiki index if the page the user was on has been deleted - avoids no page found error.
+                global $prefs, $base_url;
+                return Services_Utilities::redirect($base_url . $prefs['tikiIndex']);
+            }
+            return Services_Utilities::refresh($util->extra['referer']);
+        }
+    }
+
+    /**
+     * Remove page versions action on the tiki-pagehistory.php page
+     *
+     * @param $input
+     * @return array
+     * @throws Exception
+     * @throws Services_Exception
+     * @throws Services_Exception_Denied
+     */
+    public function action_remove_page_versions($input)
+    {
+        $util = new Services_Utilities();
+        //first pass - show confirm modal popup
+        if ($util->notConfirmPost()) {
+            $util->setVars($input, $this->filters, 'checked');
+            $p = $input['page'];
+            Services_Exception_Denied::checkObject('remove', 'wiki page', $p);
+            if ($util->itemsCount > 0) {
+                $vdesc = count($util->items) === 1 ? 'version' : 'versions';
+                $msg = tr('Delete the following %0 of %1?', $vdesc, $p);
+                return $util->confirm($msg, tra('Delete'), ['page' => $p]);
+            } else {
+                Services_Utilities::modalException(tra('No version were selected. Please select one or more versions.'));
+            }
+            //after confirm submit - perform action and return success feedback
+        } elseif ($util->checkCsrf()) {
+            $util->setVars($input, $this->filters, 'items');
+            Services_Exception_Denied::checkObject('remove', 'wiki page', $util->extra['page']);
+            //delete page
+            $histlib = TikiLib::lib('hist');
+            $pageinfo = TikiLib::lib('tiki')->get_page_info($util->extra['page']);
+            $error = false;
+            if ($pageinfo['flag'] != 'L') {
+                $result = false;
+                foreach ($util->items as $version) {
+                    $result = $histlib->remove_version($util->extra['page'], $version);
+                }
+                if (! $result) {
+                    $error = true;
+                    $feedback = [
+                        'tpl' => 'action',
+                        'mes' => tr('An error occurred. Version %0 could not be deleted.', $version),
+                    ];
+                    Feedback::error($feedback);
+                }
+            }
+            if (! $error) {
+                //prepare feedback
+                if ($util->itemsCount === 1) {
+                    $msg = tr('The following version of %0 has been deleted:', $util->extra['page']);
+                } else {
+                    $msg = tr('The following versions of %0 have been deleted:', $util->extra['page']);
+                }
+                $feedback = [
+                    'tpl' => 'action',
+                    'mes' => $msg,
+                    'items' => $util->items,
+                ];
+                Feedback::success($feedback);
+            }
+            //return to page
+            return Services_Utilities::refresh($util->extra['referer']);
+        }
+    }
+
+    /**
+     * Listpages "perform with checked" action to print pages
+     *
+     * @param $input
+     * @return array
+     * @throws Exception
+     * @throws Services_Exception
+     * @throws Services_Exception_Disabled
+     */
+    public function action_print_pages($input)
+    {
+        Services_Exception_Disabled::check('feature_wiki_multiprint');
+        $util = new Services_Utilities();
+        //first pass - show confirm modal popup
+        if ($util->notConfirmPost()) {
+            $util->setVars($input, $this->filters, 'checked');
+            $pages = array_map(function ($pageName) {
+                return ['pageName' => $pageName];
+            }, $util->items);
+            $pages = Perms::simpleFilter('wiki page', 'pageName', 'view', $pages);
+            $util->items = array_map(function ($pageName) {
+                return array_pop($pageName);
+            }, $pages);
+            if (count($util->items) > 0) {
+                if (count($util->items) === 1) {
+                    $msg = tr('Print the following page?');
+                } else {
+                    $msg = tr('Print the following pages?');
+                }
+                return $util->confirm($msg, tra('Print'));
+            } else {
+                Services_Utilities::modalException(tra('No pages were selected. Please select one or more pages.'));
+            }
+        //after confirm submit - perform action and return success feedback
+        } elseif ($util->checkCsrf()) {
+            $util->setVars($input, $this->filters, 'items');
+            $pages = array_map(function ($pageName) {
+                return ['pageName' => $pageName];
+            }, $util->items);
+            $pages = Perms::simpleFilter('wiki page', 'pageName', 'view', $pages);
+            $util->items = array_map(function ($pageName) {
+                return array_pop($pageName);
+            }, $pages);
+            if (! empty($util->items)) {
+                return ['url' => 'tiki-print_multi_pages.php?print=y&printpages=' . urlencode(json_encode($util->items))];
+            } else {
+                Feedback::error(tr('No page specified.'));
+                return Services_Utilities::refresh($util->extra['referer']);
+            }
+        }
+    }
+
+    public function action_export_pdf($input)
+    {
+        Services_Exception_Disabled::check('feature_wiki_multiprint');
+        $util = new Services_Utilities();
+        //first pass - show confirm modal popup
+        if ($util->notConfirmPost()) {
+            $util->setVars($input, $this->filters, 'checked');
+            $pages = array_map(function ($pageName) {
+                return ['pageName' => $pageName];
+            }, $util->items);
+            $pages = Perms::simpleFilter('wiki page', 'pageName', 'view', $pages);
+            $util->items = array_map(function ($pageName) {
+                return array_pop($pageName);
+            }, $pages);
+            if (count($util->items) > 0) {
+                include_once 'lib/pdflib.php';
+                $pdf = new PdfGenerator();
+                if (! empty($pdf->error)) {
+                    Services_Utilities::modalException($pdf->error);
+                } else {
+                    if (count($util->items) === 1) {
+                        $msg = tr('Export the following page to PDF?');
+                    } else {
+                        $msg = tr('Export the following pages to PDF?');
+                    }
+                    return $util->confirm($msg, tra('PDF'));
+                }
+            } else {
+                Services_Utilities::modalException(tra('No pages were selected. Please select one or more pages.'));
+            }
+        //after confirm submit - perform action
+        } elseif ($util->checkCsrf()) {
+            $util->setVars($input, $this->filters, 'items');
+            $pages = array_map(function ($pageName) {
+                return ['pageName' => $pageName];
+            }, $util->items);
+            $pages = Perms::simpleFilter('wiki page', 'pageName', 'view', $pages);
+            $util->items = array_map(function ($pageName) {
+                return array_pop($pageName);
+            }, $pages);
+            if (! empty($util->items)) {
+                include_once 'lib/pdflib.php';
+                $pdf = new PdfGenerator();
+                if (empty($pdf->error)) {
+                    return ['url' => 'tiki-print_multi_pages.php?display=pdf&printpages='
+                        . urlencode(json_encode($util->items))];
+                } else {
+                    Feedback::error($pdf->error);
+                }
+            } else {
+                Feedback::error(tr('No page specified.'));
+            }
+            return Services_Utilities::closeModal($util->extra['referer']);
+        }
+    }
+
+    /**
+     * Listpages "perform with checked" action to lock pages
+     *
+     * @param $input
+     * @return array
+     * @throws Exception
+     * @throws Services_Exception
+     * @throws Services_Exception_Disabled
+     */
+    public function action_lock_pages($input)
+    {
+        Services_Exception_Disabled::check('feature_wiki_usrlock');
+        $util = new Services_Utilities();
+        //first pass - show confirm modal popup
+        if ($util->notConfirmPost()) {
+            $util->setVars($input, $this->filters, 'checked');
+            $countUnfiltered = count($util->items);
+            $pages = array_map(function ($pageName) {
+                return ['pageName' => $pageName];
+            }, $util->items);
+            $pages = Perms::simpleFilter('wiki page', 'pageName', 'view', $pages);
+            $util->items = array_map(function ($pageName) {
+                return array_pop($pageName);
+            }, $pages);
+            foreach ($util->items as $key => $page) {
+                if (TikiLib::lib('wiki')->is_locked($page)) {
+                    unset($util->items[$key]);
+                }
+            }
+            if (count($util->items) > 0) {
+                if (count($util->items) === 1) {
+                    $msg = tr('Lock the following page?');
+                } else {
+                    $msg = tr('Lock the following pages?');
+                }
+                $ret = $util->confirm($msg, tra('Lock'));
+                if ($countUnfiltered > count($util->items)) {
+                    $ret['FORWARD']['help'] = tr('Excludes selected pages already locked or for which you lack permission to lock.');
+                }
+                return $ret;
+            } else {
+                if ($countUnfiltered > count($util->items)) {
+                    Services_Utilities::modalException(tra('You do not have permission to lock the selected pages or they have already been locked.'));
+                } else {
+                    Services_Utilities::modalException(tra('No pages were selected. Please select one or more pages.'));
+                }
+            }
+        //after confirm submit - perform action
+        } elseif ($util->checkCsrf()) {
+            $util->setVars($input, $this->filters, 'items');
+            $pages = array_map(function ($pageName) {
+                return ['pageName' => $pageName];
+            }, $util->items);
+            $pages = Perms::simpleFilter('wiki page', 'pageName', 'view', $pages);
+            $util->items = array_map(function ($pageName) {
+                return array_pop($pageName);
+            }, $pages);
+            $errorpages = [];
+            foreach ($util->items as $page) {
+                $res = TikiLib::lib('wiki')->lock_page($page);
+                if (! $res) {
+                    $errorpages[] = $page;
+                }
+            }
+            $locked = array_diff($util->items, $errorpages);
+            //prepare and send feedback
+            if (count($errorpages) > 0) {
+                if (count($errorpages) === 1) {
+                    $msg1 = tr('The following page was not locked due to an error:');
+                } else {
+                    $msg1 = tr('The following pages were not locked due to an error:');
+                }
+                $feedback1 = [
+                    'tpl' => 'action',
+                    'mes' => $msg1,
+                    'items' => $errorpages,
+                ];
+                Feedback::error($feedback1);
+            }
+            if (count($locked) > 0) {
+                if (count($locked) === 1) {
+                    $msg2 = tr('The following page has been locked:');
+                } else {
+                    $msg2 = tr('The following pages have been locked:');
+                }
+                $feedback2 = [
+                    'tpl' => 'action',
+                    'mes' => $msg2,
+                    'items' => $locked,
+                ];
+                Feedback::success($feedback2);
+            }
+            //return to page
+            return Services_Utilities::refresh($util->extra['referer']);
+        }
+    }
+
+    /**
+     * Listpages "perform with checked" action to unlock pages
+     *
+     * @param $input
+     * @return array
+     * @throws Exception
+     * @throws Services_Exception
+     * @throws Services_Exception_Disabled
+     */
+    public function action_unlock_pages($input)
+    {
+        Services_Exception_Disabled::check('feature_wiki_usrlock');
+        $util = new Services_Utilities();
+        //first pass - show confirm modal popup
+        if ($util->notConfirmPost()) {
+            $util->setVars($input, $this->filters, 'checked');
+            $countUnfiltered = $util->itemsCount;
+            $admin = Perms::get()->admin_wiki;
+            global $user;
+            foreach ($util->items as $key => $page) {
+                $pinfo = TikiLib::lib('tiki')->get_page_info($page);
+                if (
+                    ! ($pinfo['flag'] == 'L' &&
+                    ($admin || ($user == $pinfo['lockedby']) ||
+                    (! $pinfo['lockedby'] && $user == $pinfo['user'])))
+                ) {
+                    unset($util->items[$key]);
+                }
+            }
+            if (count($util->items) > 0) {
+                if (count($util->items) === 1) {
+                    $msg = tr('Unlock the following page?');
+                } else {
+                    $msg = tr('Unlock the following pages?');
+                }
+                $ret = $util->confirm($msg, tra('Unlock'));
+                if ($countUnfiltered > count($util->items)) {
+                    $ret['FORWARD']['help'] = tr('Excludes selected pages already unlocked or for which you lack permission to unlock.');
+                }
+                return $ret;
+            } else {
+                if ($countUnfiltered > count($util->items)) {
+                    Services_Utilities::modalException(tra('You do not have permission to unlock the selected pages or they have already been unlocked.'));
+                } else {
+                    Services_Utilities::modalException(tra('No pages were selected. Please select one or more pages.'));
+                }
+            }
+            //after confirm submit - perform action
+        } elseif ($util->checkCsrf()) {
+            $util->setVars($input, $this->filters, 'items');
+            $admin = Perms::get()->admin_wiki;
+            global $user;
+            foreach ($util->items as $key => $page) {
+                $pinfo = TikiLib::lib('tiki')->get_page_info($page);
+                if (
+                    ! ($pinfo['flag'] == 'L' &&
+                    ($admin || ($user == $pinfo['lockedby']) ||
+                    (! $pinfo['lockedby'] && $user == $pinfo['user'])))
+                ) {
+                    unset($util->items[$key]);
+                }
+            }
+            $errorpages = [];
+            foreach ($util->items as $page) {
+                $res = TikiLib::lib('wiki')->unlock_page($page);
+                if (! $res) {
+                    $errorpages[] = $page;
+                }
+            }
+            $locked = array_diff($util->items, $errorpages);
+            //prepare and send feedback
+            if (count($errorpages) > 0) {
+                if (count($errorpages) === 1) {
+                    $msg1 = tr('The following page was not unlocked due to an error:');
+                } else {
+                    $msg1 = tr('The following pages were not unlocked due to an error:');
+                }
+                $feedback1 = [
+                    'tpl' => 'action',
+                    'mes' => $msg1,
+                    'items' => $errorpages,
+                ];
+                Feedback::error($feedback1);
+            }
+            if (count($locked) > 0) {
+                if (count($locked) === 1) {
+                    $msg2 = tr('The following page has been unlocked:');
+                } else {
+                    $msg2 = tr('The following pages have been unlocked:');
+                }
+                $feedback2 = [
+                    'tpl' => 'action',
+                    'mes' => $msg2,
+                    'items' => $locked,
+                ];
+                Feedback::success($feedback2);
+            }
+            //return to page
+            return Services_Utilities::refresh($util->extra['referer']);
+        }
+    }
+
+    /**
+     * Listpages "perform with checked" action to zip pages
+     *
+     * @param $input
+     * @return array
+     * @throws Exception
+     * @throws Services_Exception
+     * @throws Services_Exception_Denied
+     */
+    public function action_zip($input)
+    {
+        Services_Exception_Denied::checkGlobal('admin');
+        $util = new Services_Utilities();
+        //first pass - show confirm modal popup
+        if ($util->notConfirmPost()) {
+            $util->setVars($input, $this->filters, 'checked');
+            if ($util->itemsCount > 0) {
+                if ($util->itemsCount === 1) {
+                    $msg = tr('Download a zipped file of the following page?');
+                } else {
+                    $msg = tr('Download a zipped file of the following pages?');
+                }
+                return $util->confirm($msg, tra('Zip'));
+            } else {
+                Services_Utilities::modalException(tra('No pages were selected. Please select one or more pages.'));
+            }
+        //after confirm submit - perform action
+        } elseif ($util->checkCsrf()) {
+            $util->setVars($input, $this->filters, 'items');
+            include_once('lib/wiki/xmllib.php');
+            $xmllib = new XmlLib();
+            $zipFile = 'dump/xml.zip';
+            $config['debug'] = false;
+            if ($xmllib->export_pages($util->items, null, $zipFile, $config)) {
+                if (! $config['debug']) {
+                    global $base_url;
+                    return ['url' => $base_url . $zipFile];
+                }
+            } else {
+                Feedback::error(['mes' => $xmllib->get_error()]);
+            }
+            //return to page
+            return Services_Utilities::closeModal($util->extra['referer']);
+        }
+    }
+
+    /**
+     * Listpages "perform with checked" action to add page name as title to pages
+     *
+     * @param $input
+     * @return array
+     * @throws Exception
+     * @throws Services_Exception
+     * @throws Services_Exception_Denied
+     */
+    public function action_title($input)
+    {
+        Services_Exception_Denied::checkGlobal('admin');
+        $util = new Services_Utilities();
+        //first pass - show confirm modal popup
+        if ($util->notConfirmPost()) {
+            $util->setVars($input, $this->filters, 'checked');
+            if ($util->itemsCount >
