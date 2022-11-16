@@ -464,3 +464,37 @@ class JisonParser_Phraser
     public function popState()
     {
         $this->conditionStackCount--;
+        return array_pop($this->conditionStack);
+    }
+
+    protected function currentRules()
+    {
+        return $this->conditions[
+            $this->conditionStack[
+                $this->conditionStackCount
+            ]
+        ]['rules'];
+    }
+
+    public function lexer_performAction(&$yy, $yy_, $avoiding_name_collisions, $YY_START = null)
+    {
+        $YYSTATE = $YY_START;
+
+
+
+        switch ($avoiding_name_collisions) {
+            case 0:
+                return 7;
+            break;
+            case 1:
+                return 8;
+            break;
+            case 2:
+                return 9;
+            break;
+            case 3:
+                return 5;
+            break;
+        }
+    }
+}

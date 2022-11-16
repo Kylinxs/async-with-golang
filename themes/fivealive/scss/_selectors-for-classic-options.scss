@@ -1,0 +1,55 @@
+// This file contains CSS (SCSS) that Classic theme options have in common, mostly color variations.
+// The top SCSS file of each Classic theme provides values for these variables.
+
+// Image path example:
+$imagePath: "../images/";
+// body {
+//    background-image: url('#{$imagePath}bg.jpg');
+// }
+
+// Restates default for benefit of first-child (logo module) exception
+.navbar {
+    --bs-navbar-padding-y: 0.5rem;
+}
+
+.layout_classic .header_container {
+    box-shadow: inset 0 44px 0 0 $classic-header-container-shadow;
+}
+
+.layout_classic .page-header .navbar {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.layout_classic .page-header .bg-dark {
+    background: $classic-header-bg-dark !important;
+}
+// Make logo module background full height of navbar
+// Use CSS variable for padding-right so site admin can adjust per logo or layout
+.top_modules .module:not(.box-login_box):first-child { // This exception is for United Back End, which has the log-in as first module.
+    margin-top: calc(var(--bs-navbar-padding-y) * -1) !important;
+    margin-bottom: calc(var(--bs-navbar-padding-y) * -1) !important;
+    padding-top: var(--bs-navbar-padding-y);
+    padding-bottom: var(--bs-navbar-padding-y);
+    padding-left: 15px;
+    padding-right: var(--tiki-fivealive-classic-logo-module-padding-right);
+}
+
+.top_modules .module:not(.box-login_box):first-child {
+    background: url('#{$imagePath}siteheader2.png') no-repeat top right !important;
+    margin-left: -15px !important;
+    color: $dark !important;
+    a {
+        color: $dark !important;
+    }
+}
+
+.layout_classic .sitetitle,
+.layout_classic .sitetitle a,
+.layout_classic .sitesubtitle {
+    color: #000 !important;
+}
+
+.layout_classic .page-header .nav-link {
+    color: #fff;
+}
