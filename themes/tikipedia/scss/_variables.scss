@@ -1,0 +1,123 @@
+//$Id$
+//Custom styles for the Tikipedia theme.
+// - - - - - - - Bootstrap variables (override values in vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss - - - - - - //
+
+// Colors
+ $white:    #fff !default;
+// $gray-100: #f8f9fa !default;
+// $gray-200: #e9ecef !default;
+// $gray-300: #dee2e6 !default;
+// $gray-400: #ced4da !default;
+// $gray-500: #adb5bd !default;
+// $gray-600: #868e96 !default;
+// $gray-700: #495057 !default;
+// $gray-800: #343a40 !default;
+// $gray-900: #212529 !default;
+$black:    #000;
+
+$primary: #3366cc;
+$secondary: #f8f9fa;
+$success: #bbfa7c;
+$info: #abd5f5;
+$warning: #fad67d;
+$danger: #d9534f;
+
+$theme-colors: (
+      "primary":            #3366cc,
+      "secondary":         #f8f9fa,
+     "success":             #bbfa7c,
+      "info":               #abd5f5,
+      "warning":             #fad67d,
+     "danger":              #d9534f //,
+ //        "light":            #ffffff,
+ //     "dark":                #000000
+);
+
+// Options
+// Spacing
+
+// Body
+$body-bg: #f6f6f6;
+$body-color: #252525;
+// Links
+$link-color: #0645ad;
+$link-hover-color:      $link-color;
+
+// Components
+$border-radius:          0px;
+$border-radius-lg:       4px;
+$border-radius-sm:       0px;
+
+// Fonts
+$font-size-base: .85rem;
+$font-family-sans-serif:  sans-serif;
+$h1-font-size:            1.87rem;
+$h2-font-size:            1.75rem;
+$h3-font-size:            1.3125rem;
+$h4-font-size:            1.0625rem;
+$line-height:        1.5;
+$headings-font-family:    "Linux Libertine", Georgia, Times, serif;
+$headings-line-height:    1.3;
+
+// Tables
+$table-bg:                      #fff;
+$table-border-color:            #aaa;
+//$table-bg-accent: darken(#474747,5%);
+//$table-bg-hover: #555555;
+//$table-bg-active: $table-bg-hover;
+//$table-head-bg: #292929;
+
+// Buttons
+//$btn-primary-color:              $body-color; These variables don't exist in BS4
+//$btn-primary-bg:                 #e1e1e1;
+//$btn-secondary-border:            #a2a9b1;
+//$btn-success-color:              $body-color;
+//$btn-info-color:                 $body-color;
+//$btn-warning-color:              $body-color;
+
+// Forms
+ //$input-border: #dddddd;
+// Dropdowns
+// Navs
+// Navbar
+$navbar-dark-color: #ffffff;
+$navbar-dark-bg: transparent !important;
+$navbar-light-bg: transparent !important;
+ //$navbar-dark-border: darken($navbar-dark-bg, 6.5%);
+
+// Navbarlinks ??
+//$navbar-dark-color:                 rgba($black, .5) !default;
+$navbar-dark-hover-color:           rgba($white, .75);
+//$navbar-dark-active-color:          $black !default;
+$navbar-dark-disabled-color:        rgba($black, .25) !default;
+$navbar-dark-toggler-icon-bg:       str-replace(url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='#{$navbar-dark-color}' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E"), "#", "%23") !default;
+$navbar-dark-toggler-border-color:  rgba($black, .1) !default;
+$navbar-light-color:                rgba($black, .5) !default;
+$navbar-light-hover-color:          rgba($black, .7) !default;
+// Pagination
+// Jumbotron
+// Cards
+//$card-border-radius: $border-radius-lg;
+//$card-text: #fff;//@gray-lighter;
+//$card-heading-bg: #386dbb;
+
+// Tooltips
+// Popovers
+// Badges
+// Modals
+//$modal-header-border-color: #386dbb;
+// $modal-content-bg
+// Alerts
+// Progress bars
+// List group
+// Image thumbnails
+// Figures
+// Breadcrumbs
+$breadcrumb-bg:                 transparent;
+// Carousel
+// Close
+// Code
+$label-color:                 $body-color;
+$enable-gradients: yes;
+
+// - - - - - - - - - -  - - - - - - Other variables, if any - - - - - - - - - - - - - - - - - //
