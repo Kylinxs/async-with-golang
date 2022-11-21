@@ -1,0 +1,32 @@
+post:
+  description: Moderate comment - approve
+  parameters:
+    - name: threadId
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: approve response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              threadId:
+                type: integer
+              type:
+                type: string
+              objectId:
+                type: string
+              status:
+                type: string
+              do:
+                type: string
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
