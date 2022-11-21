@@ -39,4 +39,20 @@ class Search_Action_WikiApprovalAction implements Search_Action_Action
         return true;
     }
 
-    public functi
+    public function execute(JitFilter $data)
+    {
+        $tikilib = TikiLib::lib('tiki');
+        $pageName = $data->object_id->pagename();
+        $info = $tikilib->get_page_info($pageName);
+
+        $flaggedrevisionlib = TikiLib::lib('flaggedrevision');
+        $flaggedrevisionlib->flag_revision($pageName, $info['version'], 'moderation', 'OK');
+
+        return true;
+    }
+
+    public function requiresInput(JitFilter $data)
+    {
+        return false;
+    }
+}
