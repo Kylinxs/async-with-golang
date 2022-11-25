@@ -45,4 +45,8 @@ class IndexCatchUpCommand extends Command
         } catch (\Exception $e) {
             $msg = tr('Search index could not be updated: %0', $e->getMessage());
             \Feedback::error($msg);
-      
+        }
+
+        \Feedback::printToConsole($output);
+    }
+}
