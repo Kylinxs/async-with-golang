@@ -501,4 +501,434 @@ $color-light: rgba(0, 0, 0, 0.5); // Not replaced as it's only used for minor de
     }
 }
 
-//.tiki-admin .row.row-middle { -- Repla
+//.tiki-admin .row.row-middle { -- Replaced with padding-top on #col1
+//    margin-top: 6rem;
+//}
+//
+.tiki-admin .top_modules .nav-link {
+    margin-top: .9rem;
+}
+
+.tiki-admin .top_modules .btn.login_link {
+    margin-top: .8rem;
+}
+
+.tiki-admin .top_modules .nav-link, .tiki-admin .top_modules .btn.login_link {
+    padding: 0 .6rem;
+}
+
+.tiki-admin .top_modules.navbar-dark-parent .dropdown-menu, .tiki-admin .bg-dark-parent .dropdown-item.mb-2.mt-2:hover, /*.tiki-admin .bg-dark .dropdown-menu,*/ .tiki-admin .filter-menu .dropdown-item:hover {
+    color: var(--tiki-admin-dropdown-dark-color);
+    background-color: var(--tiki-admin-dropdown-dark-bg); //$darkgrey !important;
+}
+
+.tiki-admin .top_modules.navbar-light-parent .dropdown-menu, .tiki-admin .bg-light-parent .dropdown-item.mb-2.mt-2:hover, .tiki-admin .bg-light .dropdown-menu, .tiki-admin .bg-light .filter-menu .dropdown-item:hover {
+    background-color: var(--tiki-admin-dropdown-light-bg); // $lightgrey !important;
+}
+
+.tiki-admin .top_modules.navbar-dark-parent .dropdown-menu, .tiki-admin .top_modules.navbar-light-parent .dropdown-menu {
+    border: none;
+    border-radius: unset;
+    box-shadow: none;
+}
+
+.tiki-admin .top_modules .login-box .dropdown-menu {
+    min-width: unset;
+    right: 0;
+    margin-top: 3.1rem;
+}
+
+// Login module dropdown .tiki-admin .top_modules.navbar-light-parent
+.tiki-admin .top_modules.navbar-light-parent .dropdown-menu .dropdown-item {
+    color: var(--tiki-admin-navbar-light-color);
+    background: var(--tiki-admin-navbar-light-bg);
+    &:hover {
+        color: var(--tiki-admin-navbar-light-highlight-color);
+        background: var(--tiki-admin-navbar-light-highlight-bg);
+    }
+}
+.tiki-admin .top_modules.navbar-dark-parent .dropdown-menu .dropdown-item {
+    color: var(--tiki-admin-navbar-dark-color) !important;
+    background: var(--tiki-admin-navbar-dark-bg) !important;
+    &:hover {
+        color: var(--tiki-admin-navbar-dark-highlight-color) !important;
+        background: var(--tiki-admin-navbar-dark-highlight-bg) !important;
+    }
+}
+.tiki-admin .navbar-light .dropdown-item.active,
+.tiki-admin .navbar-light .dropdown-item:active,
+.tiki-admin .navbar-light .dropdown-item:hover,
+.tiki-admin .navbar-light .dropdown-item:focus,
+.tiki-admin .top_modules.navbar-light-parent a.dropdown-item:focus,
+.tiki-admin .top_modules.navbar-light-parent a.dropdown-item:active,
+.tiki-admin aside.admin-nav .navbar-light .navbar-nav ul .nav-link:hover,
+.tiki-admin aside.admin-nav .navbar-light .dropdown-item.active {
+    background-color: var(--tiki-admin-navbar-light-highlight-bg); // $blue !important;
+    color: var(--tiki-admin-navbar-light-highlight-color); // white !important;
+}
+
+.tiki-admin .navbar-dark .dropdown-item.active,
+.tiki-admin .navbar-dark .dropdown-item:active,
+.tiki-admin .navbar-dark .dropdown-item:hover,
+.tiki-admin .navbar-dark .dropdown-item:focus,
+.tiki-admin .top_modules.navbar-dark-parent a.dropdown-item:focus,
+.tiki-admin .top_modules.navbar-dark-parent a.dropdown-item:active,
+.tiki-admin aside.admin-nav .navbar-dark .navbar-nav ul .nav-link:hover {
+    background-color: var(--tiki-admin-navbar-dark-highlight-bg); // $blue !important;
+    color: var(--tiki-admin-navbar-dark-highlight-color); // white !important;
+}
+
+.tiki-admin .btn-link:hover,
+.tiki-admin .top_modules.navbar-dark-parent .nav-link:hover,
+.tiki-admin .top_modules.navbar-light-parent .nav-link:hover,
+.tiki-admin .btn:focus,
+.tiki-admin .btn.focus {
+    box-shadow: none;
+    text-decoration: none;
+}
+
+.tiki-admin .admin-content nav.navbar-expand-md.mb-4 {
+    padding: 0;
+    display: flex;
+}
+
+.tiki-admin .admin-content nav.navbar-expand-md.mb-4 .navbar-brand {
+    padding: 0;
+    height: 50px;
+    width: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto !important;
+    text-align: center;
+    border: none;
+}
+
+.tiki-admin .admin-content nav.navbar-expand-md.mb-4 .navbar-brand img {
+    max-width: 32px;
+    max-height: 32px;
+}
+
+.tiki-admin .box-logo {
+    display: none;
+}
+
+.tiki-admin .admin-content nav.navbar-expand-md.mb-4 .navbar-collapse form {
+    position: relative;
+    top: -.15rem;
+}
+
+.tiki-admin input[type="checkbox"].preffilter-toggle-round:checked + label:before {
+    background-color: #28a745;
+    border-color: #0062cc;
+    color: white;
+}
+
+.tiki-admin aside.admin-nav .navbar-light > ul > li > a, .tiki-admin aside.admin-nav .navbar-dark > ul > li > a {
+    font-weight: 500 !important;
+    font-size: 1.1rem;
+}
+
+.tiki-admin aside.admin-nav .navbar-dark .navbar-nav .nav-link, .tiki-admin aside.admin-nav .navbar-light .navbar-nav .nav-link {
+    line-height: 1.6;
+}
+
+.tiki-admin aside.admin-nav li {
+    list-style-type: none;
+}
+
+.tiki-admin aside.admin-nav .narrow .nav-item form {
+    display: none !important;
+}
+
+.tiki-admin aside.admin-nav li form {
+    margin-right: 1.6rem;
+    margin-left: 1.6rem !important;
+    justify-content: unset !important;
+}
+
+.tiki-admin aside.admin-nav li form .my-1 {
+    width: 100%;
+}
+
+.tiki-admin aside.admin-nav li form .my-1 .input-group {
+    line-height: 1;
+}
+
+.tiki-admin .nav-item {
+    margin-right: inherit;
+}
+
+.tiki-admin aside.admin-nav ul {
+    padding-left: 0 !important;
+}
+
+.tiki-admin aside.admin-nav .sections-header a .icon.icon-home,
+.tiki-admin aside.admin-nav li .icon .icon {
+    margin-right: .5rem;
+    font-size: .9rem;
+}
+
+.tiki-admin aside.admin-nav .bg-dark {
+    background-color: var(--tiki-admin-navbar-dark-bg) !important; //$darkgrey !important;
+}
+
+.tiki-admin aside.admin-nav .navbar-dark .navbar-nav .nav-link, .tiki-admin aside.admin-nav .navbar-light .navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+}
+
+.tiki-admin aside.admin-nav .admin-menu-collapser {
+    text-align: right;
+    padding: 0;
+}
+
+.tiki-admin aside.admin-nav nav .admin-menu-collapser {
+    width: 268px;
+    position: fixed;
+    bottom: 0;
+    height: 2.3rem;
+}
+
+.tiki-admin aside.admin-nav .bg-dark .admin-menu-collapser {
+    background-color: var(--tiki-admin-dropdown-dark-bg); // $lightgrey-dark;
+}
+
+.tiki-admin aside.admin-nav .bg-dark .admin-menu-collapser a.btn-link {
+    color: var(--tiki-admin-dropdown-dark-color);
+}
+
+.tiki-admin aside.admin-nav .bg-light .admin-menu-collapser {
+    background-color: var(--tiki-admin-dropdown-light-bg); // $lightgrey-dark;
+}
+.tiki-admin aside.admin-nav .bg-light .admin-menu-collapser a.btn-link {
+    color: var(--tiki-admin-dropdown-light-color);
+}
+
+.tiki-admin aside.admin-nav .narrow ul > li {
+    position: relative;
+}
+
+.tiki-admin aside.admin-nav .narrow ul > li .collapse {
+    padding-left: 0;
+}
+
+.tiki-admin aside.admin-nav .narrow > ul > li > a span:not(.icon) {
+    display: none !important;
+}
+
+.tiki-admin .ui-droppable.modules, .tiki-admin .ui-sortable.modules {
+    min-height: unset !important;
+}
+
+.tiki-admin .form-inline .form-check {
+    padding-right: .5rem;
+}
+
+// no overflow
+
+.tiki-admin .container {
+    overflow: hidden;
+}
+
+.tiki-admin .container.container-std .col1 {
+    padding-left: 90px;
+}
+
+// main content
+//.tiki-admin:not(.fixed_width) .col1 .admin-wrapper { Replaced with above rule
+//    margin-left: 0;
+//}
+
+//.tiki-admin:not(.sidebar_collapsed) #show-errors-button, .tiki-admin:not(.sidebar_collapsed) #errors {
+//    margin-left: 283px;
+//}
+
+//.tiki-admin.sidebar_collapsed #show-errors-button, .tiki-admin.sidebar_collapsed #errors {
+//    margin-left: 75px;
+//}
+
+@media (max-width: 767.5px) {
+    .tiki-admin:not(.sidebar_collapsed) #show-errors-button, .tiki-admin:not(.sidebar_collapsed) #errors {
+        margin-left: 75px;
+    }
+}
+@media (min-width: 767px) and (max-width: 991px) {
+    .tiki-admin:not(.fixed_width) .col1 .admin-wrapper {
+    margin-left: 70px;
+    }
+}
+
+@media (min-width: 992px) {
+    .tiki-admin .container.container-std .col1 {
+        padding-left: 290px;
+    }
+}
+
+
+// Filter
+
+.tiki-admin .admin-wrapper .navbar-nav.filter-menu {
+    width: auto;
+}
+
+// Login Button
+
+.tiki-admin .module.box-login_box button {
+    background-color: transparent;
+    border: none;
+}
+
+.tiki-admin .bg-dark-parent .module.box-login_box button {
+    background-image: url("data:image/svg+xml,%3Csvg%20id%3D%22Ebene_1%22%20data-name%3D%22Ebene%201%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2034%2034%22%3E%3Cdefs%3E%3Cstyle%3E.cls-1%2C.cls-2%7Bfill%3A%23fff%3B%7D.cls-2%7Bstroke%3A%232c2c2c%3B%7D.cls-3%7Bfill%3Anone%3Bstroke%3A%23fff%3Bstroke-width%3A2px%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cpath%20class%3D%22cls-1%22%20d%3D%22M22.86%2C22A4.09%2C4.09%2C0%2C0%2C0%2C23%2C21V20a4%2C4%2C0%2C0%2C0-4-4H13a4%2C4%2C0%2C0%2C0-4%2C4v1a4.09%2C4.09%2C0%2C0%2C0%2C.14%2C1Z%22%20transform%3D%22translate(1%201)%22%2F%3E%3Ccircle%20class%3D%22cls-2%22%20cx%3D%2217%22%20cy%3D%2213%22%20r%3D%224.5%22%2F%3E%3Ccircle%20class%3D%22cls-3%22%20cx%3D%2217%22%20cy%3D%2217%22%20r%3D%2216%22%2F%3E%3C%2Fsvg%3E") !important;
+}
+
+.tiki-admin .bg-light-parent .module.box-login_box button {
+    background-image: url("data:image/svg+xml,%3Csvg%20id%3D%22Ebene_1%22%20data-name%3D%22Ebene%201%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2034%2034%22%3E%3Cdefs%3E%3Cstyle%3E.cls-1%2C.cls-2%7Bfill%3A%237c7c7d%3B%7D.cls-2%7Bstroke%3A%23f8f9fa%3B%7D.cls-3%7Bfill%3Anone%3Bstroke%3A%237c7c7d%3Bstroke-width%3A2px%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cpath%20class%3D%22cls-1%22%20d%3D%22M22.86%2C22A4.09%2C4.09%2C0%2C0%2C0%2C23%2C21V20a4%2C4%2C0%2C0%2C0-4-4H13a4%2C4%2C0%2C0%2C0-4%2C4v1a4.09%2C4.09%2C0%2C0%2C0%2C.14%2C1Z%22%20transform%3D%22translate(1%201)%22%2F%3E%3Ccircle%20class%3D%22cls-2%22%20cx%3D%2217%22%20cy%3D%2213%22%20r%3D%224.5%22%2F%3E%3Ccircle%20class%3D%22cls-3%22%20cx%3D%2217%22%20cy%3D%2217%22%20r%3D%2216%22%2F%3E%3C%2Fsvg%3E") !important;
+}
+
+.tiki-admin .bg-dark-parent .module.box-login_box button, .tiki-admin .bg-light-parent .module.box-login_box button {
+    background-repeat: no-repeat;
+    background-size: 2rem;
+    color: transparent !important;
+    text-shadow: none;
+    margin: .5rem .5rem 0 1rem !important;
+    height: 2.1rem;
+    background-position: right;
+    width: 2rem;
+}
+
+.tiki-admin .siteloginbar_popup.dropdown {
+    right: 0;
+    position: fixed;
+}
+
+// Preference bar
+
+.tiki-admin .admin-content nav.admin-navbar {
+    background-color: transparent !important;
+    background-image: none !important;
+    position: fixed;
+    left: 0;
+    padding-left: 7rem;
+    z-index: 9999 !important;
+}
+
+.tiki-admin #col1 {
+    z-index: unset !important;
+    padding-top: 5rem; // avoid top_modules overlapping page content
+}
+
+.tiki-admin .navbar-expand-md .form-inline {
+    width: auto !important;
+    margin-top: -.8rem;
+    position: relative;
+    top: -.2rem;
+}
+
+.tiki-admin .navbar-expand-md .navbar-nav .nav-link {
+    padding: 0 .4rem;
+    font-weight: normal;
+}
+
+.tiki-admin .admin-wrapper .navbar-toggler {
+    position: absolute;
+    border: none;
+    left: 3.5rem;
+}
+
+.tiki-admin .admin-navbar .navbar-toggler-icon {
+    height: 16px;
+    background-size: contain;
+}
+
+.tiki-admin .navbar-dark .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3Csvg%20id%3D%22Ebene_1%22%20data-name%3D%22Ebene%201%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2026%2016%22%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill%3A%23fff%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cpath%20class%3D%22cls-1%22%20d%3D%22M1%2C0H25a1%2C1%2C0%2C0%2C1%2C1%2C1h0a1%2C1%2C0%2C0%2C1-1%2C1H1A1%2C1%2C0%2C0%2C1%2C0%2C1H0A1%2C1%2C0%2C0%2C1%2C1%2C0Z%22%2F%3E%3Cpath%20class%3D%22cls-1%22%20d%3D%22M1%2C14H25a1%2C1%2C0%2C0%2C1%2C1%2C1h0a1%2C1%2C0%2C0%2C1-1%2C1H1a1%2C1%2C0%2C0%2C1-1-1H0A1%2C1%2C0%2C0%2C1%2C1%2C14Z%22%2F%3E%3Cpath%20class%3D%22cls-1%22%20d%3D%22M1%2C7H25a1%2C1%2C0%2C0%2C1%2C1%2C1h0a1%2C1%2C0%2C0%2C1-1%2C1H1A1%2C1%2C0%2C0%2C1%2C0%2C8H0A1%2C1%2C0%2C0%2C1%2C1%2C7Z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.tiki-admin .navbar-light .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3Csvg id='Ebene_1' data-name='Ebene 1' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 16'%3E%3Cdefs%3E%3Cstyle%3E.cls-1%7Bfill:%237c7c7d;%7D%3C/style%3E%3C/defs%3E%3Cpath class='cls-1' d='M1,0H25a1,1,0,0,1,1,1h0a1,1,0,0,1-1,1H1A1,1,0,0,1,0,1H0A1,1,0,0,1,1,0Z'/%3E%3Cpath class='cls-1' d='M1,14H25a1,1,0,0,1,1,1h0a1,1,0,0,1-1,1H1a1,1,0,0,1-1-1H0A1,1,0,0,1,1,14Z'/%3E%3Cpath class='cls-1' d='M1,7H25a1,1,0,0,1,1,1h0a1,1,0,0,1-1,1H1A1,1,0,0,1,0,8H0A1,1,0,0,1,1,7Z'/%3E%3C/svg%3E");
+}
+
+.tiki-admin .admin-wrapper .navbar-toggler:focus {
+    box-shadow: none;
+}
+
+// Popovers
+
+.tiki-admin .popover {
+    z-index: 9999;
+    max-width: 50vw;
+}
+
+// Toggle interactive translation
+
+.tiki-admin .form-check.intertrans {
+    margin-top: 50px;
+}
+
+// scrollbar
+
+// width
+.tiki-admin nav::-webkit-scrollbar {
+    width: 1.2rem;
+}
+
+.tiki-admin nav.navbar-dark::-webkit-scrollbar-track {
+    background-color: var(--tiki-admin-navbar-dark-bg) !important; //$darkgrey !important;
+}
+
+.tiki-admin nav.navbar-light::-webkit-scrollbar-track {
+    background-color: var(--tiki-admin-navbar-light-bg); // $lightgrey;
+}
+
+// Handle
+.tiki-admin nav.navbar-dark::-webkit-scrollbar-thumb {
+    background: var(--tiki-admin-dropdown-dark-bg); // $darkergrey;
+    border: .4rem solid var(--tiki-admin-navbar-dark-bg) !important; //$darkgrey !important;
+    border-radius: 2rem;
+}
+
+.tiki-admin nav.navbar-light::-webkit-scrollbar-thumb {
+    background: var(--tiki-admin-toggle-light-bg); // $lightgrey-dark;
+    border: 0.4rem solid var(--tiki-admin-navbar-light-bg); //$lightgrey;
+    border-radius: 2rem;
+}
+
+// scrollbar in firefox
+
+.tiki-admin nav.navbar-dark {
+    scrollbar-color: var(--tiki-admin-dropdown-dark-bg); // $darkergrey transparent;
+    scrollbar-width: thin;
+}
+
+.tiki-admin nav.navbar-light {
+    scrollbar-color: var(--tiki-admin-toggle-light-bg); // $lightgrey-dark transparent;
+    scrollbar-width: thin;
+}
+
+// keep the basic/advanced filter aligned and the nav menu at the same place
+.tiki-admin .admin-navbar ul.nav.navbar-nav.mr-auto {
+    position: absolute;
+    left: 295px;
+    width: max-content;
+}
+
+// little tweak of the position
+.tiki-admin .admin-content nav.admin-navbar {
+    padding-left: 6rem;
+    top: 0;
+}
+
+// FIX: make it the same width as the height
+.tiki-admin .bg-dark-parent .module.box-login_box button, .tiki-admin .bg-light-parent .module.box-login_box button {
+    width: 2.1rem;
+}
+
+// admin dashboard modules
+.admin_modules .module.card {
+    flex-grow: 1;
+    min-width: 20%;
+    width: min-content;
+    margin: .5rem;
+}
