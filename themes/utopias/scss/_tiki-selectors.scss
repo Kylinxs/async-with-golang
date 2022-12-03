@@ -1,0 +1,107 @@
+
+// $Id$
+// This file is for additional LESS rules beyond what are in variables.scss.
+// Image path example:
+// $imagePath: "../images/";
+// body {
+//    background-image: url('#{$imagePath}bg.jpg');
+// }
+//
+// If Glyphicons should be rendered in a color other than the Bootstrap default or the theme default, uncomment and specify the color.
+// .glyphicon {color: $gray-lighter;}
+
+$tiki-topmodules-row-sidemargins: 0;
+$tiki-topbar-row-sidemargins: -15px;
+
+.container {
+  background-color: #ffffff;
+}
+
+a,
+a:visited,
+.popover button.btn-link.link-list,
+.popover button.btn-link.link-list .icon,
+.dropdown-item button.btn-link.link-list,
+.dropdown-item button.btn-link.link-list .icon {
+  font-weight: bold;
+}
+
+
+h1 {
+  color: #000000;
+}
+
+.topbar .navbar-collapse {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.topbar .navbar {
+  border: 1px solid transparent;
+  margin-bottom: 0;
+  min-height: 32px;
+//  color: #888888;
+//  background-color: #fafafa;
+}
+
+//.topbar .navbar a { Replaced with tiki variable
+//  color: #6E6E6E; // #888888; Changed for increased
+//}
+
+.topbar .navbar-nav > li > a {
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+
+#col2 {
+  padding-left: 0
+}
+
+#col3 {
+  padding-right: 0;
+}
+
+.card-body a:not(.btn) {
+  color: #333333;
+  font-weight: normal;
+}
+
+.card-body a:not(.btn):hover {
+  color: #999999;
+  text-decoration: none;
+}
+
+
+.navbar-dark {
+  background-color: #fafafa;
+  color: #333333;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #dddddd;
+  //  margin: 0 0 .2em;
+}
+
+.card-header {
+  background-color: #f4f4f4;
+}
+
+.card-title {
+  //  padding: .4em .7em .3em;
+  //  margin: 0;
+  color: #555555;
+  font-size: 125%;
+}
+
+.card-title a {
+  color: #555555;
+}
+
+.card-body a.btn-primary:hover {
+  color: $primary;
+}
+
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered .select2-selection__placeholder {
+    color: #616A70 !important;
+}

@@ -1,0 +1,310 @@
+
+// Variables for Darkroom theme
+
+// - - - - - - - Bootstrap variables (override values in vendor_bundled/vendor/twbs/bootstrap/scss/_variables.scss - - - - - - //
+
+// Color system
+
+$black: #000;
+$gray-900: #f8f9fa;
+$gray-800: #e9ecef;
+$gray-700: #dee2e6;
+$gray-600: #ced4da;
+$gray-500: #adb5bd;
+$gray-400: #868e96;
+$gray-300: #495057;
+$gray-200: #343a40;
+$gray-100: #212529;
+$white: #fff;
+
+$primary: #ababab;//#193c5a
+$secondary: #dddddd;
+$success: #5cb85c;//#3d6c2a
+$info: #5bc0de;//#1b6083
+$warning: #f0ad4e;//darken(#f0ad4e,30%)
+$danger: #d9534f;
+
+$theme-colors: (
+        "primary": #ababab,
+        "secondary": #dddddd,
+        "success": #5cb85c,
+        "info": #5bc0de,
+        "warning": #f0ad4e,
+        "danger": #d9534f,
+        "light": #fff,
+        "dark": #000
+);
+
+// Options
+// Spacing
+
+// Body
+$body-bg: #474747;
+$body-color: #d8d8d8;
+
+// Links
+$link-color: #ababab;
+$link-hover-color: #858585;
+$link-hover-decoration: none;
+
+// Grid containers
+// Components
+$component-active-color: #ffffff;
+$component-active-bg: #030511;
+
+//==Pills
+$nav-pills-active-link-hover-bg: $component-active-bg;
+$nav-pills-active-link-hover-color: $component-active-color;
+
+$text-muted: #DEDEDE; // #b9b9b9;
+$abbr-border-color: $gray-200;
+$headings-small-color: $gray-200;
+$blockquote-small-color: $gray-200;
+$blockquote-border-color: $gray-400;
+$page-header-border-color: $gray-500;
+$hr-border: $gray-500;
+
+
+// Typography
+$font-family-sans-serif: "Trebuchet MS", "Bitstream Vera Sans", sans-serif;
+$font-family-serif: Georgia, "Times New Roman", Times, serif;
+$font-family-monospace: Menlo, Monaco, Consolas, "Courier New", monospace;
+$font-family-base: $font-family-sans-serif;
+
+$headings-font-weight: 500;
+
+// Tables
+$table-bg: #4e4e4e;
+$table-bg-accent: darken(#474747,5%);
+$table-bg-hover: #555555;
+$table-bg-active: $table-bg-hover;
+$table-head-bg: #292929;
+$table-border-color: #292929;
+
+// Buttons
+//$btn-primary-color: #d8d8d8;
+//$btn-primary-bg: #4b4b4b;
+//$btn-primary-border: #4b4b4b;
+
+$btn-font-weight: normal;
+
+$btn-secondary-color: #dddddd;
+//$btn-secondary-bg: $btn-primary-bg;
+//$btn-secondary-border: $btn-primary-border;
+
+$btn-success-color: #ffffff;
+$btn-success-bg: $success;
+//$btn-success-border: darken($btn-success-bg,5%);
+
+$btn-info-color: #ffffff;
+$btn-info-bg: $info;
+//$btn-info-border: darken($btn-info-bg,5%);
+
+$btn-warning-color: #ffffff;
+$btn-warning-bg: $warning;
+//$btn-warning-border: darken($btn-warning-bg,5%);
+
+$btn-danger-color: #ffffff;
+$btn-danger-bg: $danger;
+//$btn-danger-border: darken($btn-danger-bg,5%);
+
+$btn-link-disabled-color: $gray-800;
+
+// Forms
+$input-bg: #242424;
+$input-bg-disabled: $gray-800;
+$input-color: #cfcfcf;
+$input-border-color: #4c4c4c;
+$input-focus-border-color: $danger;
+$input-color-placeholder: $gray-800;
+$legend-color: #ffffff;
+$legend-border-color: #e5e5e5;
+$input-group-addon-bg: #4F4F4F;
+$input-group-addon-border-color: $input-border-color;
+
+// Form validation
+$form-feedback-valid-color:         #6ABE6A;
+$form-feedback-invalid-color:       #E89492;
+
+// Navs
+$nav-link-color: #BDBDBD;
+// Navbar
+
+$navbar-light-color: #fff;
+$navbar-light-hover-color: #f4f4f4;
+$navbar-light-hover-bg: transparent;
+$navbar-light-active-color: #f4f4f4;
+//$navbar-default-link-active-bg//Deprecated?: transparent;
+//darken($navbar-default-bg,6.5%);
+$navbar-light-disabled-color: #cccccc;
+$navbar-light-disabled-bg: transparent;
+$navbar-dark-color: $navbar-light-color;
+$navbar-dark-hover-color: $navbar-light-hover-color;
+$navbar-dark-active-color: $navbar-light-active-color;
+
+//Navbarbrandlabel
+$navbar-light-brand-color: $navbar-light-color;
+$navbar-light-brand-hover-color: darken($navbar-light-color,10%);
+$navbar-light-brand-hover-bg: transparent;
+
+$navbar-dark-color:                 $navbar-light-color;
+$navbar-dark-hover-color:           $navbar-light-hover-color;
+$navbar-dark-active-color:          $navbar-light-active-color;
+$navbar-dark-disabled-color:        $navbar-light-disabled-color;
+
+//==Tabs
+$nav-tabs-border-color: #dddddd;
+$nav-tabs-link-hover-border-color: $gray-700;
+$nav-tabs-active-link-hover-bg: $body-bg;
+$nav-tabs-active-link-hover-color: $gray-500;
+$nav-tabs-active-link-hover-border-color: #dddddd;
+$nav-tabs-justified-link-border-color: #dddddd;
+$nav-tabs-justified-active-link-border-color: $body-bg;
+
+// Dropdowns
+$dropdown-bg: #242424;
+$dropdown-border-color: rgba(0,0,0,.15);
+$dropdown-divider-bg: #e5e5e5;
+
+$dropdown-link-color: $link-color;
+$dropdown-link-hover-color: $gray-800;
+$dropdown-link-hover-bg: transparent;
+
+$dropdown-link-active-color: $component-active-color;
+$dropdown-link-active-bg: $component-active-bg;
+$dropdown-link-disabled-color: $gray-600;
+$dropdown-header-color: $gray-600;
+
+$dropdown-dark-color:               $link-color;
+$dropdown-dark-bg:                  $dropdown-bg;
+$dropdown-dark-border-color:        $dropdown-border-color;
+$dropdown-dark-divider-bg:          $dropdown-divider-bg;
+$dropdown-dark-box-shadow:          null !default;
+$dropdown-dark-link-color:          $dropdown-dark-color !default;
+$dropdown-dark-link-hover-color:    $white !default;
+$dropdown-dark-link-hover-bg:       rgba($white, .15) !default;
+
+// Pagination
+$pagination-color: #C9C9C9;
+$pagination-bg: $gray-300;
+$pagination-border: $gray-500;
+
+$pagination-hover-color: $link-hover-color;
+$pagination-hover-bg: $dropdown-link-hover-bg;
+$pagination-hover-border: #dddddd;
+
+$pagination-active-color: #000;
+$pagination-active-bg: $primary;
+$pagination-active-border: $primary;
+
+$pagination-disabled-color: $gray-800;
+$pagination-disabled-bg: #303030;
+$pagination-disabled-border: #dddddd;
+
+// Jumbotron (obsolete)
+$jumbotron-padding: 30px;
+$jumbotron-color: inherit;
+$jumbotron-bg: lighten($body-bg,10%);
+$jumbotron-heading-color: inherit;
+
+// Placeholders
+// Cards
+$card-bg: #474747;
+$card-inner-border: #474747;
+$card-border-color: transparent;
+$card-footer-bg: #474747;
+$card-primary-bg: #ababab;
+
+
+$card-primary-bg: #474747;
+$card-primary-text: #ffffff;
+$card-primary-border: #ababab;
+$card-primary-header-bg: #ababab;
+
+// Accordion
+$accordion-bg: #2A2A2D;
+
+// Tooltips
+$tooltip-color: #ffffff;
+$tooltip-bg: #000000;
+$tooltip-opacity: .9;
+$tooltip-arrow-color: $tooltip-bg;
+
+// Popovers
+$popover-bg: #292929;
+$popover-border-color: darken($popover-bg,3%);
+$popover-header-bg: darken($popover-bg,3%);
+$popover-arrow-color: $popover-bg;
+
+// Toasts
+// Badges
+$badge-color: #ffffff;
+$badge-link-hover-color: #ffffff;
+$badge-bg: $gray-300;
+$badge-active-color: $link-color;
+$badge-active-bg: #ffffff;
+
+// Modals
+$modal-content-bg: $body-bg;
+$modal-content-border-color: rgba(0,0,0,.2);
+$modal-backdrop-bg: darken(#d9534f,30%);
+$modal-header-border-color: #e5e5e5;
+$modal-footer-border-color: $modal-header-border-color;
+
+// Alerts
+// Progressbars
+$progress-bar-color: #000;
+
+//Listgroup
+$list-group-bg: lighten($body-bg,8%);
+$list-group-disabled-color: #e9eecf;
+$list-group-disabled-bg: #303030;
+$list-group-disabled-text-color: $list-group-disabled-color;
+$list-group-link-color: $body-color;
+$list-group-link-hover-color: $list-group-link-color;
+$list-group-link-heading-color: $body-color;
+
+// Image thumbnails
+$thumbnail-bg: $body-bg;
+$thumbnail-border: #dddddd;
+$thumbnail-caption-color: $body-color;
+
+// Figures
+// Breadcrumbs
+$breadcrumb-bg: #303030;
+$breadcrumb-color: $gray-300;
+$breadcrumb-active-color: $gray-500;
+$breadcrumb-padding-y: .75rem;
+$breadcrumb-padding-x: .75rem;
+
+// Carousel
+$carousel-text-shadow:  01px 2px rgba(0,0,0,.6);
+$carousel-control-color: #ffffff;
+$carousel-indicator-active-bg: #ffffff;
+$carousel-indicator-border-color: #ffffff;
+$carousel-caption-color: #ffffff;
+
+// Close
+$close-font-weight: bold;
+$close-color: #000000;
+$close-text-shadow: 01px0#ffffff;
+
+// Spinners
+// Close
+// Offcanvas
+// Code
+$code-color: #c7254e;
+$code-bg: #f9f2f4;
+$kbd-color: #ffffff;
+$kbd-bg: #333333;
+$pre-bg: #f5f5f5;
+$pre-color: $gray-800;
+$pre-border-color: #cccccc;
+
+// - - - - - - - - - -  - - - - - - Other variables, if any - - - - - - - - - - - - - - - - - //
+
+$dropdown-item: $dropdown-link-color;
+// Blockquote
+$blockquote-color: #595959 !default; // was #7a7a7a, updated for WAI compliance
+$blockquote-footer-color: $blockquote-color !default; // Bootstrap 5
+$blockquote-left-border-color: #e5e5e5 !default;

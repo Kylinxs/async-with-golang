@@ -1,0 +1,11 @@
+
+// $Id$
+/* Darkly theme newsletter stylesheet */
+$web-font-path: "https://fonts.googleapis.com/css?family=Lato:400,700,400italic" !default;
+@import url($web-font-path);
+@import "../../base_files/scss/newsletter.scss";
+@import "../../../vendor_bundled/vendor/thomaspark/bootswatch/dist/darkly/variables";
+
+$font-family-sans-serif:  "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-family-base:        $font-family-sans-serif;
+$font-size-base:          1rem;
