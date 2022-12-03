@@ -39,4 +39,27 @@ if (($id = (int)$_GET['id']) > 0) {
             $tikilib->get_perm_object($info['galleryId'], 'file gallery', $gal_info, true);
 
             if (
-                $tiki_p_admin_file_
+                $tiki_p_admin_file_galleries == 'y'
+                || ( ( empty($fileInfo['lockedby']) || $fileInfo['lockedby'] == $user ) && $tiki_p_edit_gallery_file == 'y' )
+            ) { // must be the owner or the locker or have the perms
+                error_reporting(0);
+                ignore_user_abort(true);
+                session_write_close(); // close the session to allow the user to continue browsing
+                register_shutdown_function('refresh_index', 'files', $id);
+            }
+        }
+    }
+}
+
+// Display the 1x1 transparent gif image
+header('Cache-Control: no-cache');
+header('Content-type: image/gif');
+header('Content-length: 85');
+print base64_decode(
+    'R0lGODlhAQABALMAAAAAAIAAAACAA' .
+    'ICAAAAAgIAAgACAgMDAwICAgP8AAA' .
+    'D/AP//AAAA//8A/wD//wBiZCH5BAE' .
+    'AAA8ALAAAAAABAAEAAAQC8EUAOw=='
+);
+flush();
+exit;
