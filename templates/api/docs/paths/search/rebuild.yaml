@@ -1,0 +1,66 @@
+---
+post:
+  description: Run search index rebuild
+  parameters:
+    - name: loggit
+      in: query
+      required: false
+      description: "0=no logging, 1=log to Search_Indexer.log, 2=log to Search_Indexer_console.log"
+      schema:
+        type: integer
+  responses:
+    '200':
+      description: process queue result
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              stat:
+                type: object
+              search_engine:
+                type: string
+              search_version:
+                type: string
+              search_index:
+                type: string
+              fallback_search_set:
+                type: boolean
+              fallback_search_indexed:
+                type: boolean
+              fallback_search_engine:
+                type: string
+              fallback_search_version:
+                type: string
+              fallback_search_index:
+                type: string
+              queue_count:
+                type: integer
+              execution_time:
+                type: string
+              memory_usage:
+                type: string
+              memory_peak_usage_before:
+                type: string
+              memory_peak_usage_after:
+                type: string
+              num_queries:
+                type: integer
+              log_file_browser:
+                type: string
+              fallback_log_file_browser:
+                type: string
+              log_file_console:
+                type: string
+              fallback_log_file_console:
+                type: string
+              lastLogItemWeb:
+                type: string
+              lastLogItemConsole:
+                type: string
+    '403':
+      description: forbidden
+      content:
+        application/json:
+          schema:
+            $ref: schemas-Error.yaml
