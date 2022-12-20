@@ -1,0 +1,9 @@
+// $Id$
+/* Green Valley theme newsletter stylesheet */
+@import "../../base_files/scss/newsletter.scss";
+@import "variables";
+
+$imagePath: "../images/";
+
+body {     background: url('#{$imagePath}page_background_ltr.jpg') repeat; }
+
