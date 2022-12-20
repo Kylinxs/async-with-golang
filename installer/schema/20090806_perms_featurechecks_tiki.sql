@@ -44,4 +44,13 @@ UPDATE `users_permissions` SET `feature_check` = 'feature_tasks' WHERE `type` = 
 UPDATE `users_permissions` SET `feature_check` = 'feature_tasks' WHERE `type` = 'user' AND `permName` = 'tiki_p_tasks_send' AND `feature_check` IS NULL;
 UPDATE `users_permissions` SET `feature_check` = 'feature_tasks' WHERE `type` = 'user' AND `permName` = 'tiki_p_tasks_receive' AND `feature_check` IS NULL;
 UPDATE `users_permissions` SET `feature_check` = 'feature_tasks' WHERE `type` = 'user' AND `permName` = 'tiki_p_tasks_admin' AND `feature_check` IS NULL;
-UPDATE `users_permissions` SET `feature_che
+UPDATE `users_permissions` SET `feature_check` = 'feature_user_bookmarks' WHERE `type` = 'user' AND `permName` = 'tiki_p_create_bookmarks' AND `feature_check` IS NULL;
+UPDATE `users_permissions` SET `feature_check` = 'feature_user_bookmarks' WHERE `type` = 'user' AND `permName` = 'tiki_p_cache_bookmarks' AND `feature_check` IS NULL;
+UPDATE `users_permissions` SET `feature_check` = 'feature_usermenu' WHERE `type` = 'user' AND `permName` = 'tiki_p_usermenu' AND `feature_check` IS NULL;
+UPDATE `users_permissions` SET `feature_check` = 'feature_userfiles' WHERE `type` = 'user' AND `permName` = 'tiki_p_userfiles' AND `feature_check` IS NULL;
+UPDATE `users_permissions` SET `feature_check` = 'feature_notepad' WHERE `type` = 'user' AND `permName` = 'tiki_p_notepad' AND `feature_check` IS NULL;
+UPDATE `users_permissions` SET `feature_check` = 'feature_minical' WHERE `type` = 'user' AND `permName` = 'tiki_p_minical' AND `feature_check` IS NULL;
+UPDATE `users_permissions` SET `feature_check` = 'feature_modulecontrols' WHERE `type` = 'user' AND `permName` = 'tiki_p_configure_modules' AND `feature_check` IS NULL;
+
+-- perms types that don't appear to relate to features - 'mail notifications', 'menus', 'quicktags', 'tiki'
+
