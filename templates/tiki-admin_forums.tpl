@@ -274,4 +274,269 @@
                         <div class="mb-3 row">
                             <label class="col-sm-4 col-form-label" for="moderator_user">{tr}Moderator user{/tr}</label>
                             <div class="col-sm-8">
-                                <input id="moderator_user" class="form-control" type="text" name="moderator" value="{$moderator|escape}
+                                <input id="moderator_user" class="form-control" type="text" name="moderator" value="{$moderator|escape}">
+                                {autocomplete element='#moderator_user' type='username'}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="moderator_group">{tr}Moderator group{/tr}</label>
+                            <div class="col-sm-8">
+                                <input id="moderator_group" type="text" class="form-control" name="moderator_group" id="moderator_group" value="{$moderator_group|escape}">
+                                {autocomplete element='#moderator_group' type='groupname'}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="forum_use_password">{tr}Password protected{/tr}</label>
+                            <div class="col-sm-4">
+                                {html_options name=forum_use_password class="form-control" options=$forum_use_password_options selected=$forum_use_password}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="forum_password">{tr}Forum password{/tr}</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="forum_password" id="forum_password" class="form-control" value="{$forum_password|escape}">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="controlFlood">{tr}Prevent flooding{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="controlFlood" id="controlFlood" {if $controlFlood eq 'y'}checked="checked"{/if}>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="floodInterval">{tr}Minimum time between posts{/tr}</label>
+                            <div class="col-sm-4">
+                                {html_options name=floodInterval id=floodInterval class="form-control" options=$flood_options selected=$floodInterval}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-sm-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="useMail" id="useMail" {if $useMail eq 'y'}checked="checked"{/if}>
+                                    <label class="form-check-label" for="useMail"> {tr}Send the posts of this forum to this email address{/tr} </label>
+                                </div>
+                            </div>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" name="mail" value="{$mail|escape}">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-sm-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="usePruneUnreplied" id="usePruneUnreplied" {if $usePruneUnreplied eq 'y'}checked="checked"{/if}>
+                                    <label class="form-check-label" for="usePruneUnreplied">{tr}Prune unreplied-to messages after{/tr}</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                {html_options name=pruneUnrepliedAge class="form-control" options=$pruneUnrepliedAge_options selected=$pruneUnrepliedAge}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-sm-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="usePruneOld" id="usePruneOld" {if $usePruneOld eq 'y'}checked="checked"{/if}>
+                                    <label class="form-check-label" for="usePruneOld">{tr}Prune old messages after{/tr}</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                {html_options name=pruneMaxAge class="form-control" options=$pruneMaxAge_options selected=$pruneMaxAge}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>{tr}Forum-mailing list synchronization{/tr}</legend>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="outbound_address">{tr}Forward messages to this forum to this email address, in a format that can be used for sending back to the inbound forum email address{/tr}</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="outbound_address" id="outbound_address" class="form-control" value="{$outbound_address|escape}">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="outbound_mails_for_inbound_mails">{tr}Send emails even when the post is generated by an inbound email{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="outbound_mails_for_inbound_mails" id="outbound_mails_for_inbound_mails" {if $outbound_mails_for_inbound_mails eq 'y'}checked="checked"{/if}>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="outbound_mails_reply_link">{tr}Append a reply link to outbound mails{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="outbound_mails_reply_link" id="outbound_mails_reply_link" {if $outbound_mails_reply_link eq 'y'}checked="checked"{/if}>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="outbound_from">{tr}Originating email address for emails from this forum{/tr}</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="outbound_from" id="outbound_from" class="form-control" value="{$outbound_from|escape}">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label">{tr}Add messages from this email to the forum{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="mb-3 row">
+                                    <label class="col-sm-4 col-form-label" for="inbound_pop_server">{tr}POP3 server{/tr}</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" name="inbound_pop_server" id="inbound_pop_server" class="form-control" value="{$inbound_pop_server|escape}">
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label class="col-sm-4 col-form-label" for="inbound_pop_user">{tr}User{/tr}</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" name="inbound_pop_user" id="inbound_pop_user" class="form-control"value="{$inbound_pop_user|escape}" autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="mb-3 row">
+                                    <label class="col-sm-4 col-form-label" for="inbound_pop_password">{tr}Password{/tr}</label>
+                                    <div class="col-sm-8">
+                                        <input type="password" name="inbound_pop_password" id="inbound_pop_password" class="form-control" value="{$inbound_pop_password|escape}" autocomplete="new-password">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>{tr}Forums list{/tr}</legend>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="show_description">{tr}Show description{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input position-static" name="show_description" id="show_description" {if $show_description eq 'y'}checked="checked"{/if}>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="forum_last_n">{tr}Display last post titles{/tr}</label>
+                            <div class="col-sm-4">
+                                {html_options name=forum_last_n id=forum_last_n class="form-control" options=$forum_last_n_options selected=$forum_last_n}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>{tr}Forum topics (threads) list{/tr}</legend>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="topicOrdering">{tr}Default order of topics{/tr}</label>
+                            <div class="col-sm-8">
+                                {html_options name=topicOrdering id=topicOrdering class="form-control" options=$topicOrdering_options selected=$topicOrdering}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="topicsPerPage">{tr}Topics per page{/tr}</label>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control" name="topicsPerPage" id="topicsPerPage" value="{$topicsPerPage|escape}">
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label">{tr}Topic list configuration{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_replies">
+                                        <input type="checkbox" class="form-check-input" name="topics_list_replies" id="topics_list_replies" {if $topics_list_replies eq 'y'}checked="checked"{/if}> {tr}Replies{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_reads">
+                                        <input type="checkbox" class="form-check-input" name="topics_list_reads" id="topics_list_reads" {if $topics_list_reads eq 'y'}checked="checked"{/if}> {tr}Reads{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_pts">
+                                        <input type="checkbox" class="form-check-input" name="topics_list_pts" id="topics_list_pts" {if $topics_list_pts eq 'y'}checked="checked"{/if}> {tr}Points{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_lastpost">
+                                        <input type="checkbox" class="form-check-input" name="topics_list_lastpost" id="topics_list_lastpost" {if $topics_list_lastpost eq 'y'}checked="checked"{/if}> {tr}Last post{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_lastpost_title">
+                                        <input class="form-check-input" type="checkbox" name="topics_list_lastpost_title" id="topics_list_lastpost_title" {if $topics_list_lastpost_title eq 'y'}checked="checked"{/if}> {tr}Last post title{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_lastpost_avatar">
+                                        <input class="form-check-input" type="checkbox" name="topics_list_lastpost_avatar" id="topics_list_lastpost_avatar" {if $topics_list_lastpost_avatar eq 'y'}checked="checked"{/if}> {tr}Last post profile picture{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_author">
+                                        <input class="form-check-input" type="checkbox" name="topics_list_author" id="topics_list_author" {if $topics_list_author eq 'y'}checked="checked"{/if}> {tr}Author{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="topics_list_author_avatar">
+                                        <input class="form-check-input" type="checkbox" name="topics_list_author_avatar" id="topics_list_author_avatar" {if $topics_list_author_avatar eq 'y'}checked="checked"{/if}> {tr}Author profile picture{/tr}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="topic_smileys">{tr}Use topic smileys{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input type="checkbox" name="topic_smileys" class="form-check-input" id="topic_smileys" {if $topic_smileys eq 'y'}checked="checked"{/if}>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="topic_summary">{tr}Show topic summary{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input type="checkbox" name="topic_summary" class="form-check-input" id="topic_summary" {if $topic_summary eq 'y'}checked="checked"{/if}>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>{tr}Forum threads{/tr}</legend>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="threadOrdering">{tr}Default ordering of threads{/tr}</label>
+                            <div class="col-sm-8">
+                                {html_options name=threadOrdering id=threadOrdering class="form-control" options=$threadOrdering_options selected=$threadOrdering}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="threadStyle">{tr}Default style of threads{/tr}</label>
+                            <div class="col-sm-8">
+                                {html_options name=threadStyle id=threadStyle class="form-control" options=$threadStyle_options selected=$threadStyle}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="commentsPerPage">{tr}Default number of comments per page{/tr}</label>
+                            <div class="col-sm-8">
+                                {html_options name=commentsPerPage id=commentsPerPage class="form-control" options=$commentsPerPage_options selected=$commentsPerPage}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>{tr}Posts{/tr}</legend>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="approval_type">{tr}Approval type{/tr}</label>
+                            <div class="col-sm-4">
+                                {html_options name=approval_type for=approval_type id=approval_type class="form-control" options=$approval_options selected=$approval_type}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label">{tr}User information display{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <label class="form-check-label" for="ui_avatar">
+                                        <input class="form-check-input" type="checkbox" name="ui_avatar" id="ui_avatar" {if $ui_avatar eq 'y'}checked="checked"{/if}> {tr}Profile picture{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="ui_rating_choice_topic">
+                                        <input class="form-check-input" type="checkbox" name="ui_rating_choice_topic" id="ui_rating_choice_topic" {if $ui_rating_choice_topic eq 'y'}checked="checked"{/if}> {tr}Topic Rating{/tr}
+                                    </label>
+                                </div>
+    
