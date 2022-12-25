@@ -539,4 +539,137 @@
                                         <input class="form-check-input" type="checkbox" name="ui_rating_choice_topic" id="ui_rating_choice_topic" {if $ui_rating_choice_topic eq 'y'}checked="checked"{/if}> {tr}Topic Rating{/tr}
                                     </label>
                                 </div>
-    
+                                <div class="form-check">
+                                    <label class="form-check-label" for="ui_flag">
+                                        <input class="form-check-input" type="checkbox" name="ui_flag" id="ui_flag" {if $ui_flag eq 'y'}checked="checked"{/if}> {tr}Flag{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="ui_posts">
+                                        <input class="form-check-input" type="checkbox" name="ui_posts" id="ui_posts" {if $ui_posts eq 'y'}checked="checked"{/if}> {tr}Posts{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="ui_level">
+                                        <input class="form-check-input" type="checkbox" name="ui_level" id="ui_level" {if $ui_level eq 'y'}checked="checked"{/if}> {tr}User Level{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="ui_email">
+                                        <input class="form-check-input" type="checkbox" name="ui_email" id="ui_email" {if $ui_email eq 'y'}checked="checked"{/if}> {tr}eMail{/tr}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <label class="form-check-label" for="ui_online">
+                                        <input class="form-check-input" type="checkbox" name="ui_online" id="ui_online" {if $ui_online eq 'y'}checked="checked"{/if}> {tr}Online{/tr}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="vote_threads">{tr}Posts can be rated{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="vote_threads" id="vote_threads" {if $vote_threads eq 'y'}checked="checked"{/if}>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>{tr}Attachments{/tr}</legend>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="att">{tr}Permission{/tr}</label>
+                            <div class="col-sm-8">
+                                {html_options name=att id=att class="form-control" options=$attachment_options selected=$att}
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label" for="att_store_db">{tr}Store attachments in{/tr}</label>
+                            <div class="col-sm-8">
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" name="att_store" id="att_store_db" value="db" {if $att_store eq 'db'}checked="checked"{/if}> {tr}Database{/tr}
+                                </div>
+                                <div class="form-check-inline">
+                                    <div class="col-sm-5 form-check-inline">
+                                        <input type="radio" class="form-check-input" name="att_store" value="dir" {if $att_store eq 'dir'}checked="checked"{/if}> {tr}File system{/tr}
+                                    </div>
+                                    <label class="col-form-label col-sm-2" for="att_store_dir">{tr}Path{/tr}</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" name="att_store_dir" id="att_store_dir" value="{$att_store_dir|escape}" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-form-label col-sm-4" for="att_max_size">{tr}Max attachment size (bytes){/tr}</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="att_max_size" id="att_max_size" class="form-control" value="{$att_max_size|escape}">
+                                <span class="form-text">{tr}Max:{/tr} {$maxAttachSize|escape} ({$maxAttachSize|kbsize})</span>
+                            </div>
+                        </div>
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 form-check-label" for="att_list_nb">{tr}Shows number of attachments of the all thread in forum list{/tr}</label>
+                                <div class="col-sm-8">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="att_list_nb" name="att_list_nb"{if $att_list_nb eq 'y'} checked="checked"{/if} id="att_list_nb">
+                                    </div>
+                                </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="text-center">
+                        <input type="submit" class="btn btn-primary" name="save" value="{tr}Save{/tr}">
+                    </div>
+                </form>
+
+            {else}{*duplicate*}
+                <h2>{tr}Duplicate Forum{/tr}</h2>
+                <form action="tiki-admin_forums.php" method="post" role="form">
+                    {ticket}
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 col-form-label" for="duplicate_name">{tr}Name{/tr}</label>
+                        <div class="col-sm-8">
+                            <input type="text" name="duplicate_name" id="duplicate_name" class="form-control" value="{$name|escape}">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 col-form-label" for="duplicate_description">{tr}Description{/tr}</label>
+                        <div class="col-sm-8">
+                            <textarea name="description" rows="4" id="duplicate_description" class="form-control">{$description|escape}</textarea>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 col-form-label" for="duplicate_forumId">{tr}Forum{/tr}</label>
+                        <div class="col-sm-8">
+                            <select name="duplicate_forumId" id="duplicate_forumId" class="form-control">
+                                {section name=ix loop=$allForums}
+                                    <option value="{$allForums[ix].forumId}">{$allForums[ix].name}</option>
+                                {/section}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 form-check-label" for="duplicate_categories">{tr}Duplicate categories{/tr}</label>
+                        <div class="col-sm-8">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="dupCateg" id="duplicate_categories">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 form-check-label" for="duplicate_perms">{tr}Duplicate permissions{/tr}</label>
+                        <div class="col-sm-8">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="dupPerms" id="duplicate_perms">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <input type="submit" class="btn btn-primary" name="duplicate" value="{tr}Duplicate{/tr}">
+                    </div>
+                </form>
+            {/if}
+        {/tab}
+    {/if}
+{/tabset}
