@@ -1,0 +1,10 @@
+
+// $Id$
+/* Sketchy theme newsletter stylesheet */
+@import "../../base_files/scss/newsletter.scss";
+@import "../../../vendor_bundled/vendor/thomaspark/bootswatch/dist/sketchy/variables";
+@import url("//fonts.googleapis.com/css?family=Open+Sans:400,700");
+
+$font-family-sans-serif:  "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-family-base:        $font-family-sans-serif;
+$font-size-base:          13px;
