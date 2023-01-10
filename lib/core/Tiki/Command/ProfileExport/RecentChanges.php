@@ -43,4 +43,47 @@ class RecentChanges extends ObjectWriter
         $ignoreList = [];
         foreach ($input->getOption('ignore') as $object) {
             if (preg_match("/^(?P<type>\w+):(?P<object>.+)$/", $object, $parts)) {
-                $ignoreList
+                $ignoreList[] = $parts;
+            }
+        }
+
+        $since = $since ?: 0;
+
+        $logs = \TikiDb::get()->table('tiki_actionlog');
+        $actions = $logs->fetchAll(
+            [
+                'timestamp' => 'lastModif',
+                'action',
+                'type' => 'objectType',
+                'object',
+                'detail' => 'comment',
+            ],
+            [
+                'lastModif' => $logs->greaterThan($since),
+            ],
+            -1,
+            -1,
+            'lastModif_asc'
+        );
+
+        $queue = new \Tiki_Profile_Writer_Queue();
+        foreach ($actions as $action) {
+            $queue->add($action);
+        }
+
+        $writer = $this->getProfileWriter($input);
+
+        if (count($ignoreList)) {
+            foreach ($ignoreList as $entry) {
+                $writer->addFake($entry['type'], $entry['object']);
+            }
+
+            $writer->save();
+        }
+
+        $queue->filterIncluded($writer);
+        $queue->filterInstalled(new \Tiki_Profile_Writer_ProfileFinder());
+
+        $output->writeln((string) $queue);
+    }
+}
