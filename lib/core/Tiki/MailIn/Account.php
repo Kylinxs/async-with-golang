@@ -197,4 +197,121 @@ class Account
         return $this->accountAddress;
     }
 
-    public function sendFailureReply(Source\Me
+    public function sendFailureReply(Source\Message $message, TikiMail $mail)
+    {
+        if ($this->sendResponses) {
+            $this->sendReply($message, $mail);
+        }
+    }
+
+
+    public function sendReply(Source\Message $message, TikiMail $mail)
+    {
+        $mail->send([$message->getFromAddress()], 'mail');
+    }
+
+    public function getDefaultCategory()
+    {
+        return $this->defaultCategory;
+    }
+
+    public function parseBody($body, $canAllowHtml = true)
+    {
+        global $prefs;
+
+        $is_html = false;
+        $wysiwyg = null;
+        if ($this->containsStringHTML($body)) {
+            $is_html = true;
+            $wysiwyg = 'y';
+        }
+
+        if ($is_html && $this->saveHtml && $canAllowHtml) {
+            // Keep HTML setting. Always save as HTML
+        } elseif ($prefs['feature_wysiwyg'] === 'y' && $prefs['wysiwyg_default'] === 'y' && $prefs['wysiwyg_htmltowiki'] !== 'y'  && $canAllowHtml) {
+            // WYSIWYG HTML editor is active
+            $is_html = true;
+            $wysiwyg = 'y';
+        } elseif ($is_html) {
+            $editlib = TikiLib::lib('edit');
+            $body = $editlib->parseToWiki($body);
+            $is_html = false;
+            $wysiwyg = null;
+        }
+
+        return [
+            'body' => $body,
+            'is_html' => $is_html,
+            'wysiwyg' => $wysiwyg,
+        ];
+    }
+
+    private function containsStringHTML($str)
+    {
+        return preg_match('/<[^>]*>/', $str);
+    }
+
+    public function hasAutoAttach()
+    {
+        return $this->auto_attachments;
+    }
+
+    public function hasInlineAttach()
+    {
+        return $this->inline_attachments;
+    }
+
+    public function check()
+    {
+        global $prefs;
+
+        $logs = TikiLib::lib('logs');
+        $messages = $this->source->getMessages();
+
+        foreach ($messages as $message) {
+            $success = false;
+
+            if (! $this->canReceive($message)) {
+                try {
+                    $this->sendFailureResponse($message, 'cant_use');
+                    $this->log($message, tr("Rejected message, user globally denied"));
+                } catch (\Exception $e) {
+                    \Feedback::error($e->getMessage());
+                }
+            } elseif ($action = $this->getAction($message)) {
+                $context = new \Perms_Context($message->getAssociatedUser());
+                if (! $action->isEnabled()) {
+                    // Action configured, but not enabled
+                    $this->log($message, tr("Rejected message, associated action disabled (%0)", $action->getName()));
+                    $this->sendFailureResponse($message, 'disabled');
+                } elseif ($this->isAnyoneAllowed() || $action->isAllowed($this, $message)) {
+                    $this->prepareMessage($message);
+                    $success = $action->execute($this, $message);
+                    $this->log($message, tr("Performing action (%0)", $action->getName()));
+                } else {
+                    $this->sendFailureResponse($message, 'permission_denied');
+                    $this->log($message, tr("Rejected message, user locally denied (%0)", $action->getName()));
+                }
+
+                unset($context);
+            } else {
+                $success = false;
+
+                $this->sendFailureResponse($message, 'nothing_to_do');
+                $this->log($message, tr("Rejected message, no associated action."));
+            }
+
+            if ($success) {
+                $this->completeSuccess($message);
+            } else {
+                $this->completeFailure($message);
+            }
+        }
+    }
+
+    private function log(Source\Message $message, $detail)
+    {
+        $lib = TikiLib::lib('logs');
+        $lib->add_log('mailin', $detail . ' - ' . $message->getSubject(), $message->getAssociatedUser());
+    }
+}
