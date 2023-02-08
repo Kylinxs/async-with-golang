@@ -1,0 +1,28 @@
+.signature-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.signature-container > .buttons {
+    padding-top: 10px;
+}
+
+.signature-container > .wrapper {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.signature-pad {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #000000;
+}
