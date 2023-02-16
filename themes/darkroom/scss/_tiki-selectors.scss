@@ -1,0 +1,282 @@
+
+// Darkroom theme selectors for additional styling.
+
+$imagePath: "../images/";
+//body {
+//    background-image: url('#{$imagePath}bg.jpg');
+//}
+$topmodules-row-margin-bottom: 15px;
+
+body,
+body.fullscreen {
+    background-image: url('#{$imagePath}474747_5e5e5e_40.png');
+}
+
+#middle { padding-top: 10px; }
+
+.btn-primary { color: $white; }
+.btn-secondary { color: $secondary; }
+.btn-info { color: $info; }
+.btn-success { color: $success; }
+.btn-warning { color: $warning; }
+.btn-danger { color: $danger; }
+
+.btn-success.disabled, .btn-success:disabled,
+.btn-danger.disabled, .btn-danger:disabled {
+  color: #f8f9fa;
+}
+
+.container:not(.in-navbar) {
+    background: #0c0c0c;
+}
+
+body.layout_social > .container {
+    padding-top: 1.2rem;
+}
+
+#col1 {
+    background: #3F3F3F;
+    border-left: 10px solid #0c0c0c;
+    border-right: 10px solid #0c0c0c;
+    padding-bottom: 10px;
+}
+
+// /* Background for CkEditor */
+.cke_contents > .cke_wysiwyg_frame, .cke_contents > .cke_wysiwyg_div {
+    background: #3F3F3F !important;
+    color: $body-color !important;
+}
+
+// Typography
+.text-danger { color: #E89492 !important; }
+.text-success { color: #6ABE6A !important; }
+
+.blockquote,
+blockquote {
+    color: #BABABA;
+}
+
+
+h3.card-title {
+    color: #9d9d9d;
+    font-size: 24px;
+}
+
+.card-body {
+    border: solid #292929;
+    border-width: 0 8px .5rem 8px;
+}
+
+
+.module.card { border: none; }
+
+.card-header,
+.card.postbody .card-header{ background: #292929; } // Was .card-primary - still ok?
+
+.card-link,
+.linkmodule { color: #BDBDBD; }
+
+//.navbar-fixed-top .container,
+//.bg-light,
+//.topbar,
+.btn,
+.accordion-button,
+.nav-tabs > li > a,
+.input-group-addon,
+
+// jQuery-UI overrides
+.tiki .ui-state-default,
+.tiki .ui-widget-content .ui-state-default,
+.tiki .ui-widget-header .ui-state-default,
+.tiki .ui-button,
+.tiki html .ui-button.ui-state-disabled:hover,
+.tiki html .ui-button.ui-state-disabled:active,
+
+.tiki .ui-state-active,
+.tiki .ui-widget-content .ui-state-active,
+.tiki .ui-widget-header .ui-state-active,
+.tiki a.ui-button:active,
+.tiki .ui-button:active,
+.tiki .ui-button.ui-state-active:hover {
+    background: #818181; /* Old browsers */
+    background: linear-gradient(to bottom, #818181 0%, #393939 100%);
+
+}
+
+.btn:hover {
+    background: linear-gradient(to top, #818181 0%, #393939 100%);
+}
+
+.bg-dark,
+.bg-light {
+//    background: #818181 !important;
+    background: linear-gradient(to bottom, #818181 0%, #393939 100%);
+}
+
+.tiki .nav-link.active { border-color: #dee2e6; }
+
+.nav-tabs > li.active.show > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus,
+
+    //jQuery-UI overrides
+.tiki .ui-state-active,
+.tiki .ui-widget-content .ui-state-active,
+.tiki .ui-widget-header .ui-state-active,
+.tiki a.ui-button:active,
+.tiki .ui-button:active,
+.tiki .ui-button.ui-state-active:hover{
+    color: #ffffff;
+    border-color: #dee2e6 !important;
+}
+
+.tiki .ui-state-default:not(.ui-state-active) a:hover,
+//.tiki .ui-state-default a:link:hover,
+//.tiki .ui-state-default a:visited:hover,
+.tiki a.ui-button:hover,
+.tiki a:link.ui-button:hover,
+.tiki a:visited.ui-button:hover,
+.tiki .ui-button:hover { color: #858585; }
+
+.tiki .ui-widget.ui-widget-content { border: none; }
+
+.tiki .elfinder-touch .std42-dialog .ui-dialog-titlebar .elfinder-titlebar-button { background: #f2f2f2; }
+.tiki .elfinder-cwd-file.directory.ui-selected {background: #f2f2f2; }
+
+.tiki .ui-state-hover,
+.tiki .ui-widget-content .ui-state-hover,
+.tiki .ui-widget-header .ui-state-hover,
+.tiki .ui-state-focus,
+.tiki .ui-widget-content .ui-state-focus,
+.tiki .ui-widget-header .ui-state-focus,
+.tiki .ui-button:hover,
+.tiki .ui-button:focus {
+    border: 1px solid #cccccc;
+    background: #818181; /* Old browsers */
+    background: linear-gradient(to bottom, #818181 0%, #393939 100%) !important; /* W3C */
+    font-weight: normal;
+    color: #f2f2f2;
+}
+
+.top_modules {
+    .navbar-dark,
+    .navbar-light {
+        background: transparent !important;
+        border: none;
+    }
+}
+
+.btn-link,
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-info,
+.btn-outline-success,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-outline-light,
+.btn-outline-dark {background: none !important;}
+
+.topbar {
+    margin-bottom: 1.3rem;
+}
+
+#topbar_modules,
+#top_modules {
+    .bg-dark,
+    .bg-light {
+        background: transparent !important;
+        border: none;
+        margin-bottom: 0;
+    }
+}
+
+#topbar_modules .mb-3 {
+    margin-bottom: 0
+}
+
+.textarea-toolbar a.toolbar {
+    background: none !important;
+}
+
+.nav > li > a {
+    padding: .4rem 10px;
+}
+
+select {
+    background: #292929
+}
+
+.cke_wysiwyg_frame, .cke_wysiwyg_div {
+    background: #292929 !important;
+    color: #ffffff !important;
+}
+
+.even {
+    background: $table-bg-accent;
+}
+
+.odd,
+#trig_dptxt {
+    background: $table-bg;
+    color: $primary;
+}
+
+input[type="checkbox"] {
+    color: #ffffff !important;
+    background: $table-bg;
+}
+
+input.reportBuilderInput,
+.ui-datepicker {
+    background: #292929;
+}
+
+//textarea,  OLD?
+//input {
+//    background: $input-bg;
+//    color: $input-color;
+//}
+
+// Forums
+.form-control {
+    background: rgb(71,71,71);
+    background: linear-gradient(180deg, rgba(71,71,71,1) 1%, rgba(99,99,99,1) 18%);
+}
+
+.jtrack-form {
+    background: #292929 !important;
+}
+
+//.box-quickadmin .cssmenu_horiz ul li {
+//    background-color: $body-bg;
+//}
+
+a.toolbar {
+    color: $link-color;
+}
+
+// override for some cypht background colors
+body.tiki.tiki-webmail {
+    background-image: url('#{$imagePath}474747_5e5e5e_40.png');
+}
+
+.tiki_trackers {
+    .icon-status-open, .icon-status-pending, .icon-status-closed {
+        filter: drop-shadow(0 0 1px black);
+    }
+}
+
+// Badges
+.badge {
+    &.bg-primary,
+    &.bg-danger,
+    &.bg-secondary,
+    &.bg-success,
+    &.bg-info,
+    &.bg-warning { color: #000 !important; }
+}
+
+// Breadcrumbs
+.breadcrumb {
+    display: inline-block;
+}
