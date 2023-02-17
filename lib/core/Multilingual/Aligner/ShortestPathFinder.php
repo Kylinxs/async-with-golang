@@ -174,4 +174,53 @@ class Multilingual_Aligner_ShortestPathFinder
                 $endNode = $this -> previousNode[$currNode];
                 $currNode = $this -> previousNode[$currNode];
             }
-            $ourSh
+            $ourShortestPath[$aNode] = array_reverse($ourShortestPath[$aNode]);
+            if ($to === null || $to === $aNode) {
+                if ($to === $aNode) {
+                    break;
+                }
+            }
+        }
+        return $ourShortestPath;
+    }
+
+    public function getResults($to = null)
+    {
+        $ourShortestPath = [];
+        $foo = '';
+        foreach ($this->nodes as $aNode) {
+            if ($to !== null && $to !== $aNode) {
+                continue;
+            }
+            $ourShortestPath[$aNode] = [];
+            $endNode = null;
+            $currNode = $aNode;
+            $ourShortestPath[$aNode][] = $aNode;
+            while ($endNode === null || $endNode != $this -> startnode) {
+                $ourShortestPath[$aNode][] = $this -> previousNode[$currNode];
+                $endNode = $this -> previousNode[$currNode];
+                $currNode = $this -> previousNode[$currNode];
+            }
+            $ourShortestPath[$aNode] = array_reverse($ourShortestPath[$aNode]);
+            if ($to === null || $to === $aNode) {
+                if ($this -> distance[$aNode] >= $this -> infiniteDistance) {
+                    $foo .= sprintf("no route from %d to %d. \n", $this -> startnode, $aNode);
+                } else {
+                    $foo .= sprintf(
+                        '%d => %d = %d [%d]: (%s).' . "\n",
+                        $this -> startnode,
+                        $aNode,
+                        $this -> distance[$aNode],
+                        count($ourShortestPath[$aNode]),
+                        implode('-', $ourShortestPath[$aNode])
+                    );
+                }
+                $foo .= str_repeat('-', 20) . "\n";
+                if ($to === $aNode) {
+                    break;
+                }
+            }
+        }
+        return $foo;
+    }
+}
